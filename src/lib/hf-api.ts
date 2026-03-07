@@ -20,6 +20,27 @@ class HuggingFaceAPI {
     return h;
   }
 
+  // EC-013: Exponential backoff on 429 rate limiting
+  private async fetchWithRetry(
+    url: string,
+    init?: RequestInit,
+    maxRetries = 3,
+  ): Promise<Response> {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const res = await fetch(url, init);
+      if (res.status === 429 && attempt < maxRetries) {
+        const retryAfter = res.headers.get("Retry-After");
+        const waitMs = retryAfter
+          ? parseInt(retryAfter, 10) * 1000
+          : Math.min(1000 * 2 ** attempt, 30000);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      return res;
+    }
+    throw new Error("Rate limited by HuggingFace API after retries");
+  }
+
   async searchModels(params: SearchParams): Promise<HFModel[]> {
     const url = new URL(`${HF_API_BASE}/models`);
     if (params.search) url.searchParams.set("search", params.search);
@@ -31,14 +52,16 @@ class HuggingFaceAPI {
     if (params.config) url.searchParams.set("config", "true");
     if (params.library) url.searchParams.set("filter", params.library);
 
-    const res = await fetch(url.toString(), { headers: this.headers() });
+    const res = await this.fetchWithRetry(url.toString(), {
+      headers: this.headers(),
+    });
     if (!res.ok)
       throw new Error(`HF API error: ${res.status} ${res.statusText}`);
     return res.json();
   }
 
   async getModel(modelId: string): Promise<HFModelDetail> {
-    const res = await fetch(`${HF_API_BASE}/models/${modelId}`, {
+    const res = await this.fetchWithRetry(`${HF_API_BASE}/models/${modelId}`, {
       headers: this.headers(),
     });
     if (!res.ok)
@@ -50,7 +73,7 @@ class HuggingFaceAPI {
     modelId: string,
     revision = "main",
   ): Promise<HFModelFile[]> {
-    const res = await fetch(
+    const res = await this.fetchWithRetry(
       `${HF_API_BASE}/models/${modelId}/tree/${revision}`,
       { headers: this.headers() },
     );
@@ -60,7 +83,7 @@ class HuggingFaceAPI {
   }
 
   async getModelReadme(modelId: string): Promise<string> {
-    const res = await fetch(
+    const res = await this.fetchWithRetry(
       `https://huggingface.co/${modelId}/raw/main/README.md`,
       { headers: this.headers() },
     );
@@ -71,7 +94,7 @@ class HuggingFaceAPI {
   async validateToken(): Promise<HFUser | null> {
     if (!this.token) return null;
     try {
-      const res = await fetch(`${HF_API_BASE}/whoami`, {
+      const res = await this.fetchWithRetry(`${HF_API_BASE}/whoami`, {
         headers: this.headers(),
       });
       if (!res.ok) return null;

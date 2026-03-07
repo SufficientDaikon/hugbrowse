@@ -153,6 +153,14 @@ export const useChatStore = create<ChatStore>()(
           { role: "user", content },
         ];
 
+        // EC-010: Rough context window overflow guard (~4 chars per token, 4096 default)
+        const MAX_CONTEXT_CHARS = 16000;
+        let totalChars = history.reduce((n, m) => n + m.content.length, 0);
+        while (totalChars > MAX_CONTEXT_CHARS && history.length > 2) {
+          const removed = history.splice(1, 1)[0];
+          totalChars -= removed.content.length;
+        }
+
         try {
           const res = await fetch(
             `http://127.0.0.1:${port}/v1/chat/completions`,

@@ -23,7 +23,10 @@ const queryClient = new QueryClient({
 });
 
 function TokenSync() {
-  const { hfToken } = useSettings();
+  const { hfToken, loadTokenFromStore } = useSettings();
+  useEffect(() => {
+    loadTokenFromStore();
+  }, [loadTokenFromStore]);
   useEffect(() => {
     hfApi.setToken(hfToken);
   }, [hfToken]);
@@ -44,11 +47,25 @@ export default function App() {
             )}
             <Route element={<AppShell />}>
               <Route path="/" element={<SearchPage />} />
-              <Route path="/model/:id" element={<ErrorBoundary><ModelDetailPage /></ErrorBoundary>} />
+              <Route
+                path="/model/:id"
+                element={
+                  <ErrorBoundary>
+                    <ModelDetailPage />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/recommended" element={<RecommendedPage />} />
               <Route path="/monitor" element={<ResourceMonitorPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
+              <Route
+                path="/chat"
+                element={
+                  <ErrorBoundary>
+                    <ChatPage />
+                  </ErrorBoundary>
+                }
+              />
             </Route>
           </Routes>
         </BrowserRouter>

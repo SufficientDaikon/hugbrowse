@@ -75,6 +75,20 @@ pub async fn load_model(
         (mgr.info.port, mgr.info.ctx_size, mgr.info.n_gpu_layers)
     };
 
+    // EC-002: Check for port collision before spawning
+    let listener = std::net::TcpListener::bind(format!("127.0.0.1:{port_val}"));
+    match listener {
+        Ok(l) => drop(l), // Port is free, release it for llama-server
+        Err(_) => {
+            let mut mgr = state.lock().unwrap();
+            mgr.info.status = InferenceStatus::Error;
+            mgr.info.error = Some(format!(
+                "Port {port_val} is already in use. Please choose a different port."
+            ));
+            return Ok(mgr.info.clone());
+        }
+    }
+
     let sidecar = app
         .shell()
         .sidecar("llama-server")

@@ -489,7 +489,16 @@ pub fn cancel_download(state: State<'_, ManagedDownloads>, id: String) -> Result
 
 #[tauri::command]
 pub fn get_downloads(state: State<'_, ManagedDownloads>) -> Vec<DownloadEntry> {
-    let st = state.lock().unwrap();
+    let mut st = state.lock().unwrap();
+    // EC-004: Detect externally deleted files — mark completed downloads as missing
+    for entry in st.downloads.values_mut() {
+        if entry.status == DownloadStatus::Completed {
+            if !std::path::Path::new(&entry.local_path).exists() {
+                entry.status = DownloadStatus::Error;
+                entry.error = Some("Model file was deleted externally".into());
+            }
+        }
+    }
     st.downloads.values().cloned().collect()
 }
 

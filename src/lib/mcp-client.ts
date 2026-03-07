@@ -120,12 +120,17 @@ class HuggingFaceMCPClient {
 
   /**
    * Call an MCP tool by name with arguments.
+   * EC-015: Defensive parsing for malformed JSON responses.
+   * FR-042: 30-second timeout on tool calls.
    */
   async callTool(
     name: string,
     args: Record<string, unknown>,
   ): Promise<MCPToolResult | null> {
     if (this.status !== "connected" || !this.token) return null;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     try {
       const res = await fetch(MCP_SERVER_URL, {
@@ -140,13 +145,50 @@ class HuggingFaceMCPClient {
           method: "tools/call",
           params: { name, arguments: args },
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeout);
       if (!res.ok) return null;
-      const data = await res.json();
-      return data.result ?? null;
-    } catch {
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (data.error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `MCP error: ${data.error.message ?? JSON.stringify(data.error)}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+        return data.result ?? null;
+      } catch {
+        // EC-015: Malformed JSON — surface error, don't crash
+        return {
+          content: [
+            {
+              type: "text",
+              text: `MCP returned invalid JSON: ${text.slice(0, 200)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    } catch (err) {
+      if ((err as Error).name === "AbortError") {
+        return {
+          content: [
+            { type: "text", text: `MCP tool "${name}" timed out after 30s` },
+          ],
+          isError: true,
+        };
+      }
       return null;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

@@ -27,6 +27,24 @@ export const useRag = create<RagStore>()(
       documents: [],
 
       addDocument: (doc) => {
+        // EC-014: Reject empty documents
+        if (doc.fileSize === 0) {
+          const id = crypto.randomUUID();
+          set((s) => ({
+            documents: [
+              ...s.documents,
+              {
+                ...doc,
+                id,
+                addedAt: Date.now(),
+                status: "error" as const,
+                error: "Cannot index an empty document",
+                chunkCount: 0,
+              },
+            ],
+          }));
+          return id;
+        }
         const id = crypto.randomUUID();
         set((s) => ({
           documents: [...s.documents, { ...doc, id, addedAt: Date.now() }],
