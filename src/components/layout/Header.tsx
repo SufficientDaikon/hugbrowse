@@ -7,6 +7,8 @@ import {
   Sparkles,
   Activity,
   MessageSquare,
+  Store,
+  Users,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSettings } from "../../stores/settings";
@@ -133,6 +135,30 @@ export function Header() {
         >
           <Activity className="h-3.5 w-3.5" />
           Monitor
+        </button>
+        <button
+          onClick={() => navigate("/marketplace")}
+          className={cn(
+            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+            location.pathname === "/marketplace"
+              ? "bg-accent/10 text-accent dark:text-accent-light"
+              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
+          )}
+        >
+          <Store className="h-3.5 w-3.5" />
+          Marketplace
+        </button>
+        <button
+          onClick={() => navigate("/community")}
+          className={cn(
+            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+            location.pathname === "/community"
+              ? "bg-accent/10 text-accent dark:text-accent-light"
+              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
+          )}
+        >
+          <Users className="h-3.5 w-3.5" />
+          Community
         </button>
 
         <div className="hidden sm:block w-px h-5 bg-[var(--border)] mx-1" />

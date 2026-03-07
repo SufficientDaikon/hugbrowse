@@ -18,12 +18,17 @@
           "sidecar": true
         }
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["hugbrowse"]
+      }
     }
   },
   "app": {
     "windows": [
       {
-        "title": "HugBrowse — Model Hub Browser",
+        "title": "HugBrowse — Local AI Platform",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -34,12 +39,12 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' https://huggingface.co https://*.huggingface.co http://127.0.0.1:*; img-src 'self' https://huggingface.co https://*.huggingface.co https://cdn-avatars.huggingface.co data:; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; connect-src 'self' https://huggingface.co https://*.huggingface.co http://127.0.0.1:* https://raw.githubusercontent.com https://api.github.com; img-src 'self' https://huggingface.co https://*.huggingface.co https://cdn-avatars.huggingface.co data:; style-src 'self' 'unsafe-inline'; frame-src 'self' blob:"
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["msi", "nsis", "dmg", "appimage", "deb"],
     "externalBin": ["binaries/llama-server"],
     "icon": [
       "icons/32x32.png",
@@ -47,6 +52,39 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "HugBrowse",
+    "copyright": "© 2026 HugBrowse Contributors",
+    "category": "DeveloperTool",
+    "shortDescription": "Local AI platform with community marketplace",
+    "longDescription": "HugBrowse is a desktop application for discovering, downloading, and running AI models locally. Features include a chat interface, RAG document attachment, MCP tool calling, and a community marketplace for sharing extensions, plugins, and custom models.",
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "wix": {
+        "upgradeCode": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+        "language": "en-US"
+      },
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "icons/128x128.png",
+        "displayLanguageSelector": false,
+        "installMode": "both"
+      }
+    },
+    "fileAssociations": [
+      {
+        "ext": ["gguf"],
+        "mimeType": "application/octet-stream",
+        "description": "GGUF Model File",
+        "role": "Viewer"
+      }
+    ],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+      }
+    }
   }
 }

@@ -481,11 +481,40 @@ export function SettingsPage() {
         </h2>
         <p className="text-sm text-[var(--muted)]">
           <strong>HugBrowse</strong> v0.1.0 — A beautiful Hugging Face model
-          browser.
+          browser &amp; local AI runtime.
         </p>
         <p className="text-xs text-[var(--muted-foreground)] mt-2">
           Built with Tauri, React, and Tailwind CSS.
         </p>
+      </section>
+
+      {/* FR-057: Privacy Settings */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <h2 className="text-base font-semibold text-[var(--foreground)] mb-3">
+          Privacy
+        </h2>
+        <div className="space-y-3">
+          {[
+            { key: "hugbrowse-analytics-consent", label: "Usage Analytics", desc: "Anonymous app usage patterns" },
+            { key: "hugbrowse-crash-consent", label: "Crash Reports", desc: "Automatic error reports" },
+            { key: "hugbrowse-community-consent", label: "Community", desc: "Browse and install from marketplace" },
+          ].map(({ key, label, desc }) => (
+            <label key={key} className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-[var(--muted)]">{desc}</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={localStorage.getItem(key) === "true"}
+                onChange={(e) => {
+                  localStorage.setItem(key, String(e.target.checked));
+                }}
+                className="h-4 w-4 accent-[var(--accent)]"
+              />
+            </label>
+          ))}
+        </div>
       </section>
     </div>
   );
