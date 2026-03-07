@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
+import { useSettings } from "./settings";
 
 export type InferenceStatus = "unloaded" | "loading" | "running" | "error";
 
@@ -28,7 +29,7 @@ interface InferenceStore {
 
 const DEFAULT: InferenceInfo = {
   status: "unloaded",
-  port: 8080,
+  port: 11434,
   ctx_size: 4096,
   n_gpu_layers: -1,
 };
@@ -47,6 +48,8 @@ export const useInference = create<InferenceStore>()((set) => ({
         n_gpu_layers: nGpuLayers ?? null,
       });
       set({ info });
+      // FR-032: Remember last loaded model for auto-start
+      useSettings.getState().setLastModelPath(modelPath);
     } catch (e) {
       set((s) => ({
         info: { ...s.info, status: "error", error: String(e) },

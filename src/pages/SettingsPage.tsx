@@ -34,6 +34,9 @@ export function SettingsPage() {
     setTierOverride,
     alertThresholds,
     setAlertThresholds,
+    autoLoadLastModel,
+    setAutoLoadLastModel,
+    lastModelPath,
   } = useSettings();
   const mcp = useMCP();
   const { data: tierInfo } = useTier();
@@ -328,6 +331,32 @@ export function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* FR-032: Auto-load Last Model */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Cpu className="h-5 w-5 text-accent" />
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            Inference
+          </h2>
+        </div>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoLoadLastModel}
+            onChange={(e) => setAutoLoadLastModel(e.target.checked)}
+            className="h-4 w-4 rounded border-[var(--border)] accent-accent"
+          />
+          <span className="text-sm text-[var(--foreground)]">
+            Auto-load last used model on app start
+          </span>
+        </label>
+        {lastModelPath && (
+          <p className="mt-2 text-xs text-[var(--muted)] truncate">
+            Last model: {lastModelPath}
+          </p>
+        )}
       </section>
 
       {/* Alert Thresholds */}

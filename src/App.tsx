@@ -10,6 +10,7 @@ import { ChatPage } from "./pages/ChatPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { useSettings } from "./stores/settings";
+import { useInference } from "./stores/inference";
 import { hfApi } from "./lib/hf-api";
 import { useEffect } from "react";
 
@@ -33,6 +34,22 @@ function TokenSync() {
   return null;
 }
 
+/** FR-032: Auto-load last model on app launch if enabled */
+function AutoModelLoader() {
+  const { autoLoadLastModel, lastModelPath } = useSettings();
+  const load = useInference((s) => s.load);
+  const status = useInference((s) => s.info.status);
+
+  useEffect(() => {
+    if (autoLoadLastModel && lastModelPath && status === "unloaded") {
+      const name = lastModelPath.split(/[\\/]/).pop() ?? "model";
+      load({ modelPath: lastModelPath, modelName: name });
+    }
+  }, [autoLoadLastModel, lastModelPath, status, load]);
+
+  return null;
+}
+
 export default function App() {
   const { onboardingComplete } = useSettings();
 
@@ -40,6 +57,7 @@ export default function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TokenSync />
+        <AutoModelLoader />
         <BrowserRouter>
           <Routes>
             {!onboardingComplete && (

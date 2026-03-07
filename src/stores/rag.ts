@@ -102,8 +102,18 @@ export const useRag = create<RagStore>()(
 
         try {
           const text = await readFileAsText(file);
-          const chunkCount = indexDocument(id, text);
-          get().updateDocument(id, { status: "indexed", chunkCount });
+          // EC-016: Large docs — index in next microtask to avoid UI blocking
+          await new Promise<void>((resolve, reject) => {
+            setTimeout(() => {
+              try {
+                const chunkCount = indexDocument(id, text);
+                get().updateDocument(id, { status: "indexed", chunkCount });
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
+            }, 0);
+          });
         } catch (err) {
           get().updateDocument(id, {
             status: "error",

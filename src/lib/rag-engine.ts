@@ -15,6 +15,34 @@ export interface RagChunk {
 // In-memory chunk store keyed by docId
 const chunkStore = new Map<string, RagChunk[]>();
 
+const STORAGE_KEY = "hugbrowse-rag-chunks";
+
+/** FR-037: Persist chunk index to localStorage */
+function persistChunks(): void {
+  try {
+    const data: Record<string, RagChunk[]> = {};
+    for (const [k, v] of chunkStore) data[k] = v;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    /* quota exceeded — non-critical */
+  }
+}
+
+/** FR-037: Restore chunk index from localStorage on import */
+function restoreChunks(): void {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw) as Record<string, RagChunk[]>;
+    for (const [k, v] of Object.entries(data)) chunkStore.set(k, v);
+  } catch {
+    /* parse error — start fresh */
+  }
+}
+
+// Restore on module load
+restoreChunks();
+
 const CHUNK_SIZE = 512; // ~512 chars per chunk
 const CHUNK_OVERLAP = 64;
 
@@ -141,6 +169,7 @@ function tokenize(text: string): string[] {
 export function indexDocument(docId: string, text: string): number {
   const chunks = chunkText(text, docId);
   chunkStore.set(docId, chunks);
+  persistChunks();
   return chunks.length;
 }
 
@@ -149,6 +178,7 @@ export function indexDocument(docId: string, text: string): number {
  */
 export function removeDocumentIndex(docId: string): void {
   chunkStore.delete(docId);
+  persistChunks();
 }
 
 /**

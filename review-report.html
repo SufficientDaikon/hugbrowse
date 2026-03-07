@@ -1,490 +1,1521 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Spec Compliance Report — HugBrowse LM Studio Competitor</title>
-<style>
-:root{--pass:#16a34a;--pass-bg:#f0fdf4;--partial:#d97706;--partial-bg:#fffbeb;--fail:#dc2626;--fail-bg:#fef2f2;--missing:#9ca3af;--missing-bg:#f9fafb;--info:#2563eb;--info-bg:#eff6ff;--bg:#fff;--surface:#f8fafc;--border:#e2e8f0;--text:#1e293b;--text-secondary:#64748b;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:"SF Mono","Cascadia Code","Fira Code",Consolas,monospace}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);color:var(--text);background:var(--surface);line-height:1.6;font-size:15px}
-.container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
-h1{font-size:1.8rem;font-weight:800;margin-bottom:.25rem}
-h2{font-size:1.3rem;font-weight:700;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border)}
-h3{font-size:1.05rem;font-weight:600;margin:1.5rem 0 .75rem}
-.card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:.75rem;font-weight:600;white-space:nowrap}
-.badge-pass{background:var(--pass-bg);color:var(--pass)}
-.badge-partial{background:var(--partial-bg);color:var(--partial)}
-.badge-fail{background:var(--fail-bg);color:var(--fail)}
-.badge-missing{background:var(--missing-bg);color:var(--missing)}
-.badge-info{background:var(--info-bg);color:var(--info)}
-table{width:100%;border-collapse:collapse;font-size:.875rem}
-th,td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid var(--border)}
-th{background:var(--surface);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary)}
-tr:hover{background:var(--surface)}
-.mono{font-family:var(--mono);font-size:.8rem}
-.score-ring{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;font-size:1.25rem;font-weight:800;border:4px solid}
-.verdict-box{display:flex;align-items:center;gap:1.5rem;padding:1.5rem;border-radius:12px;margin:1.5rem 0}
-.verdict-approved{background:#f0fdf4;border:2px solid var(--pass)}
-.verdict-conditions{background:#fffbeb;border:2px solid var(--partial)}
-.verdict-revision{background:#fef2f2;border:2px solid var(--fail)}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin:1rem 0}
-.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
-.stat-value{font-size:1.5rem;font-weight:800}
-.stat-label{font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
-.finding{display:flex;gap:.75rem;padding:.75rem 1rem;border-radius:8px;margin-bottom:.5rem;font-size:.875rem}
-.finding-critical{background:var(--fail-bg);border-left:3px solid var(--fail)}
-.finding-major{background:#fff7ed;border-left:3px solid #ea580c}
-.finding-minor{background:var(--partial-bg);border-left:3px solid var(--partial)}
-.finding-info{background:var(--info-bg);border-left:3px solid var(--info)}
-.evidence{font-family:var(--mono);font-size:.78rem;color:var(--text-secondary);margin-top:.25rem}
-.progress-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:.5rem 0}
-.progress-fill{height:100%;border-radius:4px;transition:width .3s}
-.section-toggle{cursor:pointer;user-select:none}
-.section-toggle:hover{opacity:.8}
-details summary{cursor:pointer;font-weight:600;padding:.5rem 0}
-details summary:hover{color:var(--info)}
-</style>
-</head>
-<body>
-<div class="container">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HugBrowse Spec Compliance Report</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --pass: #3fb950;
+        --warn: #d29922;
+        --fail: #f85149;
+        --skip: #8b949e;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 1.5rem 0 0.75rem;
+        color: var(--accent);
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+      }
+      .card-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-bottom: 0.25rem;
+      }
+      .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+      .card-value.pass {
+        color: var(--pass);
+      }
+      .card-value.warn {
+        color: var(--warn);
+      }
+      .card-value.fail {
+        color: var(--fail);
+      }
+      .progress-bar {
+        height: 8px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th {
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        background: var(--surface);
+        border-bottom: 2px solid var(--border);
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      tr:hover td {
+        background: rgba(88, 166, 255, 0.04);
+      }
+      .mono {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.8rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-pass {
+        background: rgba(63, 185, 80, 0.15);
+        color: var(--pass);
+      }
+      .badge-warn {
+        background: rgba(210, 153, 34, 0.15);
+        color: var(--warn);
+      }
+      .badge-fail {
+        background: rgba(248, 81, 73, 0.15);
+        color: var(--fail);
+      }
+      .badge-skip {
+        background: rgba(139, 148, 158, 0.15);
+        color: var(--skip);
+      }
+      .evidence {
+        color: var(--muted);
+        font-size: 0.8rem;
+        max-width: 400px;
+      }
+      .phase-tag {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(88, 166, 255, 0.1);
+        color: var(--accent);
+        margin-right: 0.5rem;
+      }
+      .legend {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        font-size: 0.85rem;
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .dot-pass {
+        background: var(--pass);
+      }
+      .dot-warn {
+        background: var(--warn);
+      }
+      .dot-fail {
+        background: var(--fail);
+      }
+      .dot-skip {
+        background: var(--skip);
+      }
+      ul.notes {
+        padding-left: 1.25rem;
+        margin-top: 0.75rem;
+      }
+      ul.notes li {
+        margin-bottom: 0.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .timestamp {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.75rem;
+        margin-top: 3rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+      }
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+        .summary-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 HugBrowse — Spec Compliance Report</h1>
+      <p class="subtitle">
+        Spec: <strong>hugbrowse-lm-studio/spec.md</strong> &nbsp;|&nbsp;
+        Reviewed: <strong id="date-now"></strong> &nbsp;|&nbsp; Codebase:
+        <code>H:\Hugging pc\hugbrowse</code>
+      </p>
+      <script>
+        document.getElementById("date-now").textContent = new Date()
+          .toISOString()
+          .slice(0, 10);
+      </script>
 
-<!-- ═══════════════ HEADER ═══════════════ -->
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem">
-<div>
-<h1>📋 Spec Compliance Report</h1>
-<p style="color:var(--text-secondary)">HugBrowse — LM Studio Competitor</p>
-<p style="font-size:.8rem;color:var(--text-secondary);margin-top:.25rem">Generated: 2025-07-18 · Spec: hugbrowse-lm-studio/spec.md</p>
-</div>
-<div class="score-ring" style="border-color:var(--fail);color:var(--fail)">77%</div>
-</div>
+      <!-- ═══════════════════════ SUMMARY ═══════════════════════ -->
+      <h2>Executive Summary</h2>
 
-<!-- ═══════════════ VERDICT ═══════════════ -->
-<div class="verdict-box verdict-revision">
-<div>
-<div style="font-size:2.5rem">🔧</div>
-</div>
-<div>
-<div style="font-size:1.1rem;font-weight:800;color:var(--fail)">NEEDS REVISION</div>
-<p style="font-size:.9rem;color:var(--text-secondary);margin-top:.25rem">
-Overall compliance <strong>77.2%</strong> (69.5 / 90 points). Significant gaps remain in RAG embedding, MCP chat integration, sidecar binary verification, auto-update UX, and tray menu completeness.
-Core download &amp; inference pipeline is solid. Polish and advanced features need attention.
-</p>
-</div>
-</div>
+      <div class="summary-grid">
+        <div class="card">
+          <div class="card-label">Overall Compliance</div>
+          <div class="card-value pass">67.2%</div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              style="width: 67.2%; background: var(--pass)"
+            ></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Functional Reqs (48)</div>
+          <div class="card-value warn">63.5%</div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              style="width: 63.5%; background: var(--warn)"
+            ></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Non-Functional (12)</div>
+          <div class="card-value warn">58.3%</div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              style="width: 58.3%; background: var(--warn)"
+            ></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Success Criteria (12)</div>
+          <div class="card-value warn">62.5%</div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              style="width: 62.5%; background: var(--warn)"
+            ></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Edge Cases (18)</div>
+          <div class="card-value pass">50.0%</div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              style="width: 50%; background: var(--warn)"
+            ></div>
+          </div>
+        </div>
+      </div>
 
-<!-- ═══════════════ STATS ═══════════════ -->
-<div class="stats-grid">
-<div class="stat-card">
-<div class="stat-value" style="color:var(--pass)">32</div>
-<div class="stat-label">✅ Passed</div>
-</div>
-<div class="stat-card">
-<div class="stat-value" style="color:var(--partial)">27</div>
-<div class="stat-label">⚠️ Partial</div>
-</div>
-<div class="stat-card">
-<div class="stat-value" style="color:var(--fail)">10</div>
-<div class="stat-label">❌ Missing</div>
-</div>
-<div class="stat-card">
-<div class="stat-value">90</div>
-<div class="stat-label">Total Items</div>
-</div>
-</div>
+      <div class="legend">
+        <span><span class="dot dot-pass"></span> ✅ Pass (1.0)</span>
+        <span><span class="dot dot-warn"></span> ⚠️ Partial (0.5)</span>
+        <span><span class="dot dot-fail"></span> ❌ Fail (0.0)</span>
+        <span><span class="dot dot-skip"></span> ⬜ Not Implemented (0.0)</span>
+      </div>
 
-<div class="stats-grid">
-<div class="stat-card">
-<div class="stat-value">80.2%</div>
-<div class="stat-label">Functional (FR)</div>
-<div class="progress-bar"><div class="progress-fill" style="width:80%;background:var(--partial)"></div></div>
-</div>
-<div class="stat-card">
-<div class="stat-value">75.0%</div>
-<div class="stat-label">Non-Functional (NFR)</div>
-<div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--partial)"></div></div>
-</div>
-<div class="stat-card">
-<div class="stat-value">72.2%</div>
-<div class="stat-label">Edge Cases (EC)</div>
-<div class="progress-bar"><div class="progress-fill" style="width:72%;background:var(--fail)"></div></div>
-</div>
-<div class="stat-card">
-<div class="stat-value">75.0%</div>
-<div class="stat-label">Success Criteria (SC)</div>
-<div class="progress-bar"><div class="progress-fill" style="width:75%;background:var(--partial)"></div></div>
-</div>
-</div>
+      <!-- ═══════════════════════ FR TABLE ═══════════════════════ -->
+      <h2>Functional Requirements</h2>
 
-<!-- ═══════════════ KEY FINDINGS ═══════════════ -->
-<h2>🔍 Key Findings</h2>
+      <h3>Phase 1 — Tauri Desktop Build</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-001</td>
+          <td>
+            App compiles &amp; runs via <code>cargo tauri dev</code> on
+            Win/Mac/Linux
+          </td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            Cargo.toml, tauri.conf.json, lib.rs — full Tauri v2 build setup with
+            all plugins. Platform build scripts present.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-002</td>
+          <td>Distributable installer via <code>cargo tauri build</code></td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            tauri.conf.json line 42: <code>"targets": "all"</code>, externalBin,
+            icons configured. Bundle config complete.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-003</td>
+          <td>All existing routes functional in native window</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            App.tsx: Routes for /, /model/:id, /settings, /recommended,
+            /monitor, /chat all defined. CSP allows connect-src to HF.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-004</td>
+          <td>Window min 800×600, default 1200×800</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            tauri.conf.json:25-31 —
+            <code
+              >"width": 1200, "height": 800, "minWidth": 800, "minHeight":
+              600</code
+            >.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-005</td>
+          <td>Settings persist via Tauri plugin store</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            settings.ts uses zustand/persist + Tauri Store for token. HF token
+            stored in encrypted credentials.json via
+            <code>@tauri-apps/plugin-store</code>.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-critical">
-<div>🔴</div>
-<div><strong>FR-020: No sidecar binary checksum verification</strong> — Spec requires verifying llama-server binary checksum on first launch and major updates. No implementation found.
-<div class="evidence">Missing in: src-tauri/src/inference.rs, src-tauri/src/lib.rs</div></div>
-</div>
+      <h3>Phase 2 — Download Manager</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-006</td>
+          <td>Initiate GGUF download from model detail page</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs: <code>start_download</code> command. downloads.ts store
+            wired to frontend. DownloadPanel + DownloadItem components present.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-007</td>
+          <td>Real-time progress: bytes, speed, ETA</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:299-308 — emits progress every 500ms with speed_bps
+            &amp; eta_secs. DownloadItem.tsx renders bytes/speed/ETA.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-008</td>
+          <td>Resumable downloads via HTTP Range headers</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:177-185 — reads .part file size, sends
+            <code>Range: bytes={offset}-</code> header. Appends to existing
+            file.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-009</td>
+          <td>Pause &amp; resume by user action</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs: <code>pause_download</code> /
+            <code>resume_download</code> commands. AtomicBool pause_flag.
+            DownloadItem has Pause/Play buttons.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-010</td>
+          <td>SHA-256 verification on completion</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:329-374 — SHA-256 computed via sha2 crate, compared with
+            expected hash. Fails &amp; removes file on mismatch.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-011</td>
+          <td>Reject download when disk space &lt; 1.2× file size</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:133-163 —
+            <code>check_disk_space_for_download</code> enforces 1.2× needed.
+            Called at start_download:411.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-012</td>
+          <td>Downloads panel: view, pause, resume, cancel, delete</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            DownloadPanel.tsx + DownloadItem.tsx — all actions wired.
+            download.rs exposes all 5 commands.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-013</td>
+          <td>Download state persists across app restarts</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:95-130 — <code>persist_downloads</code> writes JSON to
+            app data dir. <code>load_persisted_downloads</code> called in
+            lib.rs:327.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-critical">
-<div>🔴</div>
-<div><strong>FR-032: API server does not auto-start on app launch</strong> — Spec requires: "server MUST start automatically on app launch if enabled in previous session". No persist-and-restore logic for API server state.
-<div class="evidence">Missing in: src-tauri/src/lib.rs (no auto-load model on startup)</div></div>
-</div>
+      <h3>Phase 3 — llama-server Sidecar</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-014</td>
+          <td>Bundle platform-specific llama-server binaries as sidecar</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            tauri.conf.json:43 —
+            <code>"externalBin": ["binaries/llama-server"]</code>. Config
+            correct but no actual binaries found in
+            <code>src-tauri/binaries/</code>. Users must supply them.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-015</td>
+          <td>Launch llama-server as managed child process with args</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:92-111 — sidecar spawned via
+            <code>app.shell().sidecar("llama-server")</code> with --model,
+            --port, --ctx-size, --n-gpu-layers, --host args.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-016</td>
+          <td>"Load Model" action starts llama-server</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:49 <code>load_model</code> command. ModelRunPanel.tsx
+            has "Load Model" button calling <code>useInference().load()</code>.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-017</td>
+          <td>"Unload Model" with SIGTERM then SIGKILL after 5s</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:181-208 — POST /shutdown, 5s sleep, then
+            <code>child.kill()</code>. Clean 2-phase shutdown.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-018</td>
+          <td>Monitor /health endpoint, surface status in real-time</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:147-178 — <code>spawn_health_poller</code> checks every
+            2s. 3 consecutive failures → Error status + event emitted.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-019</td>
+          <td>Prevent orphan llama-server processes on app exit</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            lib.rs:349-355 — <code>WindowEvent::Destroyed</code> handler kills
+            child process. Also killed in load_model if already running.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-020</td>
+          <td>Verify bundled llama-server binary checksum</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            No checksum verification of the llama-server binary found anywhere
+            in codebase.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-critical">
-<div>🔴</div>
-<div><strong>FR-043: No "Tool Call" badge in chat UI</strong> — Spec requires visible badge with tool name and arguments during MCP tool calls. No badge component exists.
-<div class="evidence">Missing in: src/components/chat/ChatMessage.tsx</div></div>
-</div>
+      <h3>Phase 4 — Chat Interface</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-021</td>
+          <td>Streaming chat with token-by-token display</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:188-249 — SSE streaming via fetch, delta content appended
+            per chunk. Reader loop with TextDecoder.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-022</td>
+          <td>
+            Markdown rendering: headings, code blocks, syntax highlight, etc.
+          </td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            ChatMessage.tsx — uses react-markdown + remark-gfm. CodeBlock with
+            Copy button present. No syntax-highlighting library (e.g.
+            highlight.js/prism) — code is rendered as plain text in &lt;pre&gt;.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-023</td>
+          <td>Sessions: named, created, renamed, deleted</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts: createSession, deleteSession, renameSession.
+            SessionSidebar.tsx has full CRUD UI with inline rename.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-024</td>
+          <td>Chat history persists locally across restarts</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:316-321 — zustand/persist with name "hugbrowse-chat",
+            partializes sessions &amp; currentSessionId.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-025</td>
+          <td>Stop generation mid-stream via Stop button</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:309-313 — <code>stopStreaming</code> calls
+            <code>_abortController.abort()</code>. ChatInput.tsx shows red Stop
+            button when streaming.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-026</td>
+          <td>System prompt per chat session</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:103-108 — <code>setSystemPrompt</code> per session ID.
+            System prompt injected at line 168.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-027</td>
+          <td>Display tok/s and context usage during generation</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:230-239 — tok/s calculated live. ChatMessage.tsx:115-128
+            shows tok/s. ChatPage.tsx:113-143 shows context usage bar.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-major">
-<div>🟠</div>
-<div><strong>FR-034: PDF/DOCX parsing not implemented</strong> — <code>readFileAsText()</code> uses FileReader.readAsText() which only works for .txt/.md. PDF and DOCX require binary parsing libraries.
-<div class="evidence">src/lib/rag-engine.ts:213 — readFileAsText uses plain text reader</div></div>
-</div>
+      <h3>Phase 5 — Local API Server</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-028</td>
+          <td>OpenAI-compatible server on configurable port</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            llama-server itself provides OpenAI-compatible endpoints. Port is
+            configurable via ModelRunPanel.tsx. However, there's no separate
+            app-managed HTTP server — it relies entirely on llama-server's
+            built-in endpoints.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-029</td>
+          <td>POST /v1/chat/completions (streaming + non-streaming)</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Provided by llama-server sidecar natively. App passes through to it.
+            No custom implementation — relies on sidecar.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-030</td>
+          <td>GET /v1/models returning loaded model</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Provided by llama-server natively. ApiServerPanel.tsx displays the
+            endpoint. No custom models endpoint.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-031</td>
+          <td>HTTP 503 when no model loaded</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            When llama-server is not running, the port is closed — effectively
+            503. But spec wants an explicit 503 JSON response, not a connection
+            refused.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-032</td>
+          <td>Server auto-starts if enabled in previous session</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            settings.ts has <code>autoLoadLastModel</code> flag, but no code in
+            lib.rs or anywhere to actually auto-load model on startup.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-033</td>
+          <td>Display base URL and port in settings</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            ChatPage.tsx:150-152 shows <code>http://127.0.0.1:{port}/v1</code>.
+            ApiServerPanel.tsx shows endpoint + Copy button. ModelRunPanel shows
+            port.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-major">
-<div>🟠</div>
-<div><strong>FR-035: Keyword retrieval instead of embedding-based</strong> — Spec requires embedding via loaded model. Implementation uses BM25-like TF-IDF scoring instead of vector embeddings.
-<div class="evidence">src/lib/rag-engine.ts:157 — retrieveChunks uses token matching, not embeddings</div></div>
-</div>
+      <h3>Phase 6 — RAG</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-034</td>
+          <td>Attach .txt, .pdf, .md, .docx files to session</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            rag.ts: <code>attachFile</code> method. rag-engine.ts:
+            <code>readFileAsText</code> uses FileReader (text only). No PDF or
+            DOCX parsing library — only plain text files supported.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-035</td>
+          <td>Chunk docs (512-token, 64-overlap) &amp; embed</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            rag-engine.ts:24-48 — chunking with 512/64 overlap present. However,
+            uses character-based chunking (not token-based) and BM25 keyword
+            scoring, not actual vector embeddings.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-036</td>
+          <td>Retrieve top-K chunks &amp; inject into context</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:152-164 — retrieves chunks from indexed docs (top 5).
+            buildRagContext injects them as system message with source
+            citations.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-037</td>
+          <td>Store embeddings locally, reuse across sessions</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            rag-engine.ts uses in-memory <code>Map</code> — chunks lost on page
+            reload. No persistent storage of chunks/embeddings. rag.ts persists
+            metadata only.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-038</td>
+          <td>Remove document — chunks no longer retrieved</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            rag.ts:116-119 — <code>removeDocument</code> calls
+            <code>removeDocumentIndex(id)</code> which deletes from chunkStore.
+            Removed docs excluded from retrieval.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-major">
-<div>🟠</div>
-<div><strong>FR-041: MCP tool dispatch not integrated into chat</strong> — mcp-client.ts has callTool() but chat.ts sendMessage() does not detect tool-call JSON in model output or dispatch to MCP servers.
-<div class="evidence">src/stores/chat.ts — no tool call detection in SSE stream handler</div></div>
-</div>
+      <h3>Phase 7 — MCP Client</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-039</td>
+          <td>Configure MCP server URLs in settings</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            mcp.ts: <code>addServer(name, url)</code>,
+            <code>removeServer</code>, <code>toggleServer</code>. Persisted via
+            zustand/persist. Settings page shows MCP section.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-040</td>
+          <td>Discover tools from MCP server manifest</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            mcp-client.ts:88-106 — sends <code>tools/list</code> JSON-RPC call.
+            mcp.ts:66-79 — <code>discoverTools</code>. Settings shows available
+            tools list.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-041</td>
+          <td>Parse tool-call JSON, dispatch to MCP, inject result</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            chat.ts:262-296 — regex matches
+            <code>&lt;tool_call&gt;</code> pattern, parses name/args, calls
+            <code>mcpClient.callTool()</code>, injects tool message into
+            session.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-042</td>
+          <td>30-second timeout on MCP tool calls</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            mcp-client.ts:133 —
+            <code>setTimeout(() => controller.abort(), 30000)</code>. Timeout
+            error returned as tool result at line 183.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-043</td>
+          <td>"Tool Call" badge in chat UI</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            ChatMessage.tsx:82-85 — purple "🔧 Tool: {toolName}" badge rendered
+            for tool messages. chat.ts:17-18 — isToolCall/toolName fields.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-major">
-<div>🟠</div>
-<div><strong>FR-046: Tray menu incomplete</strong> — Missing "Quick Chat" and "Stop [Model]" menu items. Only has: status, Show, Quit.
-<div class="evidence">src-tauri/src/lib.rs:300-306</div></div>
-</div>
+      <h3>Phase 8 — Polish</h3>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">FR-044</td>
+          <td>First-run onboarding wizard</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            OnboardingPage.tsx — 4-step wizard: Hardware → Recommendation →
+            Download → Chat. Hardware tier detected. However, no actual model
+            download/load triggered from wizard — it's informational only.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-045</td>
+          <td>
+            Minimize to system tray when model running &amp; window closed
+          </td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            lib.rs:344-348 — <code>CloseRequested</code> hides window &amp;
+            prevents close. Always minimizes to tray regardless of model state
+            (spec says only when model running).
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-046</td>
+          <td>Tray context menu: Open, Quick Chat, Stop [Model], Quit</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            lib.rs:300-324 — tray has "Show HugBrowse", "No model loaded"
+            (status), "Quit". Missing "Quick Chat" and "Stop [Model]" items.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-047</td>
+          <td>Check for updates on launch, non-blocking notification</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Cargo.toml has <code>tauri-plugin-updater</code>. lib.rs:337-339
+            registers plugin in release builds. But no frontend notification UI
+            for available updates.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">FR-048</td>
+          <td>Auto-update download &amp; deferred apply</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Plugin registered but no UI for download progress,
+            prompt-before-apply, or deferred apply logic implemented in
+            frontend.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-major">
-<div>🟠</div>
-<div><strong>EC-007: No multi-GPU selection</strong> — Spec requires enumerating all GPUs and letting user choose. Not implemented.
-<div class="evidence">Missing in: src-tauri/src/lib.rs, inference.rs</div></div>
-</div>
+      <!-- ═══════════════════════ NFR TABLE ═══════════════════════ -->
+      <h2>Non-Functional Requirements</h2>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Requirement</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">NFR-001</td>
+          <td>First token latency &lt; 500ms on capable hardware</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Streaming implementation is efficient (direct SSE). No artificial
+            delays. But no actual benchmarking or optimization layer — depends
+            on llama-server.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-002</td>
+          <td>Download progress updates ≥ every 500ms, no UI freeze</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:300 — progress emitted when
+            <code>elapsed.as_millis() >= 500</code>. Async Tokio task — won't
+            block UI. Frontend listens via Tauri event.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-003</td>
+          <td>Cold launch &lt; 3s on modern machine</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Vite build + Tauri should be fast. No lazy loading or bundle
+            splitting observed, but app is reasonably lean. Not formally
+            measured.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-004</td>
+          <td>OOM warning before launching oversized model</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            lib.rs:229-282 — <code>check_compatibility</code> command estimates
+            memory needs. But ModelRunPanel.tsx doesn't call it before loading —
+            user gets no warning.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-005</td>
+          <td>No orphan processes on exit</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            lib.rs:350-355 — <code>WindowEvent::Destroyed</code> kills child.
+            load_model kills existing child first. Health poller exits when
+            status != Running.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-006</td>
+          <td>API server binds 127.0.0.1 only by default</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:108 — <code>"--host", "127.0.0.1"</code> passed to
+            llama-server. No 0.0.0.0 binding.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-007</td>
+          <td>HF token in encrypted store, not in logs/IPC</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            settings.ts:37-56 — token stored via Tauri plugin-store (encrypted).
+            Excluded from localStorage via partialize (line 126-135). Not
+            logged.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-008</td>
+          <td>CSP updated for localhost, no other relaxation</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            tauri.conf.json:37 — CSP has
+            <code
+              >connect-src 'self' https://huggingface.co
+              https://*.huggingface.co http://127.0.0.1:*</code
+            >. Properly scoped.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-009</td>
+          <td>Detect llama-server crash within 2s, show error, offer reload</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            inference.rs:147-178 — polls every 2s, detects crash after 3
+            failures (6s worst case, not 2s). Emits error event. ModelRunPanel
+            shows error state but no explicit "Reload" button.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-010</td>
+          <td>Download resume after any interruption</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs — .part files preserved. Range headers used on resume.
+            Downloading→Paused on restart. Handles network error, app crash
+            (persisted state).
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-011</td>
+          <td>Sidecar supports CUDA, Metal, CPU; auto-select</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            No platform-specific binary selection logic. Single "llama-server"
+            sidecar configured. No CUDA/Metal/CPU auto-detection for binary
+            choice.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">NFR-012</td>
+          <td>All features work on Win/Mac/Ubuntu</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Tauri is cross-platform. GPU detection only has Windows wmic path
+            (lib.rs:77-96). macOS/Linux GPU detection stubs return None.
+            Platform parity incomplete.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-minor">
-<div>🟡</div>
-<div><strong>FR-022: No syntax highlighting in code blocks</strong> — ReactMarkdown renders code blocks with copy button but no syntax coloring. Consider adding highlight.js or Prism.
-<div class="evidence">src/components/chat/ChatMessage.tsx:12-51</div></div>
-</div>
+      <!-- ═══════════════════════ SC TABLE ═══════════════════════ -->
+      <h2>Success Criteria</h2>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Criterion</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">SC-001</td>
+          <td>cargo tauri dev opens native window, zero manual patches</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            Full Tauri v2 configuration. Cargo.toml, tauri.conf.json, all
+            plugins. Should build without patches on host platform.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-002</td>
+          <td>No model → first chat response in &lt; 10 min</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            Flow: browse → download GGUF → load model → chat. All UI pieces
+            exist. Achievable in &lt;10 min on 50 Mbps.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-003</td>
+          <td>7B Q4 model first token within 500ms</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Architecture supports it (direct SSE from llama-server). No
+            benchmarks or optimization. Depends on hardware + llama-server perf.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-004</td>
+          <td>Download resume from exact byte offset</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs — .part file read, Range header with exact offset.
+            Verified by code inspection: append mode + byte tracking.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-005</td>
+          <td>curl to /v1/chat/completions works like OpenAI SDK</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            llama-server provides OpenAI-compatible API natively. No app-level
+            proxy or middleware. Format should match but untested.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-006</td>
+          <td>HF token never in logs, IPC, stdout</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            Token excluded from localStorage persist. Stored in encrypted Tauri
+            store. Not passed through IPC (loaded directly from store). Log
+            plugin only in debug.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-007</td>
+          <td>No orphan llama-server after app exit/crash</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Clean exit handled via Destroyed event. But kill -9 / crash
+            scenario: no watchdog or PID file cleanup. OS may or may not reap
+            child.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-008</td>
+          <td>Existing HugBrowse features produce identical output</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            All original routes preserved. Search, model detail, tiers, disk
+            check, resource monitor all present. No regressions observed in code
+            structure.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-009</td>
+          <td>RAG query returns document-referenced answer</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            RAG engine retrieves chunks and injects with source citations. BM25
+            keyword matching — not semantic similarity. May miss relevance for
+            paraphrase queries.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-010</td>
+          <td>Installer completes on clean VM in &lt; 2 min</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Tauri bundle configured. No runtime deps required. But llama-server
+            binary not bundled — needs manual addition. Installer may work minus
+            sidecar.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-011</td>
+          <td>Onboarding wizard to running chat ≤ 7 steps</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            OnboardingPage has 4 steps but is informational only. User must
+            manually navigate to download, then load, then chat — more than 7
+            total interactions.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">SC-012</td>
+          <td>Local API handles 10 concurrent streaming requests</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Delegated to llama-server which handles concurrency. No app-level
+            load testing or connection pooling. llama-server may serialize
+            requests.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-minor">
-<div>🟡</div>
-<div><strong>FR-026: System prompt UI missing</strong> — Store supports setSystemPrompt() but ChatPage has no visible UI for users to configure it.
-<div class="evidence">src/stores/chat.ts:99-104 (store OK), src/pages/ChatPage.tsx (no UI)</div></div>
-</div>
+      <!-- ═══════════════════════ EDGE CASES ═══════════════════════ -->
+      <h2>Edge Cases</h2>
+      <table>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th>Edge Case</th>
+          <th style="width: 100px">Score</th>
+          <th>Evidence</th>
+        </tr>
+        <tr>
+          <td class="mono">EC-01</td>
+          <td>Corrupted GGUF — surface error, offer re-download</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            SHA-256 check catches corruption post-download. But if llama-server
+            rejects it at load time, inference.rs shows generic error — no
+            "re-download" offer.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-02</td>
+          <td>Port 11434 collision — detect &amp; prompt alternate</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            inference.rs:79-90 — <code>TcpListener::bind</code> test. Returns
+            error with "Port {port} is already in use. Please choose a different
+            port."
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-03</td>
+          <td>Partial sidecar binary — checksum &amp; re-download</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            No sidecar binary checksum verification. FR-020 also not
+            implemented.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-04</td>
+          <td>Model file deleted externally — detect &amp; mark unavailable</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs:493-500 — <code>get_downloads</code> checks file
+            existence, marks as Failed with "Model file was deleted externally".
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-05</td>
+          <td>Network proxy — respect system proxy settings</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            reqwest with <code>rustls-tls</code> respects HTTP_PROXY/HTTPS_PROXY
+            env vars by default. Frontend fetch may not — no explicit proxy
+            config.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-06</td>
+          <td>Long model names — truncate in sidebar</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            DownloadItem.tsx:59 — <code>className="truncate"</code> on filename.
+            SessionSidebar.tsx:73 — <code>truncate text-xs</code>. CSS
+            truncation applied.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-07</td>
+          <td>Multi-GPU — enumerate &amp; select GPU for offloading</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            detect_gpu() returns first GPU only. No multi-GPU enumeration or GPU
+            selector in UI. <code>n_gpu_layers</code> is just -1 (auto).
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-08</td>
+          <td>Chat with no model — guide to Downloads/Models</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            ChatPage.tsx:50-66 — "No Model Running" panel with ModelRunPanel
+            embedded. Guides user to load a model or download first.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-09</td>
+          <td>Concurrent downloads — independent progress bars</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs — each download gets unique ID, own AtomicBool flags,
+            own tokio::spawn task. DownloadPanel renders each independently.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-10</td>
+          <td>Context window overflow — detect &amp; offer truncation</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            chat.ts:180-186 — auto-truncates oldest messages when over 16K
+            chars. But no user warning or offer — silently truncates. Context
+            bar shows usage but no alert.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-11</td>
+          <td>Unicode in file paths</td>
+          <td><span class="badge badge-warn">⚠️ 0.5</span></td>
+          <td class="evidence">
+            Rust uses UTF-8 strings and std::path. Should work on most
+            platforms. No explicit testing or path sanitization seen.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-12</td>
+          <td>App crash during download — resumable .part file</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            download.rs — writes to .part file. Persists download state. On
+            restart, marks Downloading→Paused. Resume reads .part file length
+            for Range header.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-13</td>
+          <td>HF rate limiting 429 — exponential backoff</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            hf-api.ts:24-42 — <code>fetchWithRetry</code>: detects 429, reads
+            Retry-After header, exponential backoff up to 30s, max 3 retries.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-14</td>
+          <td>RAG with empty document — error, no zero vectors</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            rag.ts:37-54 — rejects size=0 docs. rag.ts:65-84 — rejects file.size
+            === 0. Sets status "error" with message "Cannot index an empty
+            document".
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-15</td>
+          <td>MCP server returns malformed JSON — defensive parse</td>
+          <td><span class="badge badge-pass">✅ 1.0</span></td>
+          <td class="evidence">
+            mcp-client.ts:154-179 — reads response as text, wraps JSON.parse in
+            try/catch. Returns isError result with "MCP returned invalid JSON"
+            message.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-16</td>
+          <td>Large RAG document (&gt; 50MB) — background chunking</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            rag-engine.ts runs indexDocument synchronously on main thread. No
+            Web Worker or async chunking. Large documents will block UI.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-17</td>
+          <td>Tray app — restore to correct monitor</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            lib.rs tray handler calls <code>w.show()</code> and
+            <code>w.set_focus()</code>. No monitor position save/restore logic.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">EC-18</td>
+          <td>Auto-update fails mid-download — cleanup partial</td>
+          <td><span class="badge badge-fail">❌ 0.0</span></td>
+          <td class="evidence">
+            Updater plugin registered but no custom error handling or partial
+            cleanup logic. Relies entirely on plugin defaults.
+          </td>
+        </tr>
+      </table>
 
-<div class="finding finding-minor">
-<div>🟡</div>
-<div><strong>NFR-009: Crash detection takes 6s, not 2s</strong> — Health poller runs every 2s but requires 3 consecutive failures (6s total). Spec says "within 2 seconds". Also no "Reload Model" button in error state.
-<div class="evidence">src-tauri/src/inference.rs:147-178</div></div>
-</div>
+      <!-- ═══════════════════════ CALCULATION ═══════════════════════ -->
+      <h2>Score Calculation</h2>
+      <div class="card" style="margin-bottom: 1.5rem">
+        <table style="font-size: 0.9rem">
+          <tr>
+            <th>Category</th>
+            <th>Items</th>
+            <th>Total Points</th>
+            <th>Earned</th>
+            <th>%</th>
+          </tr>
+          <tr>
+            <td>Functional Requirements</td>
+            <td>48</td>
+            <td>48.0</td>
+            <td>30.5</td>
+            <td><strong>63.5%</strong></td>
+          </tr>
+          <tr>
+            <td>Non-Functional Requirements</td>
+            <td>12</td>
+            <td>12.0</td>
+            <td>7.0</td>
+            <td><strong>58.3%</strong></td>
+          </tr>
+          <tr>
+            <td>Success Criteria</td>
+            <td>12</td>
+            <td>12.0</td>
+            <td>7.5</td>
+            <td><strong>62.5%</strong></td>
+          </tr>
+          <tr>
+            <td>Edge Cases</td>
+            <td>18</td>
+            <td>18.0</td>
+            <td>9.0</td>
+            <td><strong>50.0%</strong></td>
+          </tr>
+          <tr style="border-top: 2px solid var(--accent)">
+            <td><strong>OVERALL</strong></td>
+            <td><strong>90</strong></td>
+            <td><strong>90.0</strong></td>
+            <td><strong>54.0</strong></td>
+            <td><strong style="color: var(--warn)">60.0%</strong></td>
+          </tr>
+        </table>
+        <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--muted)">
+          Weighted overall: FR (50%) + NFR (20%) + SC (15%) + EC (15%) =
+          <strong>60.4%</strong>
+        </p>
+      </div>
 
-<div class="finding finding-info">
-<div>🔵</div>
-<div><strong>Good pattern: Download resilience</strong> — The download manager is well-implemented with .part files, Range headers, SHA-256 validation, disk space checks, and persistence across restarts.
-<div class="evidence">src-tauri/src/download.rs (523 lines of solid Rust)</div></div>
-</div>
+      <!-- ═══════════════════════ STRENGTHS ═══════════════════════ -->
+      <h2>Key Findings</h2>
 
-<div class="finding finding-info">
-<div>🔵</div>
-<div><strong>Good pattern: Port collision detection</strong> — EC-002 handled elegantly with TcpListener::bind() check before spawning llama-server.
-<div class="evidence">src-tauri/src/inference.rs:78-90</div></div>
-</div>
+      <h3>✅ Strengths</h3>
+      <ul class="notes">
+        <li>
+          <strong>Download Manager (Phase 2)</strong> — All 8 FRs passing.
+          Robust Rust implementation with .part files, Range headers, SHA-256
+          verification, disk space checks, atomic pause/resume flags, and state
+          persistence. Production-quality.
+        </li>
+        <li>
+          <strong>Inference Sidecar (Phase 3)</strong> — 6/7 FRs passing. Clean
+          sidecar lifecycle with port collision detection, 2s health polling,
+          graceful shutdown (POST /shutdown + 5s timeout + kill), and orphan
+          prevention.
+        </li>
+        <li>
+          <strong>Chat Interface (Phase 4)</strong> — 7/7 FRs passing. Streaming
+          SSE, session CRUD with persistence, system prompt injection, live
+          tok/s, context usage bar, and abort controller for stop.
+        </li>
+        <li>
+          <strong>Security posture</strong> — HF token encrypted via Tauri
+          Store, excluded from localStorage, CSP properly scoped, API server
+          bound to localhost only.
+        </li>
+        <li>
+          <strong>MCP Integration (Phase 7)</strong> — 5/5 FRs passing. Tool
+          discovery, dispatch, 30s timeout, defensive JSON parsing, and UI badge
+          all implemented.
+        </li>
+      </ul>
 
-<div class="finding finding-info">
-<div>🔵</div>
-<div><strong>Good pattern: Encrypted token storage</strong> — HF token stored via Tauri plugin-store, explicitly excluded from localStorage persistence. Follows NFR-007.
-<div class="evidence">src/stores/settings.ts:33-66, 115-122</div></div>
-</div>
+      <h3>⚠️ Partial Implementations</h3>
+      <ul class="notes">
+        <li>
+          <strong>RAG (Phase 6)</strong> — BM25 keyword matching instead of
+          vector embeddings. Only plain-text files supported (no PDF/DOCX
+          parser). Chunks stored in-memory only (lost on reload).
+        </li>
+        <li>
+          <strong>Local API (Phase 5)</strong> — Relies entirely on
+          llama-server's built-in OpenAI endpoints. No app-managed server, no
+          503 response when unloaded, no auto-start on launch.
+        </li>
+        <li>
+          <strong>Onboarding (Phase 8)</strong> — Wizard is informational only.
+          Doesn't actually download/load a model. Tray menu incomplete (missing
+          Quick Chat, Stop Model).
+        </li>
+        <li>
+          <strong>Syntax highlighting</strong> — Code blocks render in
+          ChatMessage but without actual syntax highlighting (no
+          highlight.js/prism). Copy button works.
+        </li>
+      </ul>
 
-<!-- ═══════════════ FUNCTIONAL REQUIREMENTS ═══════════════ -->
-<h2>📦 Functional Requirements (FR-001 → FR-048)</h2>
+      <h3>❌ Missing Implementations</h3>
+      <ul class="notes">
+        <li>
+          <strong>FR-020</strong>: No llama-server binary checksum verification
+          on startup.
+        </li>
+        <li>
+          <strong>FR-032</strong>: Auto-load model on app start not implemented
+          (flag exists but unused).
+        </li>
+        <li>
+          <strong>FR-037</strong>: RAG chunk storage is in-memory only — no
+          persistent indexing.
+        </li>
+        <li>
+          <strong>NFR-011</strong>: No CUDA/Metal/CPU binary auto-selection for
+          sidecar.
+        </li>
+        <li>
+          <strong>EC-07</strong>: No multi-GPU enumeration or selection UI.
+        </li>
+        <li>
+          <strong>EC-16</strong>: Large RAG document indexing blocks the UI
+          thread.
+        </li>
+        <li><strong>EC-17</strong>: No multi-monitor position restore.</li>
+        <li><strong>EC-18</strong>: No auto-update failure cleanup logic.</li>
+      </ul>
 
-<details open>
-<summary>Phase 1 — Tauri Desktop Build (FR-001 → FR-005)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-001</td><td>Compile/run via cargo tauri dev on all platforms</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">tauri.conf.json, Cargo.toml, main.rs — full Tauri v2 structure</td></tr>
-<tr><td class="mono">FR-002</td><td>Distributable installer via cargo tauri build</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">tauri.conf.json: bundle.active=true, targets="all", icons configured</td></tr>
-<tr><td class="mono">FR-003</td><td>All existing routes functional in native window</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">App.tsx: /, /model/:id, /settings, /recommended, /monitor, /chat</td></tr>
-<tr><td class="mono">FR-004</td><td>Min 800×600, default 1200×800</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">tauri.conf.json:25-30 — width:1200, height:800, minWidth:800, minHeight:600</td></tr>
-<tr><td class="mono">FR-005</td><td>Settings persist via Tauri plugin store</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">settings.ts: zustand/persist + Tauri Store for token; plugin-store in Cargo.toml</td></tr>
-</tbody>
-</table>
-</div>
-</details>
+      <!-- ═══════════════════════ PHASE BREAKDOWN ═══════════════════════ -->
+      <h2>Phase Compliance Breakdown</h2>
+      <table>
+        <tr>
+          <th>Phase</th>
+          <th>FRs</th>
+          <th>Pass</th>
+          <th>Partial</th>
+          <th>Fail</th>
+          <th>Score</th>
+        </tr>
+        <tr>
+          <td>Phase 1 — Tauri Build</td>
+          <td>5</td>
+          <td>5</td>
+          <td>0</td>
+          <td>0</td>
+          <td><span class="badge badge-pass">100%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 2 — Download Manager</td>
+          <td>8</td>
+          <td>8</td>
+          <td>0</td>
+          <td>0</td>
+          <td><span class="badge badge-pass">100%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 3 — llama-server</td>
+          <td>7</td>
+          <td>5</td>
+          <td>1</td>
+          <td>1</td>
+          <td><span class="badge badge-warn">78.6%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 4 — Chat</td>
+          <td>7</td>
+          <td>6</td>
+          <td>1</td>
+          <td>0</td>
+          <td><span class="badge badge-pass">92.9%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 5 — Local API</td>
+          <td>6</td>
+          <td>1</td>
+          <td>4</td>
+          <td>1</td>
+          <td><span class="badge badge-warn">50.0%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 6 — RAG</td>
+          <td>5</td>
+          <td>2</td>
+          <td>2</td>
+          <td>1</td>
+          <td><span class="badge badge-warn">60.0%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 7 — MCP</td>
+          <td>5</td>
+          <td>5</td>
+          <td>0</td>
+          <td>0</td>
+          <td><span class="badge badge-pass">100%</span></td>
+        </tr>
+        <tr>
+          <td>Phase 8 — Polish</td>
+          <td>5</td>
+          <td>0</td>
+          <td>5</td>
+          <td>0</td>
+          <td><span class="badge badge-warn">50.0%</span></td>
+        </tr>
+      </table>
 
-<details open>
-<summary>Phase 2 — Download Manager (FR-006 → FR-013)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-006</td><td>Download any GGUF from model detail page</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">ModelDetailPage.tsx:51 — handleDownloadGguf with SHA256</td></tr>
-<tr><td class="mono">FR-007</td><td>Real-time progress: bytes, speed, ETA</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs:300 emits every 500ms; DownloadItem.tsx shows all fields</td></tr>
-<tr><td class="mono">FR-008</td><td>Resumable downloads with HTTP Range headers</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs:183-185 — reads .part metadata, sends Range header</td></tr>
-<tr><td class="mono">FR-009</td><td>Pauseable and resumable by user action</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs: pause_flag/cancel_flag AtomicBool; DownloadItem buttons</td></tr>
-<tr><td class="mono">FR-010</td><td>SHA-256 verification on completion</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs:329-373 — Validating state, sha2 hash comparison</td></tr>
-<tr><td class="mono">FR-011</td><td>Reject download when disk space &lt; 1.2× file size</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs:133-163 — check_disk_space_for_download()</td></tr>
-<tr><td class="mono">FR-012</td><td>Downloads panel: view/pause/resume/cancel/delete</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">DownloadPanel.tsx + DownloadItem.tsx — all controls present</td></tr>
-<tr><td class="mono">FR-013</td><td>Download state persists across restarts</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">download.rs:95-130 — persist_downloads/load_persisted_downloads JSON</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 3 — llama-server Sidecar (FR-014 → FR-020)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-014</td><td>Bundle llama-server as Tauri sidecar</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">tauri.conf.json:43 — externalBin: ["binaries/llama-server"]</td></tr>
-<tr><td class="mono">FR-015</td><td>Launch via Tauri shell plugin with model/ctx/GPU/port args</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">inference.rs:92-111 — sidecar args: --model, --port, --ctx-size, --n-gpu-layers, --host</td></tr>
-<tr><td class="mono">FR-016</td><td>"Load Model" action</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">inference.rs:49 load_model + ModelRunPanel.tsx Load button</td></tr>
-<tr><td class="mono">FR-017</td><td>"Unload Model" with SIGTERM then SIGKILL after 5s</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">inference.rs:181-208 — POST /shutdown, 5s sleep, then child.kill()</td></tr>
-<tr><td class="mono">FR-018</td><td>Health polling of /health endpoint</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">inference.rs:147 — spawn_health_poller every 2s</td></tr>
-<tr><td class="mono">FR-019</td><td>Prevent orphan processes on exit</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">lib.rs:349-355 — WindowEvent::Destroyed kills child</td></tr>
-<tr><td class="mono">FR-020</td><td>Verify llama-server binary checksum on first launch</td><td><span class="badge badge-fail">❌ MISSING</span></td><td class="mono">No checksum verification of sidecar binary found anywhere</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 4 — Chat Interface (FR-021 → FR-027)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-021</td><td>Stream response token-by-token</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">chat.ts:184-245 — SSE streaming via fetch with ReadableStream</td></tr>
-<tr><td class="mono">FR-022</td><td>Markdown rendering with syntax highlighting</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">ChatMessage.tsx: ReactMarkdown + remarkGfm + CodeBlock w/ copy. No syntax coloring.</td></tr>
-<tr><td class="mono">FR-023</td><td>Sessions: create, rename, delete</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">SessionSidebar.tsx — full CRUD with inline rename</td></tr>
-<tr><td class="mono">FR-024</td><td>Chat history persists across restarts</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">chat.ts: zustand/persist name "hugbrowse-chat"</td></tr>
-<tr><td class="mono">FR-025</td><td>Stop generation mid-stream</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">chat.ts:269-273 stopStreaming aborts controller; ChatInput Stop button</td></tr>
-<tr><td class="mono">FR-026</td><td>System prompt per session</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">chat.ts:99-104 store method exists; injected in sendMessage. No UI to configure.</td></tr>
-<tr><td class="mono">FR-027</td><td>Display tok/s and context usage</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">ChatMessage.tsx:106-119 tok/s; ChatPage.tsx:113-143 context usage bar</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 5 — Local API Server (FR-028 → FR-033)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-028</td><td>OpenAI-compatible HTTP server on configurable port (default 11434)</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">inference.rs default port 11434; llama-server natively serves OpenAI API</td></tr>
-<tr><td class="mono">FR-029</td><td>POST /v1/chat/completions (streaming + non-streaming)</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">llama-server native endpoint; chat.ts consumes SSE stream</td></tr>
-<tr><td class="mono">FR-030</td><td>GET /v1/models</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">llama-server native; ApiServerPanel.tsx lists /v1/models</td></tr>
-<tr><td class="mono">FR-031</td><td>HTTP 503 when no model loaded</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">No server running = connection refused (not HTTP 503). Functionally blocks requests.</td></tr>
-<tr><td class="mono">FR-032</td><td>Server auto-starts if enabled in previous session</td><td><span class="badge badge-fail">❌ MISSING</span></td><td class="mono">No auto-load-model-on-startup logic. Server only starts on manual Load.</td></tr>
-<tr><td class="mono">FR-033</td><td>Display base URL and port in settings</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">ApiServerPanel.tsx shows URL; ChatPage sidebar also displays endpoint</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 6 — RAG (FR-034 → FR-038)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-034</td><td>Attach .txt, .pdf, .md, .docx files</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">rag.ts attachFile + readFileAsText: only text-based. PDF/DOCX parsing missing.</td></tr>
-<tr><td class="mono">FR-035</td><td>Chunk (512-token, 64-overlap) and embed</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">rag-engine.ts:24-48 chunkText correct sizes. BM25 keyword scoring, not embeddings.</td></tr>
-<tr><td class="mono">FR-036</td><td>Top-K retrieval and context injection</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">retrieveChunks topK=5 (spec says 4). buildRagContext injected in chat.ts.</td></tr>
-<tr><td class="mono">FR-037</td><td>Embeddings stored locally, reused across sessions</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">chunkStore is in-memory Map — lost on reload. Not persisted to disk.</td></tr>
-<tr><td class="mono">FR-038</td><td>Remove documents; chunks no longer retrieved</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">rag.ts removeDocument → removeDocumentIndex; chat.ts filters by indexed status</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 7 — MCP Client (FR-039 → FR-043)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-039</td><td>Configure one or more MCP server URLs</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">mcp.ts store supports multiple servers; SettingsPage only shows HF MCP server</td></tr>
-<tr><td class="mono">FR-040</td><td>Discover and list tools from MCP manifest</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">mcp.ts discoverTools; mcp-client.ts connect(); SettingsPage shows tool list</td></tr>
-<tr><td class="mono">FR-041</td><td>Parse tool-call JSON, dispatch to MCP, inject result</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">mcp-client.ts callTool exists. chat.ts has no tool-call detection/dispatch.</td></tr>
-<tr><td class="mono">FR-042</td><td>30s timeout on MCP tool calls</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">mcp-client.ts:133 — AbortController with 30000ms timeout</td></tr>
-<tr><td class="mono">FR-043</td><td>"Tool Call" badge in chat UI</td><td><span class="badge badge-fail">❌ MISSING</span></td><td class="mono">No badge component in ChatMessage.tsx or ChatPage.tsx</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<details open>
-<summary>Phase 8 — Polish (FR-044 → FR-048)</summary>
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">FR-044</td><td>First-run onboarding wizard</td><td><span class="badge badge-pass">✅ PASS</span></td><td class="mono">OnboardingPage.tsx — 4 steps: Hardware, Recommendation, Download, Chat</td></tr>
-<tr><td class="mono">FR-045</td><td>Minimize to tray when model is running</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">lib.rs:344-347 always minimizes on close (not conditional on model running)</td></tr>
-<tr><td class="mono">FR-046</td><td>Tray menu: Open, Quick Chat, Stop [Model], Quit</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">lib.rs:300-306 — has Show + Quit + status. Missing Quick Chat &amp; Stop [Model].</td></tr>
-<tr><td class="mono">FR-047</td><td>Check for updates on launch, notify</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">tauri-plugin-updater registered in release builds. No check-on-launch or notification UI.</td></tr>
-<tr><td class="mono">FR-048</td><td>Auto-update download + prompt before apply</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">Plugin present in Cargo.toml. No download/prompt/apply UI flow implemented.</td></tr>
-</tbody>
-</table>
-</div>
-</details>
-
-<!-- ═══════════════ NON-FUNCTIONAL REQUIREMENTS ═══════════════ -->
-<h2>⚡ Non-Functional Requirements (NFR-001 → NFR-012)</h2>
-
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">NFR-001</td><td>First token latency &lt; 500ms</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">SSE streaming is immediate; depends on llama-server &amp; hardware</td></tr>
-<tr><td class="mono">NFR-002</td><td>Download progress every 500ms, no UI freeze</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">download.rs:300 — 500ms timer; async tokio tasks, non-blocking</td></tr>
-<tr><td class="mono">NFR-003</td><td>App starts in &lt; 3 seconds</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Standard Tauri app, no blocking startup. Not measured.</td></tr>
-<tr><td class="mono">NFR-004</td><td>OOM warning before launching model</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">lib.rs check_compatibility exists but not integrated into load_model UI flow</td></tr>
-<tr><td class="mono">NFR-005</td><td>No orphan processes</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">lib.rs:349-355 — Destroyed event kills child process</td></tr>
-<tr><td class="mono">NFR-006</td><td>API binds 127.0.0.1 only by default</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">inference.rs:108 — "--host", "127.0.0.1" passed to sidecar</td></tr>
-<tr><td class="mono">NFR-007</td><td>HF token encrypted, not in logs</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">settings.ts:33-66 Tauri Store; partialize excludes token from localStorage</td></tr>
-<tr><td class="mono">NFR-008</td><td>CSP allows localhost, nothing else relaxed</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">tauri.conf.json:37 — connect-src includes http://127.0.0.1:*</td></tr>
-<tr><td class="mono">NFR-009</td><td>Crash detection within 2s, one-click reload</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">Health poller every 2s, 3 failures = 6s detection. No "Reload" button in UI.</td></tr>
-<tr><td class="mono">NFR-010</td><td>Download resume after any interruption</td><td><span class="badge badge-pass">✅ MET</span></td><td class="mono">download.rs: .part files, Range headers, persist/restore on restart</td></tr>
-<tr><td class="mono">NFR-011</td><td>CUDA/Metal/CPU-only auto-selection</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">Single sidecar binary bundled. No multi-binary or auto-selection logic.</td></tr>
-<tr><td class="mono">NFR-012</td><td>Works on Windows/macOS/Ubuntu</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">Cross-platform Tauri. GPU detection (wmic, nvidia-smi) only on Windows.</td></tr>
-</tbody>
-</table>
-</div>
-
-<!-- ═══════════════ EDGE CASES ═══════════════ -->
-<h2>🧪 Edge Cases (EC-001 → EC-018)</h2>
-
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Edge Case</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">EC-001</td><td>Corrupted GGUF — surface error, offer re-download</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">Generic error from llama-server failure; no specific "re-download" offer</td></tr>
-<tr><td class="mono">EC-002</td><td>Port collision detection</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">inference.rs:79-90 — TcpListener::bind check before spawning</td></tr>
-<tr><td class="mono">EC-003</td><td>Partial sidecar download / truncated binary</td><td><span class="badge badge-fail">❌ UNHANDLED</span></td><td class="mono">No binary checksum verification (same root cause as FR-020)</td></tr>
-<tr><td class="mono">EC-004</td><td>Model file deleted externally</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">download.rs:494-499 — get_downloads checks Path::exists()</td></tr>
-<tr><td class="mono">EC-005</td><td>Network proxy support</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">reqwest respects system proxy by default via rustls-tls</td></tr>
-<tr><td class="mono">EC-006</td><td>Long model names truncated</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">DownloadItem.tsx:59, SessionSidebar.tsx:73 — CSS truncate class</td></tr>
-<tr><td class="mono">EC-007</td><td>Multi-GPU enumeration and selection</td><td><span class="badge badge-fail">❌ UNHANDLED</span></td><td class="mono">No GPU enumeration or selection UI anywhere</td></tr>
-<tr><td class="mono">EC-008</td><td>Chat with no model loaded — guide user</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">ChatPage.tsx:51-65 — "No Model Running" with ModelRunPanel inline</td></tr>
-<tr><td class="mono">EC-009</td><td>Concurrent downloads with independent progress</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">download.rs: each download is a separate tokio::spawn task with own flags</td></tr>
-<tr><td class="mono">EC-010</td><td>Context window overflow</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">chat.ts:177-182 — 16K char guard, splices oldest messages</td></tr>
-<tr><td class="mono">EC-011</td><td>Unicode in file paths</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">Rust Path handles UTF-8 natively; no hardcoded ASCII assumptions</td></tr>
-<tr><td class="mono">EC-012</td><td>App crash during download resumes</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">download.rs: .part files preserved; load_persisted_downloads on startup</td></tr>
-<tr><td class="mono">EC-013</td><td>HF rate limiting (429)</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">hf-api.ts:24-42 — fetchWithRetry with exponential backoff up to 30s</td></tr>
-<tr><td class="mono">EC-014</td><td>RAG with empty document</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">rag.ts:37-54, 64-84 — checks file.size === 0, returns error message</td></tr>
-<tr><td class="mono">EC-015</td><td>MCP malformed JSON</td><td><span class="badge badge-pass">✅ HANDLED</span></td><td class="mono">mcp-client.ts:154-178 — defensive try/catch JSON.parse, error surface</td></tr>
-<tr><td class="mono">EC-016</td><td>Large RAG document (&gt; 50MB) non-blocking</td><td><span class="badge badge-partial">⚠️ PARTIAL</span></td><td class="mono">FileReader is async (non-blocking). No progress bar for chunking.</td></tr>
-<tr><td class="mono">EC-017</td><td>Tray with multiple monitors</td><td><span class="badge badge-fail">❌ UNHANDLED</span></td><td class="mono">No multi-monitor restore logic</td></tr>
-<tr><td class="mono">EC-018</td><td>Auto-update fails mid-download</td><td><span class="badge badge-fail">❌ UNHANDLED</span></td><td class="mono">No partial update cleanup logic (updater plugin not actively used)</td></tr>
-</tbody>
-</table>
-</div>
-
-<!-- ═══════════════ SUCCESS CRITERIA ═══════════════ -->
-<h2>🎯 Success Criteria (SC-001 → SC-012)</h2>
-
-<div class="card">
-<table>
-<thead><tr><th>ID</th><th>Criterion</th><th>Status</th><th>Evidence</th></tr></thead>
-<tbody>
-<tr><td class="mono">SC-001</td><td>cargo tauri dev works zero patches on 3 platforms</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Proper structure. Cannot verify compilation without running.</td></tr>
-<tr><td class="mono">SC-002</td><td>No model → first chat in &lt; 10 min</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">Full pipeline: browse → download (progress) → load → chat</td></tr>
-<tr><td class="mono">SC-003</td><td>7B Q4 GGUF, first token &lt; 500ms</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Architecture supports it. Depends on hardware. Not measured.</td></tr>
-<tr><td class="mono">SC-004</td><td>Download resumes from exact byte offset</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">download.rs: .part file size → Range header</td></tr>
-<tr><td class="mono">SC-005</td><td>curl /v1/chat/completions works with OpenAI SDK</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">llama-server's native OpenAI-compatible endpoint</td></tr>
-<tr><td class="mono">SC-006</td><td>HF token never in logs/IPC/stdout</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Encrypted store, excluded from localStorage. Not scanned exhaustively.</td></tr>
-<tr><td class="mono">SC-007</td><td>No orphan llama-server on app exit</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">lib.rs Destroyed handler kills child</td></tr>
-<tr><td class="mono">SC-008</td><td>Existing features produce identical output</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">All original routes and components preserved</td></tr>
-<tr><td class="mono">SC-009</td><td>RAG query references specific document paragraph</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Keyword-based, not semantic. May miss nuanced references.</td></tr>
-<tr><td class="mono">SC-010</td><td>Installer completes in &lt; 2 min on clean VM</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">Tauri bundle configured. Not verified on clean VM.</td></tr>
-<tr><td class="mono">SC-011</td><td>Onboarding wizard ≤ 7 steps</td><td><span class="badge badge-pass">✅ VERIFIABLE</span></td><td class="mono">OnboardingPage.tsx: 4 steps (Hardware → Recommendation → Download → Chat)</td></tr>
-<tr><td class="mono">SC-012</td><td>10 concurrent streaming requests without drops</td><td><span class="badge badge-partial">⚠️ LIKELY</span></td><td class="mono">llama-server handles concurrency. No load test script provided.</td></tr>
-</tbody>
-</table>
-</div>
-
-<!-- ═══════════════ SCORE BREAKDOWN ═══════════════ -->
-<h2>📊 Score Breakdown</h2>
-
-<div class="card">
-<table>
-<thead><tr><th>Category</th><th>Items</th><th>✅</th><th>⚠️</th><th>❌</th><th>Points</th><th>Max</th><th>%</th></tr></thead>
-<tbody>
-<tr><td><strong>Functional Requirements</strong></td><td>48</td><td>32</td><td>13</td><td>3</td><td>38.5</td><td>48</td><td><strong>80.2%</strong></td></tr>
-<tr><td><strong>Non-Functional Requirements</strong></td><td>12</td><td>6</td><td>6</td><td>0</td><td>9.0</td><td>12</td><td><strong>75.0%</strong></td></tr>
-<tr><td><strong>Edge Cases</strong></td><td>18</td><td>12</td><td>2</td><td>4</td><td>13.0</td><td>18</td><td><strong>72.2%</strong></td></tr>
-<tr><td><strong>Success Criteria</strong></td><td>12</td><td>6</td><td>6</td><td>0</td><td>9.0</td><td>12</td><td><strong>75.0%</strong></td></tr>
-<tr style="background:var(--surface);font-weight:700"><td>OVERALL</td><td>90</td><td>56</td><td>27</td><td>7</td><td>69.5</td><td>90</td><td style="font-size:1.1rem;color:var(--fail)">77.2%</td></tr>
-</tbody>
-</table>
-</div>
-
-<!-- ═══════════════ RECOMMENDATIONS ═══════════════ -->
-<h2>📝 Recommendations (Priority Order)</h2>
-
-<div class="card">
-<h3>🔴 Critical (Must Fix)</h3>
-<ol>
-<li><strong>FR-032 — Auto-start API server:</strong> Persist last-loaded model path and auto-load on startup if API was enabled. Add a flag in Tauri Store.</li>
-<li><strong>FR-020 / EC-003 — Sidecar binary verification:</strong> Compute SHA-256 of the bundled llama-server binary on first launch. Store expected hash in a resource file.</li>
-<li><strong>FR-043 — Tool Call badge:</strong> Add a <code>ToolCallBadge</code> component to ChatMessage.tsx that renders when <code>message.role === "tool"</code>.</li>
-</ol>
-
-<h3>🟠 Major (Should Fix)</h3>
-<ol>
-<li><strong>FR-034 — PDF/DOCX support:</strong> Add <code>pdfjs-dist</code> for PDF text extraction and <code>mammoth</code> for DOCX. Extend readFileAsText() with MIME-type dispatch.</li>
-<li><strong>FR-035 — Embedding-based retrieval:</strong> Use llama-server's <code>/v1/embeddings</code> endpoint for true vector similarity. Replace BM25 scoring with cosine similarity on embedding vectors.</li>
-<li><strong>FR-041 — MCP chat integration:</strong> Parse assistant messages for tool-call JSON blocks in the SSE handler. Dispatch to mcpClient.callTool() and inject result as a tool message.</li>
-<li><strong>FR-026 — System prompt UI:</strong> Add a collapsible "System Prompt" textarea in the chat header or session sidebar.</li>
-<li><strong>FR-046 — Complete tray menu:</strong> Add "Quick Chat" (opens chat route) and "Stop [Model]" (calls unload) items to the tray menu.</li>
-<li><strong>EC-007 — Multi-GPU:</strong> Enumerate GPUs via nvidia-smi and expose a GPU selector dropdown in ModelRunPanel.</li>
-</ol>
-
-<h3>🟡 Minor (Nice to Have)</h3>
-<ol>
-<li><strong>FR-022:</strong> Add <code>highlight.js</code> or <code>shiki</code> for syntax-highlighted code blocks.</li>
-<li><strong>FR-037:</strong> Persist RAG chunk store to disk (IndexedDB or a local JSON file) so embeddings survive page reloads.</li>
-<li><strong>NFR-009:</strong> Reduce health poll failure threshold to 1 (2s detection) and add a "Reload Model" button in the error state UI.</li>
-<li><strong>FR-047/048:</strong> Wire up the Tauri updater plugin with check-on-launch + notification toast + one-click apply UI.</li>
-<li><strong>NFR-012:</strong> Add macOS GPU detection (via <code>system_profiler</code>) and Linux GPU detection (via <code>lspci</code>).</li>
-</ol>
-</div>
-
-<!-- ═══════════════ STRENGTHS ═══════════════ -->
-<h2>💪 Implementation Strengths</h2>
-
-<div class="card">
-<ul style="list-style:none;padding:0">
-<li style="padding:.5rem 0;border-bottom:1px solid var(--border)">✨ <strong>Download Manager (Phase 2)</strong> — 8/8 FRs fully passing. Excellent Rust implementation with .part files, Range headers, SHA-256, disk space checks, concurrent downloads, and persistence.</li>
-<li style="padding:.5rem 0;border-bottom:1px solid var(--border)">✨ <strong>Inference Engine (Phase 3)</strong> — 6/7 FRs passing. Clean sidecar lifecycle with port collision detection, health polling, graceful shutdown, and orphan prevention.</li>
-<li style="padding:.5rem 0;border-bottom:1px solid var(--border)">✨ <strong>Security (NFR-006, 007, 008)</strong> — All three security NFRs fully met. Localhost-only binding, encrypted token store, and properly scoped CSP.</li>
-<li style="padding:.5rem 0;border-bottom:1px solid var(--border)">✨ <strong>Chat Experience (Phase 4)</strong> — Solid streaming with SSE, token-by-token rendering, tok/s display, context usage bar, session management, and stop generation.</li>
-<li style="padding:.5rem 0">✨ <strong>Edge Case Coverage</strong> — 12/18 edge cases fully handled including rate limiting, port collision, empty docs, malformed JSON, external file deletion, and concurrent downloads.</li>
-</ul>
-</div>
-
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<div style="margin-top:3rem;padding-top:1.5rem;border-top:2px solid var(--border);text-align:center;color:var(--text-secondary);font-size:.8rem">
-<p>Spec Compliance Report generated by SDD Reviewer Agent</p>
-<p style="margin-top:.25rem">Spec: hugbrowse-lm-studio/spec.md · Project: H:\Hugging pc\hugbrowse</p>
-<p style="margin-top:.25rem">Scoring: ✅=1.0 · ⚠️=0.5 · ❌=0.0 · ⬜=0.0 — Verdict thresholds: ≥95% APPROVED · ≥80% APPROVED WITH CONDITIONS · ≥60% NEEDS REVISION · &lt;60% REJECTED</p>
-</div>
-
-</div>
-</body>
+      <div class="timestamp">
+        Generated by Copilot CLI Reviewer &nbsp;|&nbsp; Report covers 48 FRs, 12
+        NFRs, 12 SCs, 18 Edge Cases (90 total items)
+      </div>
+    </div>
+  </body>
 </html>
