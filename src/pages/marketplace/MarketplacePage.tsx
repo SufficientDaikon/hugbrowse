@@ -55,10 +55,12 @@ export function MarketplacePage() {
     getFeatured,
     getTrending,
     getNewReleases,
+    getRecommended,
   } = useMarketplace();
 
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null);
   const [view, setView] = useState<"browse" | "installed">("browse");
+  const [visibleCount, setVisibleCount] = useState(20); // FR-069: Pagination — 20 items per page
 
   // Fetch registry on mount
   useEffect(() => {
@@ -69,6 +71,7 @@ export function MarketplacePage() {
   const featured = getFeatured();
   const trending = getTrending();
   const newReleases = getNewReleases();
+  const recommended = getRecommended();
   const isSearching = searchQuery.length > 0 || activeCategory !== null;
 
   if (selectedListing) {
@@ -195,7 +198,7 @@ export function MarketplacePage() {
                   {filteredListings.length} result{filteredListings.length !== 1 ? "s" : ""}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredListings.map((listing) => (
+                  {filteredListings.slice(0, visibleCount).map((listing) => (
                     <MarketplaceListingCard
                       key={listing.id}
                       listing={listing}
@@ -203,6 +206,17 @@ export function MarketplacePage() {
                     />
                   ))}
                 </div>
+                {/* FR-069: Load more pagination */}
+                {filteredListings.length > visibleCount && (
+                  <div className="text-center mt-6">
+                    <button
+                      onClick={() => setVisibleCount((c) => c + 20)}
+                      className="px-4 py-2 rounded-xl border border-[var(--border)] text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                    >
+                      Load More ({filteredListings.length - visibleCount} remaining)
+                    </button>
+                  </div>
+                )}
                 {filteredListings.length === 0 && (
                   <div className="text-center py-12">
                     <Search className="h-8 w-8 text-[var(--muted)] mx-auto mb-2 opacity-30" />
@@ -258,6 +272,24 @@ export function MarketplacePage() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {newReleases.map((listing) => (
+                        <MarketplaceListingCard
+                          key={listing.id}
+                          listing={listing}
+                          onClick={() => setSelectedListing(listing)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* FR-077: Recommended For You */}
+                {recommended.length > 0 && (
+                  <section>
+                    <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-purple-500" /> Recommended For You
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {recommended.map((listing) => (
                         <MarketplaceListingCard
                           key={listing.id}
                           listing={listing}

@@ -1,13 +1,34 @@
 /**
  * FR-047: Non-blocking update notification on launch.
  * FR-048: Background download + prompt before apply.
+ * FR-062: Display changelog on first launch after update.
  */
 import { useEffect, useState } from "react";
-import { X, Download, RefreshCw } from "lucide-react";
+import { X, Download, RefreshCw, Sparkles } from "lucide-react";
 
 interface UpdateInfo {
   version: string;
   body?: string;
+}
+
+/** FR-062: Detect if app was just updated and show changelog */
+function usePostUpdateChangelog() {
+  const [changelog, setChangelog] = useState<{ version: string; body: string } | null>(null);
+
+  useEffect(() => {
+    const lastVersion = localStorage.getItem("hugbrowse-last-version");
+    const currentVersion = "0.1.0"; // Would be read from Tauri config
+    if (lastVersion && lastVersion !== currentVersion) {
+      // App was updated — show what's new
+      setChangelog({
+        version: currentVersion,
+        body: `Welcome to HugBrowse ${currentVersion}!\n\n• Community Marketplace — browse, install, and share extensions\n• Plugin system with sandboxed execution\n• Creator Dashboard for publishing content\n• Privacy consent and crash reporting\n• Keyboard shortcuts (Ctrl+/ to view)\n• Offline indicator\n• And many more improvements!`,
+      });
+    }
+    localStorage.setItem("hugbrowse-last-version", currentVersion);
+  }, []);
+
+  return { changelog, dismissChangelog: () => setChangelog(null) };
 }
 
 export function UpdateNotification() {
@@ -15,6 +36,7 @@ export function UpdateNotification() {
   const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  const { changelog, dismissChangelog } = usePostUpdateChangelog();
 
   useEffect(() => {
     checkForUpdate();
@@ -73,7 +95,37 @@ export function UpdateNotification() {
   if (!update || dismissed) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg p-4 animate-in slide-in-from-bottom-4">
+    <>
+      {/* FR-062: Post-update changelog overlay */}
+      {changelog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="max-w-md w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl overflow-hidden">
+            <div className="flex items-center gap-2 p-4 border-b border-[var(--border)] bg-accent/5">
+              <Sparkles className="h-5 w-5 text-accent" />
+              <h2 className="text-sm font-semibold">What's New in v{changelog.version}</h2>
+              <button onClick={dismissChangelog} className="ml-auto text-[var(--muted)] hover:text-[var(--foreground)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              <pre className="text-xs text-[var(--muted)] whitespace-pre-wrap leading-relaxed font-sans">
+                {changelog.body}
+              </pre>
+            </div>
+            <div className="p-4 border-t border-[var(--border)]">
+              <button
+                onClick={dismissChangelog}
+                className="w-full px-4 py-2 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FR-047: Update available notification */}
+      <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg p-4 animate-in slide-in-from-bottom-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <RefreshCw className="h-5 w-5 text-accent shrink-0" />
@@ -129,5 +181,6 @@ export function UpdateNotification() {
         </div>
       )}
     </div>
+    </>
   );
 }

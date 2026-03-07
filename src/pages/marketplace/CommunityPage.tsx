@@ -1,5 +1,5 @@
 /** FR-098: Community discovery page */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMarketplace } from "../../stores/marketplace";
 import { registryClient } from "../../lib/marketplace/registry-client";
 import { MarketplaceListingCard } from "../../components/marketplace/ListingCard";
@@ -14,6 +14,25 @@ export function CommunityPage() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
   const [activeTab, setActiveTab] = useState<"trending" | "creators" | "following">("trending");
+
+  // FR-098: Notification count — new listings from followed creators since last check
+  const [lastCheckedAt, setLastCheckedAt] = useState<number>(() => {
+    const saved = localStorage.getItem("hugbrowse-community-last-checked");
+    return saved ? Number(saved) : Date.now();
+  });
+
+  const notificationCount = useMemo(() => {
+    if (following.size === 0) return 0;
+    return listings.filter(
+      (l) => following.has(l.authorId) && l.updatedAt > lastCheckedAt,
+    ).length;
+  }, [listings, following, lastCheckedAt]);
+
+  const clearNotifications = () => {
+    const now = Date.now();
+    setLastCheckedAt(now);
+    localStorage.setItem("hugbrowse-community-last-checked", String(now));
+  };
 
   useEffect(() => {
     registryClient.fetchCreators().then(setCreators);
@@ -55,7 +74,10 @@ export function CommunityPage() {
         ]).map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onClick={() => {
+              setActiveTab(id);
+              if (id === "following") clearNotifications();
+            }}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === id
                 ? "border-accent text-accent"
@@ -63,6 +85,12 @@ export function CommunityPage() {
             }`}
           >
             <Icon className="h-3.5 w-3.5" /> {label}
+            {/* FR-098: Notification badge on Following tab */}
+            {id === "following" && notificationCount > 0 && (
+              <span className="ml-1 flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                {notificationCount}
+              </span>
+            )}
           </button>
         ))}
       </div>

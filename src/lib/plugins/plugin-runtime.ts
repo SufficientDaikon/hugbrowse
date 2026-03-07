@@ -46,6 +46,13 @@ class PluginRuntime {
     if (this.plugins.has(extension.id)) return true;
 
     try {
+      // EC-09: Plugin API version compatibility check
+      const APP_PLUGIN_API_VERSION = 1;
+      if (manifest.apiVersion > APP_PLUGIN_API_VERSION) {
+        console.warn(`Plugin ${manifest.name} requires API v${manifest.apiVersion} but app only supports v${APP_PLUGIN_API_VERSION}`);
+        return false;
+      }
+
       // Create sandboxed iframe
       const iframe = document.createElement("iframe");
       iframe.sandbox.add("allow-scripts");

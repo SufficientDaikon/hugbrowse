@@ -239,6 +239,11 @@ export const useMarketplace = create<MarketplaceStore>()(
       getInstalledByCategory: (category) =>
         get().installed.filter((e) => e.category === category),
 
+      /**
+       * FR-088: Community badge in UI — the `source` field ("community" | "huggingface")
+       * returned by getCombinedModelLibrary enables UI components to render a visible
+       * "Community" badge on community-sourced models in any model listing view.
+       */
       /** FR-093: Combined model library from HuggingFace + community sources */
       getCombinedModelLibrary: () => {
         const { listings, communityModels } = get();

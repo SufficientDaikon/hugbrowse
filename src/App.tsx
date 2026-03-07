@@ -16,6 +16,7 @@ import { UpdateNotification } from "./components/ui/UpdateNotification";
 import { OfflineIndicator } from "./components/ui/OfflineIndicator";
 import { KeyboardShortcuts } from "./components/ui/KeyboardShortcuts";
 import { PrivacyConsent } from "./components/ui/PrivacyConsent";
+import { CreatorProfilePage } from "./pages/marketplace/CreatorProfilePage";
 import { useSettings } from "./stores/settings";
 import { useInference } from "./stores/inference";
 import { hfApi } from "./lib/hf-api";
@@ -119,6 +120,31 @@ function WindowPositionTracker() {
   return null;
 }
 
+/** FR-064: Deep link route handler */
+function DeepLinkHandler() {
+  useEffect(() => {
+    async function handleDeepLink() {
+      try {
+        const mod = await import("@tauri-apps/plugin-deep-link" as string);
+        await mod.onOpenUrl((urls: string[]) => {
+          for (const url of urls) {
+            const parsed = new URL(url);
+            if (parsed.pathname.startsWith("/model/")) {
+              window.location.pathname = `/model/${parsed.pathname.slice(7)}`;
+            } else if (parsed.pathname.startsWith("/extension/")) {
+              window.location.pathname = "/marketplace";
+            } else if (parsed.pathname.startsWith("/creator/")) {
+              window.location.pathname = `/creator/${parsed.pathname.slice(9)}`;
+            }
+          }
+        });
+      } catch { /* Deep link not available in dev */ }
+    }
+    handleDeepLink();
+  }, []);
+  return null;
+}
+
 export default function App() {
   const { onboardingComplete } = useSettings();
   const [privacyAccepted, setPrivacyAccepted] = useState(
@@ -138,6 +164,7 @@ export default function App() {
         <TokenSync />
         <AutoModelLoader />
         <WindowPositionTracker />
+        <DeepLinkHandler />
         <UpdateNotification />
         <OfflineIndicator />
         <KeyboardShortcuts />
@@ -170,6 +197,7 @@ export default function App() {
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/creator-dashboard" element={<CreatorDashboard />} />
+              <Route path="/creator/:creatorId" element={<CreatorProfilePage />} />
             </Route>
           </Routes>
         </BrowserRouter>
