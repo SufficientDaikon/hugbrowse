@@ -8,6 +8,8 @@ import { CanItRun } from "../components/compatibility/CanItRun";
 import { Badge } from "../components/ui/Badge";
 import { Skeleton } from "../components/ui/Skeleton";
 import { InfoButton } from "../components/explain/ExplainText";
+import { DownloadPanel } from "../components/download/DownloadPanel";
+import { useDownloads } from "../stores/downloads";
 import {
   formatNumber,
   formatBytes,
@@ -25,9 +27,10 @@ import {
   Code,
   FolderOpen,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { appLocalDataDir } from "@tauri-apps/api/path";
 
 type Tab = "readme" | "files" | "usage";
 
@@ -41,6 +44,24 @@ export function ModelDetailPage() {
   const { data: files } = useModelFiles(modelId);
   const [tab, setTab] = useState<Tab>("readme");
   const [copied, setCopied] = useState(false);
+  const { startDownload, downloads, init: initDownloads } = useDownloads();
+
+  useEffect(() => { initDownloads(); }, [initDownloads]);
+
+  const handleDownloadGguf = async (rfilename: string, sizeBytes: number, sha256?: string) => {
+    try {
+      const destDir = await appLocalDataDir().then(d => `${d}models/${modelId}`).catch(() => `models/${modelId}`);
+      const url = `https://huggingface.co/${modelId}/resolve/main/${rfilename}`;
+      await startDownload({ url, model_id: modelId, filename: rfilename, dest_dir: destDir, total_bytes: sizeBytes, expected_sha256: sha256 });
+    } catch (e) {
+      console.error("Download failed:", e);
+    }
+  };
+
+  const isAlreadyDownloaded = (filename: string) =>
+    Object.values(downloads).some(
+      (d) => d.model_id === modelId && d.filename === filename && (d.status === "complete" || d.status === "downloading" || d.status === "paused")
+    );
 
   if (isLoading) {
     return (
@@ -202,42 +223,62 @@ huggingface-cli download ${model.id}`;
       )}
 
       {tab === "files" && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-          {files && files.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--border)] bg-[var(--background)]">
-                  <th className="px-4 py-2 text-left font-medium text-[var(--muted)]">
-                    File
-                  </th>
-                  <th className="px-4 py-2 text-right font-medium text-[var(--muted)]">
-                    Size
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {files.map((file, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-hover)]"
-                  >
-                    <td className="px-4 py-2 font-mono text-xs text-[var(--foreground)]">
-                      {file.rfilename}
-                    </td>
-                    <td className="px-4 py-2 text-right text-xs text-[var(--muted)]">
-                      {file.size
-                        ? formatBytes(file.size)
-                        : file.lfs
-                          ? formatBytes(file.lfs.size)
-                          : "—"}
-                    </td>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+            {files && files.length > 0 ? (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-[var(--background)]">
+                    <th className="px-4 py-2 text-left font-medium text-[var(--muted)]">
+                      File
+                    </th>
+                    <th className="px-4 py-2 text-right font-medium text-[var(--muted)]">
+                      Size
+                    </th>
+                    <th className="px-4 py-2 text-right font-medium text-[var(--muted)]">
+                      Action
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="p-6 text-sm text-[var(--muted)]">No files found.</p>
-          )}
+                </thead>
+                <tbody>
+                  {files.map((file, i) => {
+                    const sizeBytes = file.lfs?.size ?? file.size ?? 0;
+                    const isGguf = file.rfilename.toLowerCase().endsWith(".gguf");
+                    const alreadyQueued = isAlreadyDownloaded(file.rfilename);
+                    return (
+                      <tr
+                        key={i}
+                        className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-hover)]"
+                      >
+                        <td className="px-4 py-2 font-mono text-xs text-[var(--foreground)]">
+                          {file.rfilename}
+                          {isGguf && <Badge variant="default" className="ml-2 text-[10px]">GGUF</Badge>}
+                        </td>
+                        <td className="px-4 py-2 text-right text-xs text-[var(--muted)]">
+                          {sizeBytes ? formatBytes(sizeBytes) : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          {isGguf && (
+                            <button
+                              disabled={alreadyQueued}
+                              onClick={() => handleDownloadGguf(file.rfilename, sizeBytes, file.lfs?.sha256)}
+                              className="flex items-center gap-1 ml-auto rounded-lg border border-hf-orange/40 bg-hf-orange/10 px-2.5 py-1 text-xs font-medium text-hf-orange hover:bg-hf-orange/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <Download className="h-3 w-3" />
+                              {alreadyQueued ? "Queued" : "Download"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="p-6 text-sm text-[var(--muted)]">No files found.</p>
+            )}
+          </div>
+          <DownloadPanel />
         </div>
       )}
 

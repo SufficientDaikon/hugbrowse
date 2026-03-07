@@ -6,6 +6,7 @@ import {
   Monitor,
   Sparkles,
   Activity,
+  MessageSquare,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSettings } from "../../stores/settings";
@@ -97,6 +98,18 @@ export function Header() {
       {/* Actions */}
       <div className="flex items-center gap-1">
         {/* Nav links */}
+        <button
+          onClick={() => navigate("/chat")}
+          className={cn(
+            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+            location.pathname === "/chat"
+              ? "bg-accent/10 text-accent dark:text-accent-light"
+              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
+          )}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Chat
+        </button>
         <button
           onClick={() => navigate("/recommended")}
           className={cn(

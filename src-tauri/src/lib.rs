@@ -1,5 +1,11 @@
 use serde::Serialize;
 use sysinfo::{System, Disks};
+use crate::download::{ManagedDownloads, DownloadManagerState};
+use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
+use std::sync::{Arc, Mutex};
+
+pub mod download;
+pub mod inference;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -274,9 +280,19 @@ fn check_compatibility(model_params_billions: f64, quantization: String) -> serd
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let download_state: ManagedDownloads = Arc::new(Mutex::new(DownloadManagerState::new()));
+    let inference_state: ManagedInference = Arc::new(Mutex::new(InferenceManager {
+        info: InferenceInfo::default(),
+        child: None,
+    }));
+    let inference_on_exit = inference_state.clone();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(download_state)
+        .manage(inference_state)
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -287,12 +303,30 @@ pub fn run() {
             }
             Ok(())
         })
+        .on_window_event(move |_window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                // Terminate llama-server on window close
+                let mut mgr = inference_on_exit.lock().unwrap();
+                if let Some(child) = mgr.child.take() {
+                    let _ = child.kill();
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             get_system_info,
             check_compatibility,
             get_live_resources,
             classify_hardware_tier,
-            check_disk_space
+            check_disk_space,
+            download::start_download,
+            download::pause_download,
+            download::resume_download,
+            download::cancel_download,
+            download::get_downloads,
+            download::delete_download_entry,
+            inference::load_model,
+            inference::unload_model,
+            inference::get_inference_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

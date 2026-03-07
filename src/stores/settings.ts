@@ -12,6 +12,7 @@ interface SettingsState {
   searchHistory: string[];
   tierOverride: HardwareTier | null;
   alertThresholds: { ram: number; vram: number; cpu: number };
+  onboardingComplete: boolean;
   setTheme: (theme: Theme) => void;
   setHfToken: (token: string | null, username?: string | null) => void;
   setDefaultSort: (sort: string) => void;
@@ -23,6 +24,7 @@ interface SettingsState {
     vram: number;
     cpu: number;
   }) => void;
+  setOnboardingComplete: (v: boolean) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -35,6 +37,7 @@ export const useSettings = create<SettingsState>()(
       searchHistory: [],
       tierOverride: null,
       alertThresholds: { ram: 85, vram: 90, cpu: 95 },
+      onboardingComplete: false,
 
       setTheme: (theme) => {
         set({ theme });
@@ -56,6 +59,8 @@ export const useSettings = create<SettingsState>()(
       setTierOverride: (tier) => set({ tierOverride: tier }),
 
       setAlertThresholds: (thresholds) => set({ alertThresholds: thresholds }),
+
+      setOnboardingComplete: (v) => set({ onboardingComplete: v }),
     }),
     { name: "hugbrowse-settings" },
   ),
