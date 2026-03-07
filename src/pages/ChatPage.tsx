@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../stores/chat";
 import { useInference } from "../stores/inference";
 import { SessionSidebar } from "../components/chat/SessionSidebar";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { ChatInput } from "../components/chat/ChatInput";
 import { ModelRunPanel } from "../components/models/ModelRunPanel";
-import { Bot } from "lucide-react";
+import { Bot, Settings2, ChevronDown, ChevronUp } from "lucide-react";
 
 export function ChatPage() {
   const {
@@ -15,9 +15,11 @@ export function ChatPage() {
     createSession,
     sendMessage,
     stopStreaming,
+    setSystemPrompt,
   } = useChatStore();
   const { info } = useInference();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showSystemPrompt, setShowSystemPrompt] = useState(false);
 
   const session = sessions.find((s) => s.id === currentSessionId);
   const isRunning = info.status === "running";
@@ -109,6 +111,37 @@ export function ChatPage() {
       {isRunning && (
         <aside className="w-72 shrink-0 border-l border-[var(--border)] bg-[var(--surface)] p-4 space-y-4 overflow-y-auto">
           <ModelRunPanel />
+
+          {/* FR-026: System Prompt Editor */}
+          {session && (
+            <div className="rounded-xl border border-[var(--border)] p-3">
+              <button
+                onClick={() => setShowSystemPrompt(!showSystemPrompt)}
+                className="flex items-center gap-2 w-full text-left"
+              >
+                <Settings2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider flex-1">
+                  System Prompt
+                </h4>
+                {showSystemPrompt ? (
+                  <ChevronUp className="h-3 w-3 text-[var(--muted)]" />
+                ) : (
+                  <ChevronDown className="h-3 w-3 text-[var(--muted)]" />
+                )}
+              </button>
+              {showSystemPrompt && (
+                <textarea
+                  value={session.systemPrompt}
+                  onChange={(e) =>
+                    setSystemPrompt(session.id, e.target.value)
+                  }
+                  placeholder="You are a helpful assistant..."
+                  rows={4}
+                  className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
+                />
+              )}
+            </div>
+          )}
           {/* Context usage estimate */}
           {session && session.messages.length > 0 && (
             <div className="rounded-xl border border-[var(--border)] p-3">

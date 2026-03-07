@@ -423,15 +423,15 @@ pub async fn load_model(
     Ok(mgr.info.clone())
 }
 
-/// Background health poller — checks llama-server every 2s (NFR-009).
-/// If 3 consecutive checks fail, marks status as Error and emits event.
+/// Background health poller — checks llama-server every 1s (NFR-009: fast crash detection).
+/// If 2 consecutive checks fail (~2s), marks status as Error and emits event.
 fn spawn_health_poller(app: AppHandle, state: ManagedInference, port: u16) {
     tokio::spawn(async move {
         let client = reqwest::Client::new();
         let url = format!("http://127.0.0.1:{port}/health");
         let mut consecutive_failures = 0u32;
         loop {
-            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
             // Stop polling if model was unloaded
             {
                 let mgr = state.lock().unwrap();
@@ -445,7 +445,7 @@ fn spawn_health_poller(app: AppHandle, state: ManagedInference, port: u16) {
                 }
                 _ => {
                     consecutive_failures += 1;
-                    if consecutive_failures >= 3 {
+                    if consecutive_failures >= 2 {
                         let mut mgr = state.lock().unwrap();
                         mgr.info.status = InferenceStatus::Error;
                         mgr.info.error = Some("llama-server crashed or became unresponsive".into());

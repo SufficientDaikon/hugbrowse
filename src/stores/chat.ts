@@ -13,6 +13,8 @@ export interface ChatMessage {
   timestamp: number;
   isStreaming?: boolean;
   tokensPerSecond?: number;
+  /** NFR-001: First token latency in milliseconds */
+  firstTokenMs?: number;
   /** FR-043: Flag for tool-call messages */
   isToolCall?: boolean;
   toolName?: string;
@@ -210,6 +212,7 @@ export const useChatStore = create<ChatStore>()(
           let buf = "";
           let tokenCount = 0;
           const streamStart = performance.now();
+          let firstTokenTime: number | null = null;
 
           while (true) {
             const { done, value } = await reader.read();
@@ -227,6 +230,10 @@ export const useChatStore = create<ChatStore>()(
                 const delta = parsed?.choices?.[0]?.delta?.content;
                 if (delta) {
                   tokenCount++;
+                  // NFR-001: Track first token latency
+                  if (tokenCount === 1) {
+                    firstTokenTime = performance.now() - streamStart;
+                  }
                   const elapsed = (performance.now() - streamStart) / 1000;
                   const tps = elapsed > 0 ? tokenCount / elapsed : 0;
                   patchSession((s) => ({
@@ -237,6 +244,7 @@ export const useChatStore = create<ChatStore>()(
                             ...m,
                             content: m.content + delta,
                             tokensPerSecond: Math.round(tps * 10) / 10,
+                            ...(firstTokenTime !== null ? { firstTokenMs: Math.round(firstTokenTime) } : {}),
                           }
                         : m,
                     ),

@@ -15,5 +15,15 @@ export default defineConfig({
     target: "esnext",
     minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_DEBUG,
+    // NFR-003: Code splitting for faster cold launch (<3s)
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          ui: ["lucide-react"],
+          markdown: ["react-markdown", "remark-gfm"],
+        },
+      },
+    },
   },
 });

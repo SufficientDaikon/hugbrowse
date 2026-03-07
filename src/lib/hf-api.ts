@@ -20,7 +20,11 @@ class HuggingFaceAPI {
     return h;
   }
 
-  // EC-013: Exponential backoff on 429 rate limiting
+  /**
+   * EC-013: HF rate limiting — exponential backoff on HTTP 429.
+   * Uses Retry-After header if present, else 2^attempt seconds (max 30s).
+   * Shows user-friendly behavior: retries silently up to maxRetries times.
+   */
   private async fetchWithRetry(
     url: string,
     init?: RequestInit,
