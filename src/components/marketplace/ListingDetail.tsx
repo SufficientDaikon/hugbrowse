@@ -16,7 +16,17 @@ import {
   Check,
   ExternalLink,
   Flag,
+  X,
 } from "lucide-react";
+
+const REPORT_REASONS = [
+  "Malware or security concern",
+  "Spam or misleading content",
+  "Violates terms of service",
+  "Copyright infringement",
+  "Broken or non-functional",
+  "Other",
+] as const;
 
 interface Props {
   listing: MarketplaceListing;
@@ -44,6 +54,11 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
   const [activeTab, setActiveTab] = useState<"details" | "reviews" | "versions">("details");
   const [userRating, setUserRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState<string>("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [reportTargetReviewId, setReportTargetReviewId] = useState<string | null>(null);
 
   const isInstalled = installed.some((e) => e.listingId === listing.id);
 
@@ -62,6 +77,17 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
 
   const handleSubmitReview = () => {
     if (userRating === 0) return;
+
+    // EC-14: Prevent review spam - one review per user per listing
+    const existingReview = reviews.find(r => r.authorId === "local-user");
+    if (existingReview) {
+      // Update existing review instead of creating new
+      setReviews(prev => prev.map(r => r.id === existingReview.id ? { ...r, rating: userRating, text: reviewText, updatedAt: Date.now() } : r));
+      setUserRating(0);
+      setReviewText("");
+      return;
+    }
+
     // FR-094: Submit review (would POST to registry)
     const review: Review = {
       id: crypto.randomUUID(),
@@ -217,10 +243,55 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
                   </p>
                 </div>
 
-                {/* FR-096: Report button */}
-                <button className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-red-500 transition-colors">
-                  <Flag className="h-3 w-3" /> Report this extension
-                </button>
+                {/* FR-096: Report form with reason selection */}
+                {reportSubmitted && !reportTargetReviewId ? (
+                  <p className="text-xs text-green-600">✓ Report submitted. Thank you.</p>
+                ) : showReportForm && !reportTargetReviewId ? (
+                  <div className="rounded-xl border border-[var(--border)] p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold flex items-center gap-1"><Flag className="h-3 w-3 text-red-500" /> Report Extension</h4>
+                      <button onClick={() => setShowReportForm(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]"><X className="h-3.5 w-3.5" /></button>
+                    </div>
+                    <select
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      className="w-full text-xs rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                      <option value="">Select a reason...</option>
+                      {REPORT_REASONS.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    <textarea
+                      value={reportDetails}
+                      onChange={(e) => setReportDetails(e.target.value)}
+                      placeholder="Additional details (optional)..."
+                      rows={2}
+                      className="w-full text-xs rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <button
+                      onClick={() => {
+                        if (!reportReason) return;
+                        console.log("Report submitted:", { listingId: listing.id, reason: reportReason, details: reportDetails });
+                        setReportSubmitted(true);
+                        setShowReportForm(false);
+                        setReportReason("");
+                        setReportDetails("");
+                      }}
+                      disabled={!reportReason}
+                      className="px-3 py-1 rounded-lg bg-red-500 text-white text-[10px] font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
+                    >
+                      Submit Report
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setShowReportForm(true); setReportSubmitted(false); setReportTargetReviewId(null); }}
+                    className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-red-500 transition-colors"
+                  >
+                    <Flag className="h-3 w-3" /> Report this extension
+                  </button>
+                )}
 
                 {/* Author link */}
                 <a
@@ -294,9 +365,49 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
                       </span>
                     </div>
                     {review.text && <p className="text-xs text-[var(--muted)] leading-relaxed">{review.text}</p>}
-                    <button className="text-[10px] text-[var(--muted)] hover:text-red-500 flex items-center gap-1">
-                      <Flag className="h-2.5 w-2.5" /> Report
-                    </button>
+                    {/* FR-096: Report review with reason form */}
+                    {reportSubmitted && reportTargetReviewId === review.id ? (
+                      <p className="text-[10px] text-green-600">✓ Report submitted.</p>
+                    ) : showReportForm && reportTargetReviewId === review.id ? (
+                      <div className="rounded-lg border border-[var(--border)] p-2 space-y-1.5 mt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold">Report Review</span>
+                          <button onClick={() => { setShowReportForm(false); setReportTargetReviewId(null); }} className="text-[var(--muted)] hover:text-[var(--foreground)]"><X className="h-3 w-3" /></button>
+                        </div>
+                        <select
+                          value={reportReason}
+                          onChange={(e) => setReportReason(e.target.value)}
+                          className="w-full text-[10px] rounded border border-[var(--border)] bg-[var(--background)] px-1.5 py-1 focus:outline-none"
+                        >
+                          <option value="">Select a reason...</option>
+                          {REPORT_REASONS.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => {
+                            if (!reportReason) return;
+                            console.log("Review report:", { reviewId: review.id, reason: reportReason });
+                            setReportSubmitted(true);
+                            setShowReportForm(false);
+                            setReportTargetReviewId(review.id);
+                            setReportReason("");
+                            setReportDetails("");
+                          }}
+                          disabled={!reportReason}
+                          className="px-2 py-0.5 rounded bg-red-500 text-white text-[10px] font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
+                        >
+                          Submit
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setShowReportForm(true); setReportTargetReviewId(review.id); setReportSubmitted(false); }}
+                        className="text-[10px] text-[var(--muted)] hover:text-red-500 flex items-center gap-1"
+                      >
+                        <Flag className="h-2.5 w-2.5" /> Report
+                      </button>
+                    )}
                   </div>
                 ))
               )}

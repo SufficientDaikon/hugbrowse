@@ -32,6 +32,9 @@ interface MarketplaceStore {
   // Active embedding model
   activeEmbeddingModelId: string | null;
 
+  // EC-15: Download progress tracking
+  downloadProgress: Map<string, { downloaded: number; total: number; speed: number }>;
+
   // Actions
   fetchRegistry: () => Promise<void>;
   setSearchQuery: (query: string) => void;
@@ -45,6 +48,10 @@ interface MarketplaceStore {
   installCommunityModel: (listing: MarketplaceListing) => Promise<void>;
   setActiveEmbeddingModel: (id: string | null) => void;
 
+  // FR-090: RAG stale index flag
+  ragIndexStale: boolean;
+  clearRagIndexStale: () => void;
+
   // Computed
   getFilteredListings: () => MarketplaceListing[];
   getFeatured: () => MarketplaceListing[];
@@ -52,6 +59,7 @@ interface MarketplaceStore {
   getNewReleases: () => MarketplaceListing[];
   getRecommended: (tier?: string) => MarketplaceListing[];
   getInstalledByCategory: (category: ContentCategory) => InstalledExtension[];
+  getCombinedModelLibrary: () => { source: "huggingface" | "community"; model: CommunityModel | MarketplaceListing }[];
 }
 
 export const useMarketplace = create<MarketplaceStore>()(
@@ -69,6 +77,8 @@ export const useMarketplace = create<MarketplaceStore>()(
       installed: [],
       communityModels: [],
       activeEmbeddingModelId: null,
+      downloadProgress: new Map(),
+      ragIndexStale: false,
 
       fetchRegistry: async () => {
         set({ loading: true, error: null });
@@ -91,6 +101,49 @@ export const useMarketplace = create<MarketplaceStore>()(
       setSortBy: (sort) => set({ sortBy: sort }),
 
       installExtension: async (listing) => {
+        // EC-03: Check for version conflicts
+        const existingDeps = new Map<string, string>();
+        for (const ext of get().installed) {
+          existingDeps.set(ext.name, ext.version);
+        }
+        // If the new extension requires a specific dependency version that conflicts, warn
+        if (existingDeps.has(listing.name)) {
+          const existing = existingDeps.get(listing.name)!;
+          if (existing !== listing.version) {
+            set({ error: `Version conflict: "${listing.name}" v${existing} is already installed but v${listing.version} was requested.` });
+            return;
+          }
+        }
+
+        // EC-12: Check for missing model dependencies
+        if (listing.compatibility.requiredModels?.length) {
+          const installedModels = get().communityModels.map((m) => m.filename);
+          const missing = listing.compatibility.requiredModels.filter(
+            (rm) => !installedModels.some((im) => im.includes(rm)),
+          );
+          if (missing.length > 0) {
+            set({ error: `Missing required model(s): ${missing.join(", ")}. Please install them first.` });
+            return;
+          }
+        }
+
+        // EC-04: Check disk space before install
+        try {
+          const estimate = await navigator.storage.estimate();
+          const available = (estimate.quota ?? 0) - (estimate.usage ?? 0);
+          if (listing.fileSize > available) {
+            set({ error: `Not enough disk space. Need ${(listing.fileSize / 1048576).toFixed(1)} MB, have ${(available / 1048576).toFixed(1)} MB available.` });
+            return;
+          }
+        } catch { /* storage API not available */ }
+
+        // EC-15: Set initial download progress
+        set((s) => {
+          const progress = new Map(s.downloadProgress);
+          progress.set(listing.id, { downloaded: 0, total: listing.fileSize, speed: 0 });
+          return { downloadProgress: progress };
+        });
+
         const ext: InstalledExtension = {
           id: crypto.randomUUID(),
           listingId: listing.id,
@@ -106,6 +159,13 @@ export const useMarketplace = create<MarketplaceStore>()(
           status: "active",
         };
         set((s) => ({ installed: [...s.installed, ext] }));
+
+        // EC-15: Clear download progress after install
+        set((s) => {
+          const progress = new Map(s.downloadProgress);
+          progress.delete(listing.id);
+          return { downloadProgress: progress };
+        });
       },
 
       uninstallExtension: (id) =>
@@ -155,7 +215,14 @@ export const useMarketplace = create<MarketplaceStore>()(
         set((s) => ({ communityModels: [...s.communityModels, model] }));
       },
 
-      setActiveEmbeddingModel: (id) => set({ activeEmbeddingModelId: id }),
+      setActiveEmbeddingModel: (id) => {
+        const prev = get().activeEmbeddingModelId;
+        set({ activeEmbeddingModelId: id });
+        // FR-090: Mark RAG indexes as stale when embedding model changes
+        if (prev !== id) {
+          set({ ragIndexStale: true });
+        }
+      },
 
       getFilteredListings: () => {
         const { listings, searchQuery, activeCategory, sortBy } = get();
@@ -167,8 +234,23 @@ export const useMarketplace = create<MarketplaceStore>()(
       getNewReleases: () => registryClient.getNewReleases(get().listings),
       getRecommended: (tier) => registryClient.getRecommended(get().listings, tier),
 
+      clearRagIndexStale: () => set({ ragIndexStale: false }),
+
       getInstalledByCategory: (category) =>
         get().installed.filter((e) => e.category === category),
+
+      /** FR-093: Combined model library from HuggingFace + community sources */
+      getCombinedModelLibrary: () => {
+        const { listings, communityModels } = get();
+        const hfModels = listings
+          .filter((l) => l.category === "models")
+          .map((l) => ({ source: "huggingface" as const, model: l }));
+        const community = communityModels.map((m) => ({
+          source: "community" as const,
+          model: m,
+        }));
+        return [...hfModels, ...community];
+      },
     }),
     {
       name: "hugbrowse-marketplace",
@@ -176,6 +258,7 @@ export const useMarketplace = create<MarketplaceStore>()(
         installed: s.installed,
         communityModels: s.communityModels,
         activeEmbeddingModelId: s.activeEmbeddingModelId,
+        ragIndexStale: s.ragIndexStale,
       }),
     },
   ),

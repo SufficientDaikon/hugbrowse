@@ -315,7 +315,12 @@ export function MarketplacePage() {
 }
 
 function InstalledExtensionRow({ extension }: { extension: import("../../lib/marketplace/types").InstalledExtension }) {
-  const { uninstallExtension, enableExtension, disableExtension } = useMarketplace();
+  const { uninstallExtension, enableExtension, disableExtension, listings } = useMarketplace();
+
+  // EC-13: Check if creator deleted the published extension
+  const listingExists = extension.listingId
+    ? listings.some((l) => l.id === extension.listingId)
+    : true;
 
   const categoryColors: Record<string, string> = {
     models: "bg-blue-500/10 text-blue-600",
@@ -337,6 +342,12 @@ function InstalledExtensionRow({ extension }: { extension: import("../../lib/mar
           {extension.updateAvailable && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
               Update: v{extension.updateAvailable}
+            </span>
+          )}
+          {/* EC-13: Warn if extension was removed from registry */}
+          {!listingExists && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-500 font-medium">
+              No longer available
             </span>
           )}
         </div>

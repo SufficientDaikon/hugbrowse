@@ -70,6 +70,13 @@ class RegistryClient {
       const res = await fetch(`${REGISTRY_URL}/index.json`, {
         headers: this.headers(),
       });
+      // EC-07: Rate-limited registry handling
+      if (res.status === 429) {
+        const retryAfter = parseInt(res.headers.get("Retry-After") || "60", 10);
+        console.warn(`Registry rate-limited. Retry after ${retryAfter}s`);
+        // Fall through to cache fallback
+        throw new Error(`Rate limited. Please try again in ${retryAfter} seconds.`);
+      }
       if (!res.ok) throw new Error(`Registry HTTP ${res.status}`);
       const data = (await res.json()) as RegistryIndex;
       this.saveCache(data);

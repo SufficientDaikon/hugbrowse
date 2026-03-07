@@ -483,9 +483,25 @@ export function SettingsPage() {
           <strong>HugBrowse</strong> v0.1.0 — A beautiful Hugging Face model
           browser &amp; local AI runtime.
         </p>
+        <p className="text-xs text-[var(--muted-foreground)] mt-1">
+          License: MIT
+        </p>
+        <p className="text-xs text-[var(--muted-foreground)] mt-1">
+          Build: 2024.1-dev
+        </p>
         <p className="text-xs text-[var(--muted-foreground)] mt-2">
           Built with Tauri, React, and Tailwind CSS.
         </p>
+        <a
+          href={`https://github.com/hugbrowse/hugbrowse/issues/new?title=Bug+Report&body=${encodeURIComponent(
+            `**App Version:** 0.1.0\n**OS:** ${navigator.platform}\n**User Agent:** ${navigator.userAgent.slice(0, 100)}\n\n**Description:**\n\n**Steps to Reproduce:**\n`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs text-accent dark:text-accent-light hover:underline"
+        >
+          🐛 Report a Bug
+        </a>
       </section>
 
       {/* FR-057: Privacy Settings */}

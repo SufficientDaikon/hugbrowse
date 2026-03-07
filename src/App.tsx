@@ -10,6 +10,7 @@ import { ChatPage } from "./pages/ChatPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { MarketplacePage } from "./pages/marketplace/MarketplacePage";
 import { CommunityPage } from "./pages/marketplace/CommunityPage";
+import { CreatorDashboard } from "./pages/marketplace/CreatorDashboard";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { UpdateNotification } from "./components/ui/UpdateNotification";
 import { OfflineIndicator } from "./components/ui/OfflineIndicator";
@@ -168,6 +169,7 @@ export default function App() {
               />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/community" element={<CommunityPage />} />
+              <Route path="/creator-dashboard" element={<CreatorDashboard />} />
             </Route>
           </Routes>
         </BrowserRouter>
