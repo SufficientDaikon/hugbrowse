@@ -116,7 +116,7 @@ export function ChatMessage({ message }: Props) {
               message.tokensPerSecond != null &&
               !message.isStreaming && (
                 <p className="mt-1 text-[10px] text-[var(--muted)] opacity-60 font-mono">
-                  {message.tokensPerSecond} tok/s
+                  {message.tokensPerSecond} tok/s{message.firstTokenMs != null ? ` · ${message.firstTokenMs}ms first token` : ""}
                 </p>
               )}
             {!isUser &&
