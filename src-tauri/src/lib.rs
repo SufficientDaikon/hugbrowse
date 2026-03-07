@@ -335,13 +335,21 @@ pub fn run() {
             }
             Ok(())
         })
-        .on_window_event(move |_window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
-                // Terminate llama-server on window close
-                let mut mgr = inference_on_exit.lock().unwrap();
-                if let Some(child) = mgr.child.take() {
-                    let _ = child.kill();
+        .on_window_event(move |window, event| {
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    // FR-046: Minimize to tray instead of quitting
+                    let _ = window.hide();
+                    api.prevent_close();
                 }
+                tauri::WindowEvent::Destroyed => {
+                    // Terminate llama-server on app exit
+                    let mut mgr = inference_on_exit.lock().unwrap();
+                    if let Some(child) = mgr.child.take() {
+                        let _ = child.kill();
+                    }
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![

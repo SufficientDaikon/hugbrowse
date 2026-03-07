@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useRag } from "./rag";
+import { retrieveChunks, buildRagContext } from "../lib/rag-engine";
 
 export type Role = "user" | "assistant" | "system" | "tool";
 
@@ -143,9 +145,26 @@ export const useChatStore = create<ChatStore>()(
 
         _abortController = new AbortController();
 
+        // FR-035: RAG context injection — retrieve relevant chunks from attached docs
+        let ragContext = "";
+        const ragDocs = useRag.getState().getSessionDocs(sessionId);
+        const indexedDocs = ragDocs.filter((d) => d.status === "indexed");
+        if (indexedDocs.length > 0) {
+          const docNames = new Map(indexedDocs.map((d) => [d.id, d.filename]));
+          const chunks = retrieveChunks(
+            content,
+            indexedDocs.map((d) => d.id),
+            5,
+          );
+          ragContext = buildRagContext(chunks, docNames);
+        }
+
         const history = [
           ...(session.systemPrompt
             ? [{ role: "system", content: session.systemPrompt }]
+            : []),
+          ...(ragContext
+            ? [{ role: "system", content: ragContext }]
             : []),
           ...session.messages.map((m) => ({
             role: m.role,

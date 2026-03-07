@@ -1,5 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  indexDocument,
+  removeDocumentIndex,
+  readFileAsText,
+} from "../lib/rag-engine";
 
 export interface RagDocument {
   id: string;
@@ -16,6 +21,8 @@ export interface RagDocument {
 interface RagStore {
   documents: RagDocument[];
   addDocument: (doc: Omit<RagDocument, "id" | "addedAt">) => string;
+  /** FR-032: Attach and index a file for a session */
+  attachFile: (sessionId: string, file: File) => Promise<string>;
   removeDocument: (id: string) => void;
   updateDocument: (id: string, patch: Partial<RagDocument>) => void;
   getSessionDocs: (sessionId: string) => RagDocument[];
@@ -52,8 +59,64 @@ export const useRag = create<RagStore>()(
         return id;
       },
 
-      removeDocument: (id) =>
-        set((s) => ({ documents: s.documents.filter((d) => d.id !== id) })),
+      /** FR-032: Attach and index a file */
+      attachFile: async (sessionId, file) => {
+        // EC-014: Reject empty files
+        if (file.size === 0) {
+          const id = crypto.randomUUID();
+          set((s) => ({
+            documents: [
+              ...s.documents,
+              {
+                id,
+                sessionId,
+                filename: file.name,
+                fileType: file.type || "text/plain",
+                fileSize: 0,
+                status: "error" as const,
+                chunkCount: 0,
+                error: "Cannot index an empty document",
+                addedAt: Date.now(),
+              },
+            ],
+          }));
+          return id;
+        }
+
+        const id = crypto.randomUUID();
+        set((s) => ({
+          documents: [
+            ...s.documents,
+            {
+              id,
+              sessionId,
+              filename: file.name,
+              fileType: file.type || "text/plain",
+              fileSize: file.size,
+              status: "indexing" as const,
+              chunkCount: 0,
+              addedAt: Date.now(),
+            },
+          ],
+        }));
+
+        try {
+          const text = await readFileAsText(file);
+          const chunkCount = indexDocument(id, text);
+          get().updateDocument(id, { status: "indexed", chunkCount });
+        } catch (err) {
+          get().updateDocument(id, {
+            status: "error",
+            error: (err as Error).message,
+          });
+        }
+        return id;
+      },
+
+      removeDocument: (id) => {
+        removeDocumentIndex(id);
+        set((s) => ({ documents: s.documents.filter((d) => d.id !== id) }));
+      },
 
       updateDocument: (id, patch) =>
         set((s) => ({
