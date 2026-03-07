@@ -102,6 +102,21 @@ export function ChatMessage({ message }: Props) {
             >
               {message.content || (message.isStreaming ? "▋" : "")}
             </ReactMarkdown>
+            {/* FR-019: Show tokens/second for assistant messages */}
+            {!isUser &&
+              message.tokensPerSecond != null &&
+              !message.isStreaming && (
+                <p className="mt-1 text-[10px] text-[var(--muted)] opacity-60 font-mono">
+                  {message.tokensPerSecond} tok/s
+                </p>
+              )}
+            {!isUser &&
+              message.isStreaming &&
+              message.tokensPerSecond != null && (
+                <p className="mt-1 text-[10px] text-[var(--muted)] opacity-60 font-mono animate-pulse">
+                  {message.tokensPerSecond} tok/s ▋
+                </p>
+              )}
           </div>
         )}
       </div>

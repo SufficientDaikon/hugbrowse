@@ -9,6 +9,7 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   isStreaming?: boolean;
+  tokensPerSecond?: number;
 }
 
 export interface ChatSession {
@@ -184,6 +185,8 @@ export const useChatStore = create<ChatStore>()(
           const reader = res.body!.getReader();
           const dec = new TextDecoder();
           let buf = "";
+          let tokenCount = 0;
+          const streamStart = performance.now();
 
           while (true) {
             const { done, value } = await reader.read();
@@ -197,13 +200,21 @@ export const useChatStore = create<ChatStore>()(
               const data = line.slice(6).trim();
               if (data === "[DONE]") break;
               try {
-                const delta = JSON.parse(data)?.choices?.[0]?.delta?.content;
+                const parsed = JSON.parse(data);
+                const delta = parsed?.choices?.[0]?.delta?.content;
                 if (delta) {
+                  tokenCount++;
+                  const elapsed = (performance.now() - streamStart) / 1000;
+                  const tps = elapsed > 0 ? tokenCount / elapsed : 0;
                   patchSession((s) => ({
                     ...s,
                     messages: s.messages.map((m) =>
                       m.id === asstId
-                        ? { ...m, content: m.content + delta }
+                        ? {
+                            ...m,
+                            content: m.content + delta,
+                            tokensPerSecond: Math.round(tps * 10) / 10,
+                          }
                         : m,
                     ),
                   }));

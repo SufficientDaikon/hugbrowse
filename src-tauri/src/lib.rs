@@ -3,6 +3,9 @@ use sysinfo::{System, Disks};
 use crate::download::{ManagedDownloads, DownloadManagerState};
 use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
 use std::sync::{Arc, Mutex};
+use tauri::menu::{MenuBuilder, MenuItemBuilder};
+use tauri::tray::TrayIconBuilder;
+use tauri::Manager;
 
 pub mod download;
 pub mod inference;
@@ -293,6 +296,29 @@ pub fn run() {
         .manage(download_state.clone())
         .manage(inference_state)
         .setup(move |app| {
+            // FR-046: System tray icon
+            let show = MenuItemBuilder::with_id("show", "Show HugBrowse").build(app)?;
+            let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
+            let menu = MenuBuilder::new(app).items(&[&show, &quit]).build()?;
+            let _tray = TrayIconBuilder::new()
+                .menu(&menu)
+                .tooltip("HugBrowse")
+                .on_menu_event(|app, event| {
+                    match event.id().as_ref() {
+                        "show" => {
+                            if let Some(w) = app.get_webview_window("main") {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
+
             // Restore persisted downloads from previous session (FR-013)
             crate::download::load_persisted_downloads(app.handle(), &download_state);
             if cfg!(debug_assertions) {

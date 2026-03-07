@@ -492,9 +492,9 @@ pub fn get_downloads(state: State<'_, ManagedDownloads>) -> Vec<DownloadEntry> {
     let mut st = state.lock().unwrap();
     // EC-004: Detect externally deleted files — mark completed downloads as missing
     for entry in st.downloads.values_mut() {
-        if entry.status == DownloadStatus::Completed {
+        if entry.status == DownloadStatus::Complete {
             if !std::path::Path::new(&entry.local_path).exists() {
-                entry.status = DownloadStatus::Error;
+                entry.status = DownloadStatus::Failed;
                 entry.error = Some("Model file was deleted externally".into());
             }
         }
