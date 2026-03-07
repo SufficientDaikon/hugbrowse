@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useRag } from "./rag";
 import { retrieveChunks, buildRagContext } from "../lib/rag-engine";
+import { mcpClient } from "../lib/mcp-client";
 
 export type Role = "user" | "assistant" | "system" | "tool";
 
@@ -12,6 +13,9 @@ export interface ChatMessage {
   timestamp: number;
   isStreaming?: boolean;
   tokensPerSecond?: number;
+  /** FR-043: Flag for tool-call messages */
+  isToolCall?: boolean;
+  toolName?: string;
 }
 
 export interface ChatSession {
@@ -255,6 +259,42 @@ export const useChatStore = create<ChatStore>()(
             }));
           }
         } finally {
+          // FR-041: Check if LLM response contains a tool call pattern
+          const finalSession = get().sessions.find(
+            (s) => s.id === sessionId,
+          );
+          const asstContent =
+            finalSession?.messages.find((m) => m.id === asstId)?.content ?? "";
+          const toolCallMatch = asstContent.match(
+            /<tool_call>\s*\{[^}]*"name"\s*:\s*"([^"]+)"[^}]*"arguments"\s*:\s*(\{[^}]*\})/,
+          );
+          if (toolCallMatch && mcpClient.getStatus() === "connected") {
+            const toolName = toolCallMatch[1];
+            try {
+              const toolArgs = JSON.parse(toolCallMatch[2]);
+              const result = await mcpClient.callTool(toolName, toolArgs);
+              if (result) {
+                const toolMsg: ChatMessage = {
+                  id: uid(),
+                  role: "tool",
+                  content:
+                    result.content
+                      ?.map((c) => c.text ?? "")
+                      .join("\n") ?? "",
+                  timestamp: Date.now(),
+                  isToolCall: true,
+                  toolName,
+                };
+                patchSession((s) => ({
+                  ...s,
+                  messages: [...s.messages, toolMsg],
+                }));
+              }
+            } catch {
+              /* tool call parse/dispatch failed — non-critical */
+            }
+          }
+
           patchSession((s) => ({
             ...s,
             messages: s.messages.map((m) =>

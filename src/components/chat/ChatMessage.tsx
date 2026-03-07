@@ -53,6 +53,7 @@ function CodeBlock({
 
 export function ChatMessage({ message }: Props) {
   const isUser = message.role === "user";
+  const isTool = message.role === "tool" || message.isToolCall;
 
   return (
     <div className={cn("flex gap-3 px-4 py-3", isUser && "flex-row-reverse")}>
@@ -61,7 +62,9 @@ export function ChatMessage({ message }: Props) {
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
           isUser
             ? "bg-hf-orange/20 text-hf-orange"
-            : "bg-accent/10 text-accent dark:text-accent-light",
+            : isTool
+              ? "bg-purple-500/20 text-purple-600 dark:text-purple-400"
+              : "bg-accent/10 text-accent dark:text-accent-light",
         )}
       >
         {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
@@ -75,6 +78,12 @@ export function ChatMessage({ message }: Props) {
             : "bg-[var(--surface)] border border-[var(--border)] rounded-tl-sm",
         )}
       >
+        {/* FR-043: Tool Call badge */}
+        {isTool && message.toolName && (
+          <span className="inline-block mb-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+            🔧 Tool: {message.toolName}
+          </span>
+        )}
         {isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (

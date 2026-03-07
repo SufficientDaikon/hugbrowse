@@ -13,6 +13,9 @@ interface SettingsState {
   tierOverride: HardwareTier | null;
   alertThresholds: { ram: number; vram: number; cpu: number };
   onboardingComplete: boolean;
+  /** FR-048: Auto-load last used model on launch */
+  autoLoadLastModel: boolean;
+  lastModelPath: string | null;
   _tokenLoaded: boolean;
   setTheme: (theme: Theme) => void;
   setHfToken: (token: string | null, username?: string | null) => void;
@@ -26,6 +29,8 @@ interface SettingsState {
     cpu: number;
   }) => void;
   setOnboardingComplete: (v: boolean) => void;
+  setAutoLoadLastModel: (v: boolean) => void;
+  setLastModelPath: (path: string | null) => void;
   loadTokenFromStore: () => Promise<void>;
 }
 
@@ -76,6 +81,8 @@ export const useSettings = create<SettingsState>()(
       tierOverride: null,
       alertThresholds: { ram: 85, vram: 90, cpu: 95 },
       onboardingComplete: false,
+      autoLoadLastModel: false,
+      lastModelPath: null,
       _tokenLoaded: false,
 
       setTheme: (theme) => {
@@ -103,6 +110,10 @@ export const useSettings = create<SettingsState>()(
 
       setOnboardingComplete: (v) => set({ onboardingComplete: v }),
 
+      setAutoLoadLastModel: (v) => set({ autoLoadLastModel: v }),
+
+      setLastModelPath: (path) => set({ lastModelPath: path }),
+
       loadTokenFromStore: async () => {
         if (get()._tokenLoaded) return;
         const { token, username } = await loadTokenFromSecureStore();
@@ -119,6 +130,8 @@ export const useSettings = create<SettingsState>()(
         tierOverride: s.tierOverride,
         alertThresholds: s.alertThresholds,
         onboardingComplete: s.onboardingComplete,
+        autoLoadLastModel: s.autoLoadLastModel,
+        lastModelPath: s.lastModelPath,
       }),
     },
   ),
