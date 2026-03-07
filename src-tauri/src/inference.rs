@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandChild;
 
@@ -30,7 +30,7 @@ impl InferenceInfo {
             status: InferenceStatus::Unloaded,
             model_path: None,
             model_name: None,
-            port: 8080,
+            port: 11434,
             ctx_size: 4096,
             n_gpu_layers: -1,
             error: None,
@@ -64,7 +64,7 @@ pub async fn load_model(
         mgr.info.status = InferenceStatus::Loading;
         mgr.info.model_path = Some(model_path.clone());
         mgr.info.model_name = Some(model_name.clone());
-        mgr.info.port = port.unwrap_or(8080);
+        mgr.info.port = port.unwrap_or(11434);
         mgr.info.ctx_size = ctx_size.unwrap_or(4096);
         mgr.info.n_gpu_layers = n_gpu_layers.unwrap_or(-1);
         mgr.info.error = None;
@@ -109,7 +109,11 @@ pub async fn load_model(
             if resp.status().is_success() {
                 let mut mgr = state.lock().unwrap();
                 mgr.info.status = InferenceStatus::Running;
-                return Ok(mgr.info.clone());
+                let result = mgr.info.clone();
+                drop(mgr);
+                // Spawn background health polling (NFR-009: crash detection)
+                spawn_health_poller(app.clone(), state.inner().clone(), port_val);
+                return Ok(result);
             }
         }
     }
@@ -124,12 +128,64 @@ pub async fn load_model(
     Ok(mgr.info.clone())
 }
 
+/// Background health poller — checks llama-server every 10s.
+/// If 3 consecutive checks fail, marks status as Error and emits event.
+fn spawn_health_poller(app: AppHandle, state: ManagedInference, port: u16) {
+    tokio::spawn(async move {
+        let client = reqwest::Client::new();
+        let url = format!("http://127.0.0.1:{port}/health");
+        let mut consecutive_failures = 0u32;
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            // Stop polling if model was unloaded
+            {
+                let mgr = state.lock().unwrap();
+                if mgr.info.status != InferenceStatus::Running {
+                    return;
+                }
+            }
+            match client.get(&url).send().await {
+                Ok(resp) if resp.status().is_success() => {
+                    consecutive_failures = 0;
+                }
+                _ => {
+                    consecutive_failures += 1;
+                    if consecutive_failures >= 3 {
+                        let mut mgr = state.lock().unwrap();
+                        mgr.info.status = InferenceStatus::Error;
+                        mgr.info.error = Some("llama-server crashed or became unresponsive".into());
+                        let _ = app.emit("inference-status", mgr.info.clone());
+                        return;
+                    }
+                }
+            }
+        }
+    });
+}
+
 #[tauri::command]
-pub fn unload_model(state: State<'_, ManagedInference>) -> Result<InferenceInfo, String> {
-    let mut mgr = state.lock().unwrap();
-    if let Some(child) = mgr.child.take() {
+pub async fn unload_model(state: State<'_, ManagedInference>) -> Result<InferenceInfo, String> {
+    let (port_val, child_opt) = {
+        let mut mgr = state.lock().unwrap();
+        let port = mgr.info.port;
+        let child = mgr.child.take();
+        (port, child)
+    };
+
+    if let Some(child) = child_opt {
+        // Try graceful shutdown via llama-server's API first
+        let client = reqwest::Client::new();
+        let _ = client
+            .post(format!("http://127.0.0.1:{port_val}/shutdown"))
+            .send()
+            .await;
+        // Grace period: wait up to 5 seconds for process to exit
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+        // Force kill if still alive
         let _ = child.kill();
     }
+
+    let mut mgr = state.lock().unwrap();
     mgr.info.status = InferenceStatus::Unloaded;
     mgr.info.model_path = None;
     mgr.info.model_name = None;

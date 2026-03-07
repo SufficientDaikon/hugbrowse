@@ -20,7 +20,7 @@ interface ModelRunPanelProps {
 export function ModelRunPanel({ download }: ModelRunPanelProps) {
   const { info, load, unload } = useInference();
   const { downloads } = useDownloads();
-  const [port, setPort] = useState(8080);
+  const [port, setPort] = useState(11434);
   const [ctxSize, setCtxSize] = useState(4096);
 
   const loadableDownloads = Object.values(downloads).filter(

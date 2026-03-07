@@ -290,16 +290,22 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .manage(download_state)
+        .manage(download_state.clone())
         .manage(inference_state)
-        .setup(|app| {
+        .setup(move |app| {
+            // Restore persisted downloads from previous session (FR-013)
+            crate::download::load_persisted_downloads(app.handle(), &download_state);
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+            // Updater plugin: only register in release builds with proper config
+            #[cfg(not(debug_assertions))]
+            {
+                let _ = app.handle().plugin(tauri_plugin_updater::Builder::new().build());
             }
             Ok(())
         })

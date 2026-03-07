@@ -3,8 +3,9 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use futures_util::StreamExt;
+use sysinfo::Disks;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -79,6 +80,88 @@ fn emit_progress(app: &AppHandle, entry: &DownloadEntry) {
     let _ = app.emit("download-progress", p);
 }
 
+/// Emit progress AND persist to disk (for terminal states: Complete, Failed, Cancelled)
+fn emit_and_persist(app: &AppHandle, entry: &DownloadEntry, state: &ManagedDownloads) {
+    emit_progress(app, entry);
+    match entry.status {
+        DownloadStatus::Complete | DownloadStatus::Failed | DownloadStatus::Cancelled => {
+            persist_downloads(app, state);
+        }
+        _ => {}
+    }
+}
+
+/// Persist download entries to a JSON file in the app data directory.
+fn persist_downloads(app: &AppHandle, state: &ManagedDownloads) {
+    let entries: Vec<DownloadEntry> = {
+        let st = state.lock().unwrap();
+        st.downloads.values().cloned().collect()
+    };
+    if let Ok(dir) = app.path().app_local_data_dir() {
+        let file = dir.join("downloads.json");
+        let _ = std::fs::create_dir_all(&dir);
+        let _ = std::fs::write(&file, serde_json::to_string(&entries).unwrap_or_default());
+    }
+}
+
+/// Load persisted download entries from disk. Called once at startup.
+pub fn load_persisted_downloads(app: &AppHandle, state: &ManagedDownloads) {
+    let dir = match app.path().app_local_data_dir() {
+        Ok(d) => d,
+        Err(_) => return,
+    };
+    let file = dir.join("downloads.json");
+    let data = match std::fs::read_to_string(&file) {
+        Ok(d) => d,
+        Err(_) => return,
+    };
+    let entries: Vec<DownloadEntry> = match serde_json::from_str(&data) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    let mut st = state.lock().unwrap();
+    for mut entry in entries {
+        // Mark any previously-active downloads as Paused on restore
+        if entry.status == DownloadStatus::Downloading {
+            entry.status = DownloadStatus::Paused;
+        }
+        st.downloads.insert(entry.id.clone(), entry);
+    }
+}
+
+/// Check if the target disk has enough free space (1.2× file size).
+fn check_disk_space_for_download(dest_dir: &str, total_bytes: u64) -> Result<(), String> {
+    let disks = Disks::new_with_refreshed_list();
+    let target = std::path::Path::new(dest_dir);
+    let needed = (total_bytes as f64 * 1.2) as u64;
+
+    for disk in disks.list() {
+        if target.starts_with(disk.mount_point()) {
+            if disk.available_space() < needed {
+                let free_gb = disk.available_space() as f64 / 1_073_741_824.0;
+                let need_gb = needed as f64 / 1_073_741_824.0;
+                return Err(format!(
+                    "Not enough disk space: {:.1} GB free, need {:.1} GB (1.2× file size)",
+                    free_gb, need_gb
+                ));
+            }
+            return Ok(());
+        }
+    }
+    // Fallback: check first disk
+    if let Some(disk) = disks.list().first() {
+        if disk.available_space() < needed {
+            let free_gb = disk.available_space() as f64 / 1_073_741_824.0;
+            let need_gb = needed as f64 / 1_073_741_824.0;
+            return Err(format!(
+                "Not enough disk space: {:.1} GB free, need {:.1} GB (1.2× file size)",
+                free_gb, need_gb
+            ));
+        }
+    }
+    Ok(())
+}
+
 async fn do_download(
     app: AppHandle,
     state: ManagedDownloads,
@@ -109,7 +192,7 @@ async fn do_download(
             if let Some(e) = st.downloads.get_mut(&id) {
                 e.status = DownloadStatus::Failed;
                 e.error = Some(format!("HTTP {}", r.status()));
-                emit_progress(&app, e);
+                emit_and_persist(&app, e, &state);
             }
             return;
         }
@@ -118,7 +201,7 @@ async fn do_download(
             if let Some(entry) = st.downloads.get_mut(&id) {
                 entry.status = DownloadStatus::Failed;
                 entry.error = Some(e.to_string());
-                emit_progress(&app, entry);
+                emit_and_persist(&app, entry, &state);
             }
             return;
         }
@@ -151,7 +234,7 @@ async fn do_download(
             if let Some(entry) = st.downloads.get_mut(&id) {
                 entry.status = DownloadStatus::Failed;
                 entry.error = Some(format!("File open error: {}", e));
-                emit_progress(&app, entry);
+                emit_and_persist(&app, entry, &state);
             }
             return;
         }
@@ -167,7 +250,7 @@ async fn do_download(
             let mut st = state.lock().unwrap();
             if let Some(e) = st.downloads.get_mut(&id) {
                 e.status = DownloadStatus::Cancelled;
-                emit_progress(&app, e);
+                emit_and_persist(&app, e, &state);
             }
             drop(file);
             let _ = tokio::fs::remove_file(&part_path).await;
@@ -209,7 +292,7 @@ async fn do_download(
                     if let Some(entry) = st.downloads.get_mut(&id) {
                         entry.status = DownloadStatus::Failed;
                         entry.error = Some(format!("Write error: {}", e));
-                        emit_progress(&app, entry);
+                        emit_and_persist(&app, entry, &state);
                     }
                     return;
                 }
@@ -233,7 +316,7 @@ async fn do_download(
                 if let Some(entry) = st.downloads.get_mut(&id) {
                     entry.status = DownloadStatus::Failed;
                     entry.error = Some(format!("Network error: {}", e));
-                    emit_progress(&app, entry);
+                    emit_and_persist(&app, entry, &state);
                 }
                 return;
             }
@@ -273,7 +356,7 @@ async fn do_download(
                 if let Some(e) = st.downloads.get_mut(&id) {
                     e.status = DownloadStatus::Failed;
                     e.error = Some(format!("SHA-256 mismatch: expected {expected_hash}, got {hash}"));
-                    emit_progress(&app, e);
+                    emit_and_persist(&app, e, &state);
                 }
                 let _ = tokio::fs::remove_file(&part_path).await;
                 return;
@@ -283,7 +366,7 @@ async fn do_download(
                 if let Some(e) = st.downloads.get_mut(&id) {
                     e.status = DownloadStatus::Failed;
                     e.error = Some("SHA-256 validation failed".into());
-                    emit_progress(&app, e);
+                    emit_and_persist(&app, e, &state);
                 }
                 return;
             }
@@ -295,7 +378,7 @@ async fn do_download(
         if let Some(entry) = st.downloads.get_mut(&id) {
             entry.status = DownloadStatus::Failed;
             entry.error = Some(format!("Cannot finalize: {}", e));
-            emit_progress(&app, entry);
+            emit_and_persist(&app, entry, &state);
         }
         return;
     }
@@ -309,6 +392,8 @@ async fn do_download(
         emit_progress(&app, e);
     }
     st.active.remove(&id);
+    drop(st);
+    persist_downloads(&app, &state);
 }
 
 #[tauri::command]
@@ -322,6 +407,9 @@ pub async fn start_download(
     total_bytes: u64,
     expected_sha256: Option<String>,
 ) -> Result<String, String> {
+    // Enforce disk space: reject if free < 1.2× file size (FR-011)
+    check_disk_space_for_download(&dest_dir, total_bytes)?;
+
     std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
     let id = uuid::Uuid::new_v4().to_string();
     let local_path = format!("{}/{}", dest_dir.trim_end_matches('/'), filename);
@@ -354,6 +442,7 @@ pub async fn start_download(
             },
         );
     }
+    persist_downloads(&app, &state);
 
     let app2 = app.clone();
     let state2 = state.inner().clone();
