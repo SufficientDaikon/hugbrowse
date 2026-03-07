@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+  --color-hf-orange: #ff9d00;
+  --color-hf-orange-light: #ffb84d;
+  --color-accent: #6366f1;
+  --color-accent-light: #818cf8;
+
+  --color-can-run: #16a34a;
+  --color-can-run-light: #4ade80;
+  --color-maybe-run: #ca8a04;
+  --color-maybe-run-light: #facc15;
+  --color-cant-run: #dc2626;
+  --color-cant-run-light: #f87171;
+}
+
+@layer base {
+  :root {
+    --background: #fafafa;
+    --foreground: #09090b;
+    --surface: #ffffff;
+    --surface-hover: #f4f4f5;
+    --border: #e4e4e7;
+    --muted: #71717a;
+    --muted-foreground: #a1a1aa;
+    --ring: #6366f1;
+  }
+
+  .dark {
+    --background: #0a0a0b;
+    --foreground: #fafafa;
+    --surface: #141416;
+    --surface-hover: #1e1e22;
+    --border: #27272a;
+    --muted: #a1a1aa;
+    --muted-foreground: #71717a;
+    --ring: #818cf8;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
+}
