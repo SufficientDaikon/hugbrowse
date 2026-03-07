@@ -9,6 +9,7 @@ import { ResourceMonitorPage } from "./pages/ResourceMonitorPage";
 import { ChatPage } from "./pages/ChatPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
+import { UpdateNotification } from "./components/ui/UpdateNotification";
 import { useSettings } from "./stores/settings";
 import { useInference } from "./stores/inference";
 import { hfApi } from "./lib/hf-api";
@@ -50,6 +51,68 @@ function AutoModelLoader() {
   return null;
 }
 
+/** EC-017: Save/restore window position for multi-monitor support */
+function WindowPositionTracker() {
+  const { windowPosition, setWindowPosition } = useSettings();
+
+  useEffect(() => {
+    // Restore window position on mount
+    async function restorePosition() {
+      if (!windowPosition) return;
+      try {
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        const win = getCurrentWindow();
+        await win.setPosition(
+          new (await import("@tauri-apps/api/dpi")).LogicalPosition(
+            windowPosition.x,
+            windowPosition.y,
+          ),
+        );
+        await win.setSize(
+          new (await import("@tauri-apps/api/dpi")).LogicalSize(
+            windowPosition.w,
+            windowPosition.h,
+          ),
+        );
+      } catch {
+        /* Tauri API not available (browser dev) */
+      }
+    }
+    restorePosition();
+  }, []); // Run once on mount
+
+  useEffect(() => {
+    // Save position periodically
+    let interval: ReturnType<typeof setInterval>;
+    async function startTracking() {
+      try {
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        const win = getCurrentWindow();
+        interval = setInterval(async () => {
+          try {
+            const pos = await win.outerPosition();
+            const size = await win.outerSize();
+            setWindowPosition({
+              x: pos.x,
+              y: pos.y,
+              w: size.width,
+              h: size.height,
+            });
+          } catch {
+            /* ignore */
+          }
+        }, 5000); // Save every 5s
+      } catch {
+        /* Tauri API not available */
+      }
+    }
+    startTracking();
+    return () => clearInterval(interval);
+  }, [setWindowPosition]);
+
+  return null;
+}
+
 export default function App() {
   const { onboardingComplete } = useSettings();
 
@@ -58,6 +121,8 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <TokenSync />
         <AutoModelLoader />
+        <WindowPositionTracker />
+        <UpdateNotification />
         <BrowserRouter>
           <Routes>
             {!onboardingComplete && (

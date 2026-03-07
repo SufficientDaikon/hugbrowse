@@ -1,10 +1,11 @@
 /**
  * Lightweight MCP client for HuggingFace's MCP server.
  * Uses Server-Sent Events (SSE) transport.
+ * FR-039: Supports configurable server URLs.
  * This is an enrichment layer — REST API is primary.
  */
 
-const MCP_SERVER_URL = "https://huggingface.co/mcp";
+const DEFAULT_MCP_SERVER_URL = "https://huggingface.co/mcp";
 
 export interface MCPTool {
   name: string;
@@ -23,6 +24,7 @@ class HuggingFaceMCPClient {
   private status: MCPStatus = "disconnected";
   private tools: MCPTool[] = [];
   private token: string | null = null;
+  private serverUrl: string = DEFAULT_MCP_SERVER_URL;
   private listeners: Set<(status: MCPStatus) => void> = new Set();
 
   getStatus(): MCPStatus {
@@ -35,6 +37,15 @@ class HuggingFaceMCPClient {
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  /** FR-039: Allow configuring the MCP server URL */
+  setServerUrl(url: string) {
+    this.serverUrl = url || DEFAULT_MCP_SERVER_URL;
+  }
+
+  getServerUrl(): string {
+    return this.serverUrl;
   }
 
   onStatusChange(fn: (status: MCPStatus) => void) {
@@ -62,7 +73,7 @@ class HuggingFaceMCPClient {
     try {
       // MCP uses JSON-RPC 2.0 over HTTP/SSE
       // First, initialize the session
-      const initRes = await fetch(MCP_SERVER_URL, {
+      const initRes = await fetch(this.serverUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +97,7 @@ class HuggingFaceMCPClient {
       }
 
       // List available tools
-      const toolsRes = await fetch(MCP_SERVER_URL, {
+      const toolsRes = await fetch(this.serverUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +144,7 @@ class HuggingFaceMCPClient {
     const timeout = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const res = await fetch(MCP_SERVER_URL, {
+      const res = await fetch(this.serverUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

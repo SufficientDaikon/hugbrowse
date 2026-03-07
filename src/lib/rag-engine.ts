@@ -43,8 +43,12 @@ function restoreChunks(): void {
 // Restore on module load
 restoreChunks();
 
-const CHUNK_SIZE = 512; // ~512 chars per chunk
-const CHUNK_OVERLAP = 64;
+// FR-035: ~4 chars per token; 512 tokens ≈ 2048 chars, 64 tokens ≈ 256 chars
+const CHARS_PER_TOKEN = 4;
+const CHUNK_TOKENS = 512;
+const OVERLAP_TOKENS = 64;
+const CHUNK_SIZE = CHUNK_TOKENS * CHARS_PER_TOKEN;
+const CHUNK_OVERLAP = OVERLAP_TOKENS * CHARS_PER_TOKEN;
 
 /**
  * FR-033: Split text into overlapping chunks.
@@ -174,6 +178,42 @@ export function indexDocument(docId: string, text: string): number {
 }
 
 /**
+ * EC-016: Index a document in a Web Worker for large files.
+ */
+export function indexDocumentFromWorker(docId: string, text: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    try {
+      const worker = new Worker(
+        new URL("./rag-worker.ts", import.meta.url),
+        { type: "module" },
+      );
+      worker.onmessage = (e) => {
+        const { chunkCount, chunks } = e.data;
+        // Store the chunks from worker in our chunk store
+        chunkStore.set(docId, chunks);
+        persistChunks();
+        worker.terminate();
+        resolve(chunkCount);
+      };
+      worker.onerror = (err) => {
+        worker.terminate();
+        reject(new Error(err.message));
+      };
+      worker.postMessage({
+        type: "index",
+        docId,
+        text,
+        chunkSize: CHUNK_SIZE,
+        overlap: CHUNK_OVERLAP,
+      });
+    } catch {
+      // Fallback to sync if workers not supported
+      resolve(indexDocument(docId, text));
+    }
+  });
+}
+
+/**
  * Remove a document's chunks from the index.
  */
 export function removeDocumentIndex(docId: string): void {
@@ -237,10 +277,40 @@ export function buildRagContext(
 }
 
 /**
- * FR-032: Read a File object and return its text content.
- * Supports .txt, .md, .csv, .json, .html files.
+ * FR-034: Read a File object and return its text content.
+ * Supports .txt, .md, .csv, .json, .html, .pdf, .docx files.
  */
 export async function readFileAsText(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+
+  // FR-034: PDF parsing via pdfjs-dist
+  if (ext === "pdf") {
+    const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
+    // Use bundled worker
+    GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
+    const buf = await file.arrayBuffer();
+    const pdf = await getDocument({ data: buf }).promise;
+    const pages: string[] = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item: unknown) => (item as { str?: string }).str ?? "").join(" "));
+    }
+    return pages.join("\n\n");
+  }
+
+  // FR-034: DOCX parsing via mammoth
+  if (ext === "docx") {
+    const mammoth = await import("mammoth");
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
+    return result.value;
+  }
+
+  // Default: read as text (.txt, .md, .csv, .json, .html)
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);

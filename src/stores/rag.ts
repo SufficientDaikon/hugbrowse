@@ -2,9 +2,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   indexDocument,
+  indexDocumentFromWorker,
   removeDocumentIndex,
   readFileAsText,
 } from "../lib/rag-engine";
+
+/** EC-016: Threshold for worker-based indexing (50 MB) */
+const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024;
 
 export interface RagDocument {
   id: string;
@@ -102,18 +106,14 @@ export const useRag = create<RagStore>()(
 
         try {
           const text = await readFileAsText(file);
-          // EC-016: Large docs — index in next microtask to avoid UI blocking
-          await new Promise<void>((resolve, reject) => {
-            setTimeout(() => {
-              try {
-                const chunkCount = indexDocument(id, text);
-                get().updateDocument(id, { status: "indexed", chunkCount });
-                resolve();
-              } catch (e) {
-                reject(e);
-              }
-            }, 0);
-          });
+          let chunkCount: number;
+          // EC-016: Large docs use Web Worker to avoid blocking UI
+          if (file.size > LARGE_FILE_THRESHOLD) {
+            chunkCount = await indexDocumentFromWorker(id, text);
+          } else {
+            chunkCount = indexDocument(id, text);
+          }
+          get().updateDocument(id, { status: "indexed", chunkCount });
         } catch (err) {
           get().updateDocument(id, {
             status: "error",

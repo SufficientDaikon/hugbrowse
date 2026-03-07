@@ -296,14 +296,20 @@ pub fn run() {
         .manage(download_state.clone())
         .manage(inference_state)
         .setup(move |app| {
-            // FR-046: System tray icon with model status
-            let show = MenuItemBuilder::with_id("show", "Show HugBrowse").build(app)?;
+            // FR-046: System tray icon with full context menu
+            let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
+            let quick_chat = MenuItemBuilder::with_id("quick_chat", "Quick Chat").build(app)?;
             let status = MenuItemBuilder::with_id("status", "No model loaded")
+                .enabled(false)
+                .build(app)?;
+            let stop_model = MenuItemBuilder::with_id("stop_model", "Stop Model")
                 .enabled(false)
                 .build(app)?;
             let sep = tauri::menu::PredefinedMenuItem::separator(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-            let menu = MenuBuilder::new(app).items(&[&status, &sep, &show, &quit]).build()?;
+            let menu = MenuBuilder::new(app)
+                .items(&[&status, &stop_model, &sep, &show, &quick_chat, &sep, &quit])
+                .build()?;
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
                 .tooltip("HugBrowse — Local LLM Runtime")
@@ -314,6 +320,18 @@ pub fn run() {
                                 let _ = w.show();
                                 let _ = w.set_focus();
                             }
+                        }
+                        "quick_chat" => {
+                            // Open app and navigate to chat
+                            if let Some(w) = app.get_webview_window("main") {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                                let _ = w.eval("window.location.hash = '#/chat';");
+                            }
+                        }
+                        "stop_model" => {
+                            // Trigger model unload via event
+                            let _ = app.emit("tray-stop-model", ());
                         }
                         "quit" => {
                             app.exit(0);
@@ -371,6 +389,10 @@ pub fn run() {
             inference::load_model,
             inference::unload_model,
             inference::get_inference_status,
+            inference::verify_sidecar_checksum,
+            inference::get_gpus,
+            inference::check_model_memory,
+            inference::check_api_ready,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -13,9 +13,15 @@ interface SettingsState {
   tierOverride: HardwareTier | null;
   alertThresholds: { ram: number; vram: number; cpu: number };
   onboardingComplete: boolean;
-  /** FR-048: Auto-load last used model on launch */
+  /** FR-032: Auto-load last used model on launch */
   autoLoadLastModel: boolean;
   lastModelPath: string | null;
+  /** FR-039: User-configurable MCP server URLs */
+  mcpServers: string[];
+  /** EC-005: Optional proxy URL */
+  proxyUrl: string | null;
+  /** EC-017: Window position for multi-monitor restore */
+  windowPosition: { x: number; y: number; w: number; h: number } | null;
   _tokenLoaded: boolean;
   setTheme: (theme: Theme) => void;
   setHfToken: (token: string | null, username?: string | null) => void;
@@ -31,6 +37,9 @@ interface SettingsState {
   setOnboardingComplete: (v: boolean) => void;
   setAutoLoadLastModel: (v: boolean) => void;
   setLastModelPath: (path: string | null) => void;
+  setMcpServers: (servers: string[]) => void;
+  setProxyUrl: (url: string | null) => void;
+  setWindowPosition: (pos: { x: number; y: number; w: number; h: number } | null) => void;
   loadTokenFromStore: () => Promise<void>;
 }
 
@@ -83,6 +92,9 @@ export const useSettings = create<SettingsState>()(
       onboardingComplete: false,
       autoLoadLastModel: false,
       lastModelPath: null,
+      mcpServers: ["https://huggingface.co/mcp"],
+      proxyUrl: null,
+      windowPosition: null,
       _tokenLoaded: false,
 
       setTheme: (theme) => {
@@ -114,6 +126,12 @@ export const useSettings = create<SettingsState>()(
 
       setLastModelPath: (path) => set({ lastModelPath: path }),
 
+      setMcpServers: (servers) => set({ mcpServers: servers }),
+
+      setProxyUrl: (url) => set({ proxyUrl: url }),
+
+      setWindowPosition: (pos) => set({ windowPosition: pos }),
+
       loadTokenFromStore: async () => {
         if (get()._tokenLoaded) return;
         const { token, username } = await loadTokenFromSecureStore();
@@ -132,6 +150,9 @@ export const useSettings = create<SettingsState>()(
         onboardingComplete: s.onboardingComplete,
         autoLoadLastModel: s.autoLoadLastModel,
         lastModelPath: s.lastModelPath,
+        mcpServers: s.mcpServers,
+        proxyUrl: s.proxyUrl,
+        windowPosition: s.windowPosition,
       }),
     },
   ),

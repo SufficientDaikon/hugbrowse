@@ -37,6 +37,10 @@ export function SettingsPage() {
     autoLoadLastModel,
     setAutoLoadLastModel,
     lastModelPath,
+    mcpServers,
+    setMcpServers,
+    proxyUrl,
+    setProxyUrl,
   } = useSettings();
   const mcp = useMCP();
   const { data: tierInfo } = useTier();
@@ -290,6 +294,70 @@ export function SettingsPage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* FR-039: MCP Server URLs */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Plug className="h-5 w-5 text-purple-500" />
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            MCP Server URLs
+          </h2>
+        </div>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          Configure one or more MCP server endpoints. The first server is used
+          for tool calls.
+        </p>
+        {mcpServers.map((url, i) => (
+          <div key={i} className="flex gap-2 mb-2">
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => {
+                const updated = [...mcpServers];
+                updated[i] = e.target.value;
+                setMcpServers(updated);
+              }}
+              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+            />
+            {mcpServers.length > 1 && (
+              <button
+                onClick={() =>
+                  setMcpServers(mcpServers.filter((_, j) => j !== i))
+                }
+                className="text-xs text-[var(--muted)] hover:text-cant-run px-2"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        ))}
+        <button
+          onClick={() => setMcpServers([...mcpServers, ""])}
+          className="mt-2 text-xs text-accent hover:underline"
+        >
+          + Add server
+        </button>
+      </section>
+
+      {/* EC-005: Proxy Configuration */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <RefreshCw className="h-5 w-5 text-blue-500" />
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            Network Proxy
+          </h2>
+        </div>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          System proxy is used by default. Set a custom proxy URL to override.
+        </p>
+        <input
+          type="url"
+          value={proxyUrl ?? ""}
+          onChange={(e) => setProxyUrl(e.target.value || null)}
+          placeholder="http://proxy.example.com:8080 (leave blank for system proxy)"
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+        />
       </section>
 
       {/* Hardware Tier Override */}
