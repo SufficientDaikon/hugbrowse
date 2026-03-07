@@ -109,6 +109,40 @@ export function ChatPage() {
       {isRunning && (
         <aside className="w-72 shrink-0 border-l border-[var(--border)] bg-[var(--surface)] p-4 space-y-4 overflow-y-auto">
           <ModelRunPanel />
+          {/* Context usage estimate */}
+          {session && session.messages.length > 0 && (
+            <div className="rounded-xl border border-[var(--border)] p-3">
+              <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2">
+                Context Usage
+              </h4>
+              {(() => {
+                const chars = session.messages.reduce(
+                  (n, m) => n + m.content.length,
+                  0,
+                );
+                const estTokens = Math.ceil(chars / 4);
+                const maxTokens = 4096;
+                const pct = Math.min(
+                  100,
+                  Math.round((estTokens / maxTokens) * 100),
+                );
+                return (
+                  <>
+                    <div className="w-full bg-[var(--border)] rounded-full h-1.5 mb-1">
+                      <div
+                        className={`h-1.5 rounded-full transition-all ${pct > 80 ? "bg-red-500" : pct > 50 ? "bg-yellow-500" : "bg-green-500"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-[var(--muted)] font-mono">
+                      ~{estTokens.toLocaleString()} /{" "}
+                      {maxTokens.toLocaleString()} tokens ({pct}%)
+                    </p>
+                  </>
+                );
+              })()}
+            </div>
+          )}
           <div className="rounded-xl border border-[var(--border)] p-3">
             <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2">
               API Endpoint

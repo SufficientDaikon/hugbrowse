@@ -142,7 +142,7 @@ pub async fn load_model(
     Ok(mgr.info.clone())
 }
 
-/// Background health poller — checks llama-server every 10s.
+/// Background health poller — checks llama-server every 2s (NFR-009).
 /// If 3 consecutive checks fail, marks status as Error and emits event.
 fn spawn_health_poller(app: AppHandle, state: ManagedInference, port: u16) {
     tokio::spawn(async move {
@@ -150,7 +150,7 @@ fn spawn_health_poller(app: AppHandle, state: ManagedInference, port: u16) {
         let url = format!("http://127.0.0.1:{port}/health");
         let mut consecutive_failures = 0u32;
         loop {
-            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
             // Stop polling if model was unloaded
             {
                 let mgr = state.lock().unwrap();

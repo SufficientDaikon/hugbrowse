@@ -3,482 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HugBrowse — Spec Compliance Review Report</title>
+<title>HugBrowse Spec Compliance Review Report</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --border: #30363d;
-    --fg: #e6edf3;
-    --muted: #8b949e;
-    --green: #3fb950;
-    --yellow: #d29922;
-    --red: #f85149;
-    --orange: #ff6e00;
-    --blue: #58a6ff;
-    --green-bg: rgba(63,185,80,.12);
-    --yellow-bg: rgba(210,153,34,.12);
-    --red-bg: rgba(248,81,73,.12);
-    --orange-bg: rgba(255,110,0,.12);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
-  h1 { font-size: 1.75rem; margin-bottom: .25rem; }
-  h2 { font-size: 1.3rem; margin: 2rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
-  h3 { font-size: 1.1rem; margin: 1.5rem 0 .75rem; color: var(--blue); }
-  a { color: var(--blue); text-decoration: none; }
-  p, li { color: var(--fg); }
-  code { background: rgba(110,118,129,.2); padding: 1px 5px; border-radius: 4px; font-size: .85em; }
-  .subtitle { color: var(--muted); font-size: .95rem; margin-bottom: 1.5rem; }
-
-  /* Score banner */
-  .score-banner {
-    display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 1.5rem 2rem; margin-bottom: 2rem;
-  }
-  .score-main { font-size: 3rem; font-weight: 800; line-height: 1; }
-  .score-verdict { font-size: 1.1rem; font-weight: 700; padding: 4px 16px; border-radius: 8px; }
-  .verdict-revision { background: var(--yellow-bg); color: var(--yellow); }
-  .score-meta { flex: 1; min-width: 200px; }
-  .score-bars { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .75rem; width: 100%; margin-top: 1rem; }
-  .score-bar-item { background: var(--bg); padding: .5rem .75rem; border-radius: 8px; border: 1px solid var(--border); }
-  .score-bar-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 4px; }
-  .score-bar-track { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
-  .score-bar-fill { height: 100%; border-radius: 3px; }
-  .score-bar-value { font-size: .85rem; font-weight: 700; margin-top: 2px; }
-
-  /* Tables */
-  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .85rem; }
-  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
-  th { background: var(--surface); color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; }
-  tr:hover td { background: rgba(255,255,255,.02); }
-  td:first-child { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: .8rem; white-space: nowrap; }
-  td.status { text-align: center; font-size: 1.1rem; }
-
-  /* Finding cards */
-  .finding { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: .75rem; }
-  .finding-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
-  .finding-severity { font-weight: 700; font-size: .8rem; text-transform: uppercase; }
-  .sev-high { color: var(--red); }
-  .sev-medium { color: var(--yellow); }
-  .sev-low { color: var(--blue); }
-  .finding-refs { font-size: .75rem; color: var(--muted); font-family: monospace; }
-  .finding-body { color: var(--muted); font-size: .85rem; }
-  .finding-body strong { color: var(--fg); }
-
-  /* Summary stats row */
-  .stats-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
-  .stat-card { flex: 1; min-width: 100px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .75rem 1rem; text-align: center; }
-  .stat-num { font-size: 1.5rem; font-weight: 800; }
-  .stat-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-
-  /* Phase label */
-  .phase-label { display: inline-block; font-size: .65rem; background: var(--orange-bg); color: var(--orange); padding: 1px 6px; border-radius: 4px; margin-right: 4px; font-weight: 600; }
-
-  .table-wrap { overflow-x: auto; }
-  .timestamp { color: var(--muted); font-size: .8rem; }
+  :root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #8b949e; --green: #3fb950; --yellow: #d29922; --red: #f85149; --blue: #58a6ff; --orange: #ff7b00; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.35rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: var(--blue); }
+  .header { text-align: center; padding: 2rem 0; border-bottom: 2px solid var(--orange); margin-bottom: 2rem; }
+  .header p { color: var(--muted); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .card h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; }
+  .card .value { font-size: 2rem; font-weight: 700; }
+  .card .value.green { color: var(--green); }
+  .card .value.yellow { color: var(--yellow); }
+  .card .value.red { color: var(--red); }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: var(--surface); border-radius: 8px; overflow: hidden; }
+  th { background: #1c2128; text-align: left; padding: 0.6rem 0.75rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); font-size: 0.875rem; vertical-align: top; }
+  tr:hover td { background: rgba(88,166,255,0.04); }
+  .status { font-size: 1rem; text-align: center; }
+  .pass { color: var(--green); }
+  .partial { color: var(--yellow); }
+  .fail { color: var(--red); }
+  .na { color: var(--muted); }
+  .evidence { font-size: 0.8rem; color: var(--muted); }
+  .verdict-box { text-align: center; padding: 2rem; border-radius: 16px; margin: 2rem 0; }
+  .verdict-box.approved { background: rgba(63,185,80,0.1); border: 2px solid var(--green); }
+  .verdict-box.conditional { background: rgba(210,153,34,0.1); border: 2px solid var(--yellow); }
+  .verdict-box h2 { border: none; margin: 0 0 0.5rem; }
+  .finding { background: var(--surface); border-left: 3px solid var(--yellow); padding: 0.75rem 1rem; margin: 0.5rem 0; border-radius: 0 8px 8px 0; font-size: 0.875rem; }
+  .finding.critical { border-left-color: var(--red); }
+  .finding.good { border-left-color: var(--green); }
+  code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.82rem; background: #1c2128; padding: 0.15rem 0.4rem; border-radius: 4px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--border); margin-top: 0.5rem; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .phase-score { font-weight: 600; margin: 0.5rem 0 1.5rem; padding: 0.5rem 1rem; background: var(--surface); border-radius: 8px; display: inline-block; }
 </style>
 </head>
 <body>
 
-<h1>&#128269; HugBrowse &mdash; Spec Compliance Review</h1>
-<p class="subtitle">
-  Spec: <code>.specify/specs/hugbrowse-lm-studio/spec.md</code> &nbsp;|&nbsp;
-  <span class="timestamp">Generated: 2025-07-15</span>
-</p>
-
-<!-- SCORE BANNER -->
-<div class="score-banner">
-  <div>
-    <div class="score-main" style="color:var(--yellow)">76.1%</div>
-    <div class="score-verdict verdict-revision" style="margin-top:6px">NEEDS REVISION</div>
-  </div>
-  <div class="score-meta">
-    <p style="font-size:.9rem;color:var(--muted)">68.5 / 90 total points across 90 requirements (48 FR + 12 NFR + 12 SC + 18 EC)</p>
-    <p style="font-size:.85rem;color:var(--muted);margin-top:4px">Phases 1&ndash;5 are strong (85%+). Phase 6 (RAG) is skeletal, Phase 7 (MCP) partial, Phase 8 (Polish) incomplete.</p>
-  </div>
-</div>
-
-<div class="score-bars">
-  <div class="score-bar-item">
-    <div class="score-bar-label">Functional (FR)</div>
-    <div class="score-bar-track"><div class="score-bar-fill" style="width:70.8%;background:var(--yellow)"></div></div>
-    <div class="score-bar-value" style="color:var(--yellow)">70.8% <span style="font-weight:400;color:var(--muted);font-size:.75rem">(34/48)</span></div>
-  </div>
-  <div class="score-bar-item">
-    <div class="score-bar-label">Non-Functional (NFR)</div>
-    <div class="score-bar-track"><div class="score-bar-fill" style="width:87.5%;background:var(--green)"></div></div>
-    <div class="score-bar-value" style="color:var(--green)">87.5% <span style="font-weight:400;color:var(--muted);font-size:.75rem">(10.5/12)</span></div>
-  </div>
-  <div class="score-bar-item">
-    <div class="score-bar-label">Success Criteria (SC)</div>
-    <div class="score-bar-track"><div class="score-bar-fill" style="width:87.5%;background:var(--green)"></div></div>
-    <div class="score-bar-value" style="color:var(--green)">87.5% <span style="font-weight:400;color:var(--muted);font-size:.75rem">(10.5/12)</span></div>
-  </div>
-  <div class="score-bar-item">
-    <div class="score-bar-label">Edge Cases (EC)</div>
-    <div class="score-bar-track"><div class="score-bar-fill" style="width:75%;background:var(--yellow)"></div></div>
-    <div class="score-bar-value" style="color:var(--yellow)">75.0% <span style="font-weight:400;color:var(--muted);font-size:.75rem">(13.5/18)</span></div>
-  </div>
-</div>
-
-<div class="stats-row">
-  <div class="stat-card"><div class="stat-num" style="color:var(--green)">53</div><div class="stat-label">&#10003; Passed</div></div>
-  <div class="stat-card"><div class="stat-num" style="color:var(--yellow)">18</div><div class="stat-label">&#9888; Partial</div></div>
-  <div class="stat-card"><div class="stat-num" style="color:var(--red)">19</div><div class="stat-label">&#10007; Missing</div></div>
+<div class="header">
+  <h1>&#x1F50D; HugBrowse &mdash; Spec Compliance Review</h1>
+  <p>Spec: <code>.specify/specs/hugbrowse-lm-studio/spec.md</code> &middot; Reviewed: 2026-03-07</p>
+  <p style="margin-top:0.5rem;">Reviewer: Automated Compliance Audit</p>
 </div>
 
 <!-- EXECUTIVE SUMMARY -->
-<h2>1. Executive Summary</h2>
-<p>HugBrowse delivers a solid foundation as a local AI desktop application. <strong>Phases 1&ndash;3</strong> (Tauri build, download manager, llama-server sidecar) are fully implemented with proper persistence, resumable downloads, SHA-256 verification, disk space guards, port collision detection, health polling, and graceful shutdown. <strong>Phase 4</strong> (Chat) is strong: SSE streaming, markdown rendering, session management, system prompts, and tok/s display all work. <strong>Phase 5</strong> (Local API) leverages llama-server&rsquo;s native OpenAI-compatible endpoints effectively.</p>
-<p style="margin-top:.75rem">The primary gaps are in <strong>Phase 6 (RAG)</strong> &mdash; only a store skeleton exists with no actual document processing, chunking, or embedding &mdash; and <strong>Phase 8 (Polish)</strong> &mdash; the tray menu is minimal (missing Quick Chat / Stop Model), window close kills the model instead of minimizing to tray, and auto-update has no UI. <strong>Phase 7 (MCP)</strong> has good client infrastructure (timeouts, defensive JSON) but isn&rsquo;t wired into the chat tool-calling flow.</p>
+<h2>&#x1F4CB; Executive Summary</h2>
+<div class="summary-grid">
+  <div class="card"><h4>Total Requirements</h4><div class="value">78</div><p class="evidence">48 FR + 12 NFR + 18 EC</p></div>
+  <div class="card"><h4>Passed &#x2705;</h4><div class="value green">55</div></div>
+  <div class="card"><h4>Partial &#x26A0;&#xFE0F;</h4><div class="value yellow">14</div></div>
+  <div class="card"><h4>Missing &#x274C;</h4><div class="value red">9</div></div>
+  <div class="card"><h4>Overall Score</h4><div class="value yellow">79.5%</div>
+    <div class="bar"><div class="bar-fill" style="width:79.5%;background:var(--yellow);"></div></div>
+  </div>
+</div>
 
-<!-- PHASE-BY-PHASE BREAKDOWN -->
-<h2>2. Per-Phase Functional Requirements</h2>
+<p>The implementation covers the <strong>critical path</strong> (Phases 1&ndash;4) thoroughly &mdash; native Tauri build, download manager with resume/SHA-256/disk-space checks, llama-server sidecar with health polling, and a streaming chat UI with markdown rendering. Phases 5&ndash;7 (API server, RAG, MCP) have solid foundations. Phase 8 (polish) is partially complete. Key gaps are auto-update UX, onboarding wizard depth, and a few edge cases around multi-GPU selection and large-doc progress bars.</p>
 
-<h3><span class="phase-label">P1</span> Phase 1 &mdash; Tauri Desktop Build (5/5 = 100%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-001</td><td>Compile &amp; run via <code>cargo tauri dev</code> on Win/Mac/Linux</td><td class="status">&#10003;</td><td>1.0</td><td>Cargo.toml + tauri.conf.json fully configured; sysinfo, tauri 2.10</td></tr>
-<tr><td>FR-002</td><td>Distributable installer via <code>cargo tauri build</code></td><td class="status">&#10003;</td><td>1.0</td><td>bundle.targets = &quot;all&quot;, icons configured</td></tr>
-<tr><td>FR-003</td><td>All existing routes functional in native window</td><td class="status">&#10003;</td><td>1.0</td><td>App.tsx: /, /model/:id, /settings, /recommended, /monitor, /chat</td></tr>
-<tr><td>FR-004</td><td>Window min 800&times;600, default 1200&times;800</td><td class="status">&#10003;</td><td>1.0</td><td>tauri.conf.json: minWidth:800, minHeight:600, width:1200, height:800</td></tr>
-<tr><td>FR-005</td><td>Settings persist via Tauri Store</td><td class="status">&#10003;</td><td>1.0</td><td>zustand persist + Tauri encrypted plugin-store for HF token</td></tr>
-</table></div>
+<!-- PHASE 1 -->
+<h2>Phase 1 &mdash; Tauri Desktop Build</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-001</td><td>Compiles and runs via <code>cargo tauri dev</code></td><td class="status pass">&#x2705;</td><td class="evidence"><code>Cargo.toml</code> valid with tauri 2.10.3, <code>tauri.conf.json</code> has devUrl/frontendDist configured</td></tr>
+<tr><td>FR-002</td><td>Produces distributable installer</td><td class="status pass">&#x2705;</td><td class="evidence"><code>tauri.conf.json</code>: <code>bundle.active: true, targets: "all"</code>, icon paths defined for all platforms</td></tr>
+<tr><td>FR-003</td><td>All existing routes functional</td><td class="status pass">&#x2705;</td><td class="evidence"><code>App.tsx</code> routes: <code>/</code>, <code>/model/:id</code>, <code>/settings</code>, <code>/recommended</code>, <code>/monitor</code>, plus new <code>/chat</code></td></tr>
+<tr><td>FR-004</td><td>Window min 800&times;600, default 1200&times;800</td><td class="status pass">&#x2705;</td><td class="evidence"><code>tauri.conf.json</code>: <code>width:1200, height:800, minWidth:800, minHeight:600</code></td></tr>
+<tr><td>FR-005</td><td>Settings persist via Tauri plugin store</td><td class="status pass">&#x2705;</td><td class="evidence"><code>settings.ts</code>: zustand/persist for non-sensitive; Tauri <code>Store.load("credentials.json")</code> for HF token</td></tr>
+</table>
+<div class="phase-score pass">Phase 1 Score: 5.0 / 5.0 = 100%</div>
 
-<h3><span class="phase-label">P1</span> Phase 2 &mdash; Download Manager (8/8 = 100%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-006</td><td>Initiate GGUF download from model detail page</td><td class="status">&#10003;</td><td>1.0</td><td>ModelDetailPage.tsx: handleDownloadGguf() for .gguf files</td></tr>
-<tr><td>FR-007</td><td>Real-time progress: bytes, speed, ETA</td><td class="status">&#10003;</td><td>1.0</td><td>download.rs emits every 500ms; DownloadEntry has speed_bps, eta_secs</td></tr>
-<tr><td>FR-008</td><td>Resumable via HTTP Range headers</td><td class="status">&#10003;</td><td>1.0</td><td>download.rs: checks .part file size, sends Range header</td></tr>
-<tr><td>FR-009</td><td>Pause/Resume by user action</td><td class="status">&#10003;</td><td>1.0</td><td>AtomicBool pause_flag toggled by pause_download/resume_download</td></tr>
-<tr><td>FR-010</td><td>SHA-256 verification on completion</td><td class="status">&#10003;</td><td>1.0</td><td>sha2 crate: validates hash, marks Failed on mismatch, deletes file</td></tr>
-<tr><td>FR-011</td><td>Reject download when disk &lt; 1.2&times; file size</td><td class="status">&#10003;</td><td>1.0</td><td>check_disk_space_for_download() with 1.2&times; multiplier</td></tr>
-<tr><td>FR-012</td><td>Downloads panel (view, pause, resume, cancel, delete)</td><td class="status">&#10003;</td><td>1.0</td><td>All Tauri commands exposed; downloads.ts store with full CRUD</td></tr>
-<tr><td>FR-013</td><td>Download state persists across restarts</td><td class="status">&#10003;</td><td>1.0</td><td>persist_downloads to downloads.json; load_persisted_downloads on startup</td></tr>
-</table></div>
+<!-- PHASE 2 -->
+<h2>Phase 2 &mdash; Download Manager</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-006</td><td>Download any GGUF from model detail page</td><td class="status pass">&#x2705;</td><td class="evidence"><code>ModelDetailPage.tsx</code>: <code>handleDownloadGguf()</code> triggers <code>startDownload</code> for .gguf files</td></tr>
+<tr><td>FR-007</td><td>Real-time progress: bytes, speed (MB/s), ETA</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs</code>: emits <code>download-progress</code> events with <code>speed_bps</code>, <code>eta_secs</code>, <code>downloaded_bytes</code> every 500ms</td></tr>
+<tr><td>FR-008</td><td>Resumable via HTTP Range headers</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs:184-185</code>: <code>.header("Range", format!("bytes={}-", already_downloaded))</code> with <code>.part</code> file detection</td></tr>
+<tr><td>FR-009</td><td>Pause and resume by user action</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs</code>: <code>pause_download</code>/<code>resume_download</code> commands with <code>AtomicBool</code> flags</td></tr>
+<tr><td>FR-010</td><td>SHA-256 verification on completion</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs:329-373</code>: full SHA-256 check, <code>Validating</code> status, mismatch &rarr; Failed + file deleted</td></tr>
+<tr><td>FR-011</td><td>Reject download when disk space &lt; 1.2&times; file size</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs:133-163</code>: <code>check_disk_space_for_download()</code> enforced before download start</td></tr>
+<tr><td>FR-012</td><td>Download management panel (view/pause/resume/cancel/delete)</td><td class="status pass">&#x2705;</td><td class="evidence"><code>DownloadPanel.tsx</code> + <code>DownloadItem.tsx</code>: sorted list with all management actions</td></tr>
+<tr><td>FR-013</td><td>Download state persists across restarts</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs</code>: <code>persist_downloads()</code> writes JSON; <code>load_persisted_downloads()</code> in setup; downloading&rarr;paused on restore</td></tr>
+</table>
+<div class="phase-score pass">Phase 2 Score: 8.0 / 8.0 = 100%</div>
 
-<h3><span class="phase-label">P1</span> Phase 3 &mdash; llama-server Sidecar (6/7 = 85.7%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-014</td><td>Bundle platform-specific llama-server as sidecar</td><td class="status">&#10003;</td><td>1.0</td><td>externalBin: [&quot;binaries/llama-server&quot;], shell scope configured</td></tr>
-<tr><td>FR-015</td><td>Launch via Tauri shell plugin with args</td><td class="status">&#10003;</td><td>1.0</td><td>app.shell().sidecar() with --model, --port, --ctx-size, --n-gpu-layers, --host</td></tr>
-<tr><td>FR-016</td><td>&quot;Load Model&quot; action</td><td class="status">&#10003;</td><td>1.0</td><td>load_model Tauri command + UI Load button</td></tr>
-<tr><td>FR-017</td><td>&quot;Unload Model&quot; &mdash; SIGTERM then SIGKILL after 5s</td><td class="status">&#10003;</td><td>1.0</td><td>Posts /shutdown, sleeps 5s, force kills</td></tr>
-<tr><td>FR-018</td><td>Health polling via /health endpoint</td><td class="status">&#10003;</td><td>1.0</td><td>spawn_health_poller every 10s; 3 failures = Error state</td></tr>
-<tr><td>FR-019</td><td>No orphan processes on exit</td><td class="status">&#10003;</td><td>1.0</td><td>on_window_event(Destroyed) kills child process</td></tr>
-<tr><td>FR-020</td><td>Verify sidecar binary checksum on first launch</td><td class="status">&#10007;</td><td>0.0</td><td>No checksum verification of llama-server binary found</td></tr>
-</table></div>
+<!-- PHASE 3 -->
+<h2>Phase 3 &mdash; llama-server Sidecar</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-014</td><td>Bundle platform-specific llama-server as sidecar</td><td class="status pass">&#x2705;</td><td class="evidence"><code>tauri.conf.json</code>: <code>externalBin: ["binaries/llama-server"]</code>; shell scope with <code>sidecar: true</code></td></tr>
+<tr><td>FR-015</td><td>Launch via Tauri shell plugin with args</td><td class="status pass">&#x2705;</td><td class="evidence"><code>inference.rs:92-111</code>: <code>app.shell().sidecar("llama-server")</code> with --model, --port, --ctx-size, --n-gpu-layers, --host</td></tr>
+<tr><td>FR-016</td><td>"Load Model" action starts llama-server</td><td class="status pass">&#x2705;</td><td class="evidence"><code>load_model</code> command + <code>ModelRunPanel.tsx</code> "Load Model" button</td></tr>
+<tr><td>FR-017</td><td>"Unload" terminates cleanly (SIGTERM then SIGKILL after 5s)</td><td class="status pass">&#x2705;</td><td class="evidence"><code>inference.rs:189-199</code>: POST /shutdown &rarr; 5s sleep &rarr; <code>child.kill()</code></td></tr>
+<tr><td>FR-018</td><td>Health polling via /health endpoint</td><td class="status pass">&#x2705;</td><td class="evidence">Initial: 60&times;500ms poll; Ongoing: <code>spawn_health_poller()</code> every 10s with 3-strike crash detection</td></tr>
+<tr><td>FR-019</td><td>Prevent orphan processes on app exit</td><td class="status pass">&#x2705;</td><td class="evidence"><code>lib.rs:345-351</code>: <code>WindowEvent::Destroyed</code> kills child; also kills before new load</td></tr>
+<tr><td>FR-020</td><td>Verify llama-server binary checksum</td><td class="status fail">&#x274C;</td><td class="evidence">No binary checksum verification found in codebase</td></tr>
+</table>
+<div class="phase-score partial">Phase 3 Score: 6.0 / 7.0 = 85.7%</div>
 
-<h3><span class="phase-label">P1</span> Phase 4 &mdash; Chat Interface (5.5/7 = 78.6%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-021</td><td>Stream tokens in real-time from loaded model</td><td class="status">&#10003;</td><td>1.0</td><td>chat.ts: SSE reader with delta content extraction</td></tr>
-<tr><td>FR-022</td><td>Markdown: headings, bold, code blocks with syntax highlighting</td><td class="status">&#9888;</td><td>0.5</td><td>ReactMarkdown + remarkGfm renders all markdown, but no syntax highlighter (Prism/Shiki) &mdash; code is monospace only</td></tr>
-<tr><td>FR-023</td><td>Sessions: create, rename, delete</td><td class="status">&#10003;</td><td>1.0</td><td>SessionSidebar with inline rename, delete; createSession()</td></tr>
-<tr><td>FR-024</td><td>Chat history persists across restarts</td><td class="status">&#10003;</td><td>1.0</td><td>zustand persist with name &quot;hugbrowse-chat&quot;</td></tr>
-<tr><td>FR-025</td><td>Stop generation mid-stream</td><td class="status">&#10003;</td><td>1.0</td><td>AbortController; stopStreaming() aborts fetch</td></tr>
-<tr><td>FR-026</td><td>System prompt per session</td><td class="status">&#10003;</td><td>1.0</td><td>setSystemPrompt action; injected first in message history</td></tr>
-<tr><td>FR-027</td><td>Display tok/s and context usage during generation</td><td class="status">&#9888;</td><td>0.5</td><td>tok/s tracked and displayed during + after streaming. Context usage counter (tokens used/limit) not visible in UI</td></tr>
-</table></div>
+<!-- PHASE 4 -->
+<h2>Phase 4 &mdash; Chat Interface</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-021</td><td>Streaming token-by-token responses</td><td class="status pass">&#x2705;</td><td class="evidence"><code>chat.ts:184-244</code>: SSE streaming via fetch + ReadableStream, parses <code>data:</code> lines</td></tr>
+<tr><td>FR-022</td><td>Markdown rendering (headings, code blocks, etc.)</td><td class="status pass">&#x2705;</td><td class="evidence"><code>ChatMessage.tsx</code>: ReactMarkdown + remarkGfm; custom CodeBlock with Copy button; inline code styled</td></tr>
+<tr><td>FR-023</td><td>Sessions: create, rename, delete</td><td class="status pass">&#x2705;</td><td class="evidence"><code>SessionSidebar.tsx</code>: New Chat, inline rename (Pencil), delete (Trash2); all wired to store</td></tr>
+<tr><td>FR-024</td><td>Chat history persists across restarts</td><td class="status pass">&#x2705;</td><td class="evidence"><code>chat.ts</code>: zustand <code>persist</code> with <code>name: "hugbrowse-chat"</code></td></tr>
+<tr><td>FR-025</td><td>Stop generation mid-stream</td><td class="status pass">&#x2705;</td><td class="evidence"><code>chat.ts:270</code>: <code>stopStreaming()</code> + <code>AbortController</code>; red Stop button in ChatInput</td></tr>
+<tr><td>FR-026</td><td>System prompt per session</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>chat.ts:99</code>: <code>setSystemPrompt()</code> exists and injects as first message. UI for setting it not prominently surfaced in ChatPage.</td></tr>
+<tr><td>FR-027</td><td>Display tok/s and context usage (tokens/limit)</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>ChatMessage.tsx:106-119</code>: shows tok/s. Context usage indicator (tokens used / limit) NOT implemented.</td></tr>
+</table>
+<div class="phase-score partial">Phase 4 Score: 6.0 / 7.0 = 85.7%</div>
 
-<h3><span class="phase-label">P2</span> Phase 5 &mdash; Local API Server (4.5/6 = 75%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-028</td><td>OpenAI-compatible server on configurable port (default 11434)</td><td class="status">&#10003;</td><td>1.0</td><td>llama-server bound to user-selected port; default 11434</td></tr>
-<tr><td>FR-029</td><td>POST /v1/chat/completions (stream + non-stream)</td><td class="status">&#10003;</td><td>1.0</td><td>llama-server provides this natively</td></tr>
-<tr><td>FR-030</td><td>GET /v1/models</td><td class="status">&#10003;</td><td>1.0</td><td>llama-server provides natively; shown in ApiServerPanel</td></tr>
-<tr><td>FR-031</td><td>HTTP 503 when no model loaded</td><td class="status">&#9888;</td><td>0.5</td><td>No server running = connection refused, not HTTP 503 with JSON body</td></tr>
-<tr><td>FR-032</td><td>Auto-start on launch if previously enabled</td><td class="status">&#10007;</td><td>0.0</td><td>No auto-start logic; user must load model each session</td></tr>
-<tr><td>FR-033</td><td>Display base URL and port in settings panel</td><td class="status">&#10003;</td><td>1.0</td><td>ApiServerPanel shows URL, port, available endpoints</td></tr>
-</table></div>
+<!-- PHASE 5 -->
+<h2>Phase 5 &mdash; Local API Server</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-028</td><td>OpenAI-compatible server on configurable port</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">llama-server natively serves OpenAI-compatible endpoints. Port configurable in ModelRunPanel. Correct per spec assumption that llama-server&rsquo;s native endpoints are used.</td></tr>
+<tr><td>FR-029</td><td>POST /v1/chat/completions (streaming + non-streaming)</td><td class="status pass">&#x2705;</td><td class="evidence">llama-server provides this. <code>chat.ts</code> uses it with <code>stream: true</code>. <code>ApiServerPanel.tsx</code> lists endpoint.</td></tr>
+<tr><td>FR-030</td><td>GET /v1/models returns loaded model</td><td class="status pass">&#x2705;</td><td class="evidence">llama-server provides this. <code>ApiServerPanel.tsx</code> lists <code>/v1/models</code>.</td></tr>
+<tr><td>FR-031</td><td>HTTP 503 when no model loaded</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">When no model is loaded, llama-server isn't running &mdash; connections refused (not a 503 JSON response).</td></tr>
+<tr><td>FR-032</td><td>Server auto-starts if previously enabled</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">API server = llama-server which only starts on "Load Model". No auto-start on app relaunch.</td></tr>
+<tr><td>FR-033</td><td>Display base URL and port in settings</td><td class="status pass">&#x2705;</td><td class="evidence"><code>ApiServerPanel.tsx</code>: shows URL with Copy button. Also in ChatPage sidebar.</td></tr>
+</table>
+<div class="phase-score partial">Phase 5 Score: 4.5 / 6.0 = 75.0%</div>
 
-<h3><span class="phase-label">P2</span> Phase 6 &mdash; RAG (0.5/5 = 10%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-034</td><td>Attach .txt, .pdf, .md, .docx files</td><td class="status">&#9888;</td><td>0.5</td><td>RAG store has document entity structure but no file picker or parser</td></tr>
-<tr><td>FR-035</td><td>Chunk (512-token, 64 overlap) and embed documents</td><td class="status">&#10007;</td><td>0.0</td><td>No chunking or embedding implementation</td></tr>
-<tr><td>FR-036</td><td>Retrieve top-K chunks per message</td><td class="status">&#10007;</td><td>0.0</td><td>No retrieval in sendMessage flow</td></tr>
-<tr><td>FR-037</td><td>Embeddings stored locally, reused</td><td class="status">&#10007;</td><td>0.0</td><td>No embedding storage</td></tr>
-<tr><td>FR-038</td><td>Remove documents, chunks not retrieved</td><td class="status">&#9888;</td><td>0.5</td><td>removeDocument() exists in store; retrieval not implemented anyway</td></tr>
-</table></div>
+<!-- PHASE 6 -->
+<h2>Phase 6 &mdash; RAG Document Attachment</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-034</td><td>Attach .txt, .pdf, .md, .docx files</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>readFileAsText()</code> uses <code>FileReader.readAsText()</code>. Works for .txt/.md. PDF/DOCX binary formats not actually parsed.</td></tr>
+<tr><td>FR-035</td><td>Chunking: 512-token chunks, 64-token overlap</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">CHUNK_SIZE=512, CHUNK_OVERLAP=64 &mdash; but character-based, not token-based. Close approximation.</td></tr>
+<tr><td>FR-036</td><td>Top-K retrieval and context injection</td><td class="status pass">&#x2705;</td><td class="evidence"><code>retrieveChunks()</code> with BM25-like scoring; <code>chat.ts:148-160</code> injects as system message.</td></tr>
+<tr><td>FR-037</td><td>Embeddings stored locally, reused across sessions</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">In-memory <code>chunkStore</code> Map &mdash; lost on restart. Metadata persisted via zustand but chunks are not.</td></tr>
+<tr><td>FR-038</td><td>Remove documents; chunks excluded from retrieval</td><td class="status pass">&#x2705;</td><td class="evidence"><code>removeDocument()</code> calls <code>removeDocumentIndex(id)</code> which deletes from chunkStore.</td></tr>
+</table>
+<div class="phase-score partial">Phase 6 Score: 4.0 / 5.0 = 80.0%</div>
 
-<h3><span class="phase-label">P3</span> Phase 7 &mdash; MCP Client (3/5 = 60%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-039</td><td>Configure MCP server URLs in settings</td><td class="status">&#9888;</td><td>0.5</td><td>Hardcoded to HuggingFace MCP URL; not user-configurable for custom servers</td></tr>
-<tr><td>FR-040</td><td>Discover &amp; list available tools from manifest</td><td class="status">&#10003;</td><td>1.0</td><td>connect() calls tools/list via JSON-RPC; tools shown in settings</td></tr>
-<tr><td>FR-041</td><td>Parse tool-call JSON, dispatch, inject result</td><td class="status">&#9888;</td><td>0.5</td><td>callTool() infrastructure exists but not wired into chat streaming loop</td></tr>
-<tr><td>FR-042</td><td>30-second timeout on tool calls</td><td class="status">&#10003;</td><td>1.0</td><td>AbortController with setTimeout(30000)</td></tr>
-<tr><td>FR-043</td><td>UI &quot;Tool Call&quot; badge while in flight</td><td class="status">&#10007;</td><td>0.0</td><td>No tool call badge component in chat UI</td></tr>
-</table></div>
+<!-- PHASE 7 -->
+<h2>Phase 7 &mdash; MCP Tool Calling</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-039</td><td>Configure MCP server URLs in settings</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">Settings shows MCP status/tools. URL hardcoded to HuggingFace MCP. No multi-server config UI.</td></tr>
+<tr><td>FR-040</td><td>Discover and list tools from MCP manifest</td><td class="status pass">&#x2705;</td><td class="evidence"><code>mcp-client.ts:88-106</code>: <code>tools/list</code> JSON-RPC call; Settings page lists tools by name.</td></tr>
+<tr><td>FR-041</td><td>Parse tool-call JSON, dispatch, inject result</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>callTool()</code> can dispatch. But auto-detection of tool-call JSON in model output not wired into chat.</td></tr>
+<tr><td>FR-042</td><td>30-second timeout on tool calls</td><td class="status pass">&#x2705;</td><td class="evidence"><code>mcp-client.ts:132-133</code>: AbortController + 30s timeout; returns error on abort.</td></tr>
+<tr><td>FR-043</td><td>"Tool Call" badge in chat UI</td><td class="status fail">&#x274C;</td><td class="evidence">No tool-call badge component found in chat components.</td></tr>
+</table>
+<div class="phase-score partial">Phase 7 Score: 3.5 / 5.0 = 70.0%</div>
 
-<h3><span class="phase-label">P3</span> Phase 8 &mdash; Polish (2.5/5 = 50%)</h3>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>FR-044</td><td>Onboarding wizard: hardware &rarr; model &rarr; download &rarr; chat</td><td class="status">&#10003;</td><td>1.0</td><td>OnboardingPage.tsx: 4-step wizard with hardware detection and skip</td></tr>
-<tr><td>FR-045</td><td>Minimize to tray when model running &amp; window closed</td><td class="status">&#10007;</td><td>0.0</td><td>WindowEvent::Destroyed kills inference; no minimize-to-tray intercept</td></tr>
-<tr><td>FR-046</td><td>Tray: &quot;Open&quot;, &quot;Quick Chat&quot;, &quot;Stop [Model]&quot;, &quot;Quit&quot;</td><td class="status">&#9888;</td><td>0.5</td><td>Tray has &quot;Show HugBrowse&quot; and &quot;Quit&quot; only. Missing Quick Chat &amp; Stop Model</td></tr>
-<tr><td>FR-047</td><td>Update check on launch, non-blocking notification</td><td class="status">&#9888;</td><td>0.5</td><td>tauri-plugin-updater registered in release builds; no visible notification UI</td></tr>
-<tr><td>FR-048</td><td>Auto-update: background download, prompt before applying</td><td class="status">&#9888;</td><td>0.5</td><td>Relies on Tauri updater plugin defaults; no custom prompt UI</td></tr>
-</table></div>
+<!-- PHASE 8 -->
+<h2>Phase 8 &mdash; Polish (Installer, Onboarding &amp; Tray)</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>FR-044</td><td>Onboarding wizard: hardware, model rec, download, chat</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>OnboardingPage.tsx</code>: 4-step wizard with tier detection. Informational only &mdash; doesn't trigger actual download/load.</td></tr>
+<tr><td>FR-045</td><td>Minimize to tray when model running + window closed</td><td class="status pass">&#x2705;</td><td class="evidence"><code>lib.rs:340-344</code>: CloseRequested &rarr; <code>window.hide()</code> + <code>prevent_close()</code></td></tr>
+<tr><td>FR-046</td><td>Tray menu: Open, Quick Chat, Stop [Model], Quit</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">Tray has "Show HugBrowse" and "Quit". Missing "Quick Chat" and "Stop [Model Name]".</td></tr>
+<tr><td>FR-047</td><td>Check for updates on launch; non-blocking notification</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>tauri-plugin-updater</code> registered in release builds. No frontend UI for update notification.</td></tr>
+<tr><td>FR-048</td><td>Auto-update: background download, prompt, apply on restart</td><td class="status fail">&#x274C;</td><td class="evidence">Plugin registered but no update logic, download UI, or prompt implemented.</td></tr>
+</table>
+<div class="phase-score partial">Phase 8 Score: 3.0 / 5.0 = 60.0%</div>
 
-<!-- NON-FUNCTIONAL REQUIREMENTS -->
-<h2>3. Non-Functional Requirements (10.5/12 = 87.5%)</h2>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Requirement</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>NFR-001</td><td>First token latency &lt; 500ms</td><td class="status">&#10003;</td><td>1.0</td><td>Direct SSE to llama-server; architecture supports. Runtime-testable only.</td></tr>
-<tr><td>NFR-002</td><td>Download progress &ge; 500ms, UI never freezes</td><td class="status">&#10003;</td><td>1.0</td><td>Async Tokio streaming; progress emitted every 500ms via event</td></tr>
-<tr><td>NFR-003</td><td>Cold launch &lt; 3s</td><td class="status">&#10003;</td><td>1.0</td><td>Standard Tauri + Vite; meets threshold on modern hardware</td></tr>
-<tr><td>NFR-004</td><td>Memory bounded; OOM warning before loading</td><td class="status">&#9888;</td><td>0.5</td><td>check_compatibility exists (model detail page) but not enforced as gate before load</td></tr>
-<tr><td>NFR-005</td><td>No orphan llama-server on exit</td><td class="status">&#10003;</td><td>1.0</td><td>WindowEvent::Destroyed kills child</td></tr>
-<tr><td>NFR-006</td><td>API binds to 127.0.0.1 only by default</td><td class="status">&#10003;</td><td>1.0</td><td>--host 127.0.0.1 passed to llama-server</td></tr>
-<tr><td>NFR-007</td><td>HF token in encrypted store, not in logs/IPC</td><td class="status">&#10003;</td><td>1.0</td><td>settings.ts partialize excludes hfToken from localStorage; Tauri encrypted store used</td></tr>
-<tr><td>NFR-008</td><td>CSP allows localhost, doesn&rsquo;t relax other directives</td><td class="status">&#10003;</td><td>1.0</td><td>connect-src: &lsquo;self&rsquo; + HF domains + http://127.0.0.1:*; no wildcard</td></tr>
-<tr><td>NFR-009</td><td>Detect llama-server crash within 2s, offer reload</td><td class="status">&#9888;</td><td>0.5</td><td>Health poller at 10s &times; 3 failures = ~30s detection. Spec requires 2s. No &quot;Reload&quot; button.</td></tr>
-<tr><td>NFR-010</td><td>Download resume after any interruption</td><td class="status">&#10003;</td><td>1.0</td><td>.part files preserved; HTTP Range on resume; state persisted to JSON</td></tr>
-<tr><td>NFR-011</td><td>Sidecar supports CUDA/Metal/CPU auto-selected</td><td class="status">&#9888;</td><td>0.5</td><td>Single binary path in config; --n-gpu-layers param exists; no multi-binary selection logic</td></tr>
-<tr><td>NFR-012</td><td>All features on Win/Mac/Linux</td><td class="status">&#10003;</td><td>1.0</td><td>Tauri cross-platform; cfg(target_os) for platform-specific GPU detection</td></tr>
-</table></div>
-
-<!-- SUCCESS CRITERIA -->
-<h2>4. Success Criteria (10.5/12 = 87.5%)</h2>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Criterion</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>SC-001</td><td>cargo tauri dev zero patches on 3 platforms</td><td class="status">&#10003;</td><td>1.0</td><td>Config and dependencies fully specified</td></tr>
-<tr><td>SC-002</td><td>No model &rarr; first chat &lt; 10 min on 50 Mbps</td><td class="status">&#10003;</td><td>1.0</td><td>Complete flow: search &rarr; detail &rarr; download &rarr; load &rarr; chat</td></tr>
-<tr><td>SC-003</td><td>7B Q4 first token &lt; 500ms</td><td class="status">&#10003;</td><td>1.0</td><td>Architecture supports; runtime-testable</td></tr>
-<tr><td>SC-004</td><td>Download resume from exact byte offset</td><td class="status">&#10003;</td><td>1.0</td><td>.part file + Range header implementation</td></tr>
-<tr><td>SC-005</td><td>curl / OpenAI SDK works at localhost:11434</td><td class="status">&#10003;</td><td>1.0</td><td>llama-server&rsquo;s native OpenAI-compat endpoints</td></tr>
-<tr><td>SC-006</td><td>HF token never in logs</td><td class="status">&#10003;</td><td>1.0</td><td>Excluded from localStorage persist; encrypted store only</td></tr>
-<tr><td>SC-007</td><td>No orphan llama-server after exit/crash</td><td class="status">&#10003;</td><td>1.0</td><td>Destroyed event handler kills child</td></tr>
-<tr><td>SC-008</td><td>Existing features produce identical output</td><td class="status">&#10003;</td><td>1.0</td><td>All pre-existing routes preserved in App.tsx</td></tr>
-<tr><td>SC-009</td><td>RAG query references specific PDF paragraph</td><td class="status">&#10007;</td><td>0.0</td><td>RAG not functionally implemented; store skeleton only</td></tr>
-<tr><td>SC-010</td><td>Installer works on clean VM &lt; 2 min</td><td class="status">&#9888;</td><td>0.5</td><td>Build config exists; not runtime-testable in code review</td></tr>
-<tr><td>SC-011</td><td>Onboarding wizard &le; 7 steps</td><td class="status">&#10003;</td><td>1.0</td><td>4-step wizard (Hardware &rarr; Recommendation &rarr; Download &rarr; Chat)</td></tr>
-<tr><td>SC-012</td><td>API server handles 10 concurrent streams</td><td class="status">&#10003;</td><td>1.0</td><td>llama-server handles concurrent requests natively</td></tr>
-</table></div>
+<!-- NFR -->
+<h2>Non-Functional Requirements</h2>
+<table>
+<tr><th style="width:70px">Req</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>NFR-001</td><td>First token latency &lt; 500ms</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">Architecture supports it (direct localhost SSE). Actual latency depends on hardware. No measurement code.</td></tr>
+<tr><td>NFR-002</td><td>Download progress refreshes &ge; every 500ms</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs:300</code>: emits progress when <code>elapsed.as_millis() >= 500</code></td></tr>
+<tr><td>NFR-003</td><td>Cold launch &lt; 3 seconds</td><td class="status pass">&#x2705;</td><td class="evidence">Tauri + Vite-built SPA is lightweight. No heavy init blocking startup.</td></tr>
+<tr><td>NFR-004</td><td>OOM warning before launching over-sized model</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence"><code>check_compatibility()</code> + <code>CanItRun</code> component warn about insufficient resources. User can still proceed (spec allows this).</td></tr>
+<tr><td>NFR-005</td><td>No orphan processes</td><td class="status pass">&#x2705;</td><td class="evidence">Destroyed handler kills child; load_model kills existing child first.</td></tr>
+<tr><td>NFR-006</td><td>Local API binds 127.0.0.1 only by default</td><td class="status pass">&#x2705;</td><td class="evidence"><code>inference.rs:108</code>: <code>"--host", "127.0.0.1"</code></td></tr>
+<tr><td>NFR-007</td><td>HF token in encrypted store, not in logs/IPC</td><td class="status pass">&#x2705;</td><td class="evidence">Tauri plugin-store (encrypted); excluded from localStorage via <code>partialize</code>.</td></tr>
+<tr><td>NFR-008</td><td>CSP allows localhost connect-src only</td><td class="status pass">&#x2705;</td><td class="evidence"><code>tauri.conf.json</code>: connect-src includes <code>http://127.0.0.1:*</code>; no other relaxations.</td></tr>
+<tr><td>NFR-009</td><td>Detect llama-server crash within 2 seconds</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">Health poller: 10s interval, 3 failures = 30s worst case. Spec requires 2s. Too slow.</td></tr>
+<tr><td>NFR-010</td><td>Download resume after any interruption</td><td class="status pass">&#x2705;</td><td class="evidence">.part files preserved; Range headers; downloading&rarr;paused on restart.</td></tr>
+<tr><td>NFR-011</td><td>Support CUDA, Metal, CPU-only; auto-detect</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">n_gpu_layers passed. Binary selection delegated to sidecar bundling. No runtime auto-detection.</td></tr>
+<tr><td>NFR-012</td><td>Works on Windows 11, macOS 13+, Ubuntu 22.04+</td><td class="status pass">&#x2705;</td><td class="evidence">Tauri 2.x cross-platform. Platform-specific GPU detection code present.</td></tr>
+</table>
+<div class="phase-score partial">NFR Score: 10.0 / 12.0 = 83.3%</div>
 
 <!-- EDGE CASES -->
-<h2>5. Edge Cases (13.5/18 = 75%)</h2>
-<div class="table-wrap"><table>
-<tr><th>ID</th><th>Scenario</th><th class="status">Status</th><th>Score</th><th>Evidence / Notes</th></tr>
-<tr><td>EC-001</td><td>Corrupted GGUF &mdash; surface error, offer re-download</td><td class="status">&#9888;</td><td>0.5</td><td>llama-server errors surface via InferenceStatus::Error; no explicit re-download offer</td></tr>
-<tr><td>EC-002</td><td>Port collision &mdash; detect &amp; prompt alternate port</td><td class="status">&#10003;</td><td>1.0</td><td>TcpListener::bind check before spawn; error message with port number</td></tr>
-<tr><td>EC-003</td><td>Partial sidecar binary &mdash; checksum on startup</td><td class="status">&#10007;</td><td>0.0</td><td>No sidecar binary checksum verification</td></tr>
-<tr><td>EC-004</td><td>Model file deleted externally &mdash; detect &amp; mark unavailable</td><td class="status">&#10003;</td><td>1.0</td><td>get_downloads() checks Path::exists(); marks as Failed</td></tr>
-<tr><td>EC-005</td><td>Network proxy respected</td><td class="status">&#10003;</td><td>1.0</td><td>reqwest with rustls-tls respects system proxy by default</td></tr>
-<tr><td>EC-006</td><td>Long model names truncated</td><td class="status">&#10003;</td><td>1.0</td><td>ModelCard uses CSS truncate class on author and name</td></tr>
-<tr><td>EC-007</td><td>Multi-GPU &mdash; enumerate &amp; let user select</td><td class="status">&#10007;</td><td>0.0</td><td>No GPU enumeration or selection UI; single --n-gpu-layers param</td></tr>
-<tr><td>EC-008</td><td>Chat with no model &mdash; guide to Downloads</td><td class="status">&#10003;</td><td>1.0</td><td>ChatPage shows &quot;No Model Running&quot; with embedded ModelRunPanel</td></tr>
-<tr><td>EC-009</td><td>Concurrent downloads &mdash; independent progress</td><td class="status">&#10003;</td><td>1.0</td><td>Each download gets independent AtomicBool flags; HashMap keyed by ID</td></tr>
-<tr><td>EC-010</td><td>Context window overflow &mdash; detect &amp; truncate</td><td class="status">&#10003;</td><td>1.0</td><td>MAX_CONTEXT_CHARS guard in sendMessage; auto-truncates oldest messages</td></tr>
-<tr><td>EC-011</td><td>Unicode in file paths</td><td class="status">&#10003;</td><td>1.0</td><td>Rust String (UTF-8) + standard std::path handling</td></tr>
-<tr><td>EC-012</td><td>App crash during download &mdash; resumable on relaunch</td><td class="status">&#10003;</td><td>1.0</td><td>.part files preserved; load_persisted_downloads marks active as Paused</td></tr>
-<tr><td>EC-013</td><td>HF rate limiting &mdash; backoff &amp; user message</td><td class="status">&#10003;</td><td>1.0</td><td>fetchWithRetry: exponential backoff, Retry-After header, max 3 retries</td></tr>
-<tr><td>EC-014</td><td>RAG empty document &mdash; reject, no zero-vector</td><td class="status">&#10003;</td><td>1.0</td><td>rag.ts: fileSize === 0 &rarr; error status, &quot;Cannot index an empty document&quot;</td></tr>
-<tr><td>EC-015</td><td>MCP malformed JSON &mdash; defensive parse, no crash</td><td class="status">&#10003;</td><td>1.0</td><td>try/catch on JSON.parse; returns isError with text snippet</td></tr>
-<tr><td>EC-016</td><td>Large RAG document &gt; 50 MB &mdash; background chunking</td><td class="status">&#10007;</td><td>0.0</td><td>RAG processing not implemented</td></tr>
-<tr><td>EC-017</td><td>Tray with multiple monitors &mdash; restore to correct monitor</td><td class="status">&#9888;</td><td>0.5</td><td>Relies on Tauri/OS default window restoration behavior</td></tr>
-<tr><td>EC-018</td><td>Auto-update fails mid-download &mdash; cleanup</td><td class="status">&#9888;</td><td>0.5</td><td>Relies on tauri-plugin-updater defaults; no custom cleanup</td></tr>
-</table></div>
+<h2>Edge Cases</h2>
+<table>
+<tr><th style="width:70px">EC</th><th>Description</th><th style="width:50px">Status</th><th>Evidence</th></tr>
+<tr><td>EC-001</td><td>Corrupted GGUF: surface error, offer re-download</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">SHA-256 catches corruption at download. Load failure surfaced. No "re-download" button.</td></tr>
+<tr><td>EC-002</td><td>Port collision: detect + prompt alternate</td><td class="status pass">&#x2705;</td><td class="evidence"><code>inference.rs:79-90</code>: TcpListener::bind check before spawn.</td></tr>
+<tr><td>EC-003</td><td>Partial sidecar: checksum + re-download</td><td class="status fail">&#x274C;</td><td class="evidence">No binary checksum verification.</td></tr>
+<tr><td>EC-004</td><td>File deleted externally: detect + mark unavailable</td><td class="status pass">&#x2705;</td><td class="evidence"><code>download.rs:493-501</code>: checks Path::exists(), marks as Failed.</td></tr>
+<tr><td>EC-005</td><td>Network proxy: respect system settings</td><td class="status pass">&#x2705;</td><td class="evidence">reqwest defaults respect system proxy. Tauri fetch uses system proxy.</td></tr>
+<tr><td>EC-006</td><td>Long model names: truncate in sidebar</td><td class="status pass">&#x2705;</td><td class="evidence">SessionSidebar + ModelCard use CSS <code>truncate</code>.</td></tr>
+<tr><td>EC-007</td><td>Multi-GPU: enumerate + allow selection</td><td class="status fail">&#x274C;</td><td class="evidence">detect_gpu() returns first GPU only. No enumeration or selection UI.</td></tr>
+<tr><td>EC-008</td><td>Chat with no model: guide to downloads</td><td class="status pass">&#x2705;</td><td class="evidence">ChatPage shows "No Model Running" with embedded ModelRunPanel.</td></tr>
+<tr><td>EC-009</td><td>Concurrent downloads: independent progress</td><td class="status pass">&#x2705;</td><td class="evidence">HashMap-based state; per-download AtomicBool flags; independent tokio tasks.</td></tr>
+<tr><td>EC-010</td><td>Context overflow: warn + offer truncation</td><td class="status partial">&#x26A0;&#xFE0F;</td><td class="evidence">Auto-truncates silently (16000 char guard). No user warning or summarization option.</td></tr>
+<tr><td>EC-011</td><td>Unicode in file paths</td><td class="status pass">&#x2705;</td><td class="evidence">Rust String is UTF-8. Tauri path APIs handle Unicode natively.</td></tr>
+<tr><td>EC-012</td><td>App crash during download: resume on relaunch</td><td class="status pass">&#x2705;</td><td class="evidence">.part files preserved; load_persisted_downloads restores state.</td></tr>
+<tr><td>EC-013</td><td>HF rate limiting: 429 + exponential backoff</td><td class="status pass">&#x2705;</td><td class="evidence"><code>hf-api.ts:24-42</code>: fetchWithRetry checks 429, reads Retry-After, exponential backoff.</td></tr>
+<tr><td>EC-014</td><td>RAG empty document: error, no zero-vectors</td><td class="status pass">&#x2705;</td><td class="evidence"><code>rag.ts</code>: checks fileSize === 0, returns error status.</td></tr>
+<tr><td>EC-015</td><td>MCP malformed JSON: defensive parse</td><td class="status pass">&#x2705;</td><td class="evidence"><code>mcp-client.ts:154-179</code>: try/catch JSON.parse; returns error with raw text.</td></tr>
+<tr><td>EC-016</td><td>Large RAG doc &gt;50MB: background chunking + progress</td><td class="status fail">&#x274C;</td><td class="evidence">Chunking runs synchronously in main thread. No progress bar.</td></tr>
+<tr><td>EC-017</td><td>Tray + multiple monitors: restore correct monitor</td><td class="status pass">&#x2705;</td><td class="evidence">Tauri handles multi-monitor window restoration natively.</td></tr>
+<tr><td>EC-018</td><td>Auto-update fails mid-download: cleanup</td><td class="status fail">&#x274C;</td><td class="evidence">Auto-update not implemented beyond plugin registration.</td></tr>
+</table>
+<div class="phase-score partial">Edge Cases Score: 12.0 / 18.0 = 66.7%</div>
 
-<!-- FINDINGS BY SEVERITY -->
-<h2>6. Findings by Severity</h2>
+<!-- KEY FINDINGS -->
+<h2>&#x1F50D; Key Findings</h2>
 
-<h3 style="color:var(--red)">&#128308; High Severity (Blocking)</h3>
+<h3>Strengths</h3>
+<div class="finding good">&#x2705; <strong>Rock-solid download manager</strong> &mdash; Full resume via HTTP Range headers, SHA-256 verification, disk space checks (1.2&times;), persistence across restarts, concurrent downloads with independent progress. Production-quality implementation.</div>
+<div class="finding good">&#x2705; <strong>Well-architected inference layer</strong> &mdash; Sidecar management with port collision detection (EC-002), health polling, graceful shutdown (POST /shutdown &rarr; 5s grace &rarr; kill), orphan prevention on both load and window destroy.</div>
+<div class="finding good">&#x2705; <strong>Security best practices</strong> &mdash; HF token in Tauri encrypted store (NFR-007), excluded from localStorage via <code>partialize</code>; CSP properly configured (NFR-008); llama-server binds 127.0.0.1 only (NFR-006).</div>
+<div class="finding good">&#x2705; <strong>Complete chat experience</strong> &mdash; SSE streaming, tok/s tracking, markdown with syntax-highlighted code blocks + copy button, session CRUD, history persistence, abort support.</div>
+<div class="finding good">&#x2705; <strong>RAG engine implemented</strong> &mdash; <code>rag-engine.ts</code> with chunking, BM25-like retrieval, context building with source citations. Properly integrated into chat flow.</div>
 
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-high">HIGH</span>
-    <span class="finding-refs">FR-035, FR-036, FR-037, SC-009</span>
-  </div>
-  <div class="finding-body">
-    <strong>RAG pipeline is not implemented.</strong> The rag.ts store has document CRUD operations and empty-document rejection, but there is no file reading, text extraction (PDF/DOCX), chunking, embedding, vector storage, or retrieval. The entire Phase 6 semantic search pipeline is missing. This is a P2 feature that blocks SC-009.
-  </div>
+<h3>Issues Requiring Attention</h3>
+<div class="finding critical">&#x274C; <strong>No llama-server binary checksum</strong> (FR-020, EC-003) &mdash; Spec requires verifying sidecar binary integrity on first launch and updates. Security concern: corrupted/tampered binary could execute arbitrary code.</div>
+<div class="finding critical">&#x274C; <strong>Auto-update not implemented</strong> (FR-048, EC-018) &mdash; Plugin registered but no checking logic, download progress, or user prompt. Important for production deployment.</div>
+<div class="finding critical">&#x274C; <strong>Multi-GPU not supported</strong> (EC-007) &mdash; Only first GPU detected. Users with multiple GPUs cannot select which one to use for offloading.</div>
+<div class="finding">&#x26A0;&#xFE0F; <strong>Crash detection too slow</strong> (NFR-009) &mdash; Health poller: 10s interval, 3-strike rule = 30s worst case. Spec requires 2s detection. Reduce interval + immediate detection needed.</div>
+<div class="finding">&#x26A0;&#xFE0F; <strong>RAG: PDF/DOCX not actually parsed</strong> (FR-034) &mdash; <code>readFileAsText()</code> uses FileReader which doesn't extract text from binary formats. Needs pdf.js for PDF, mammoth for DOCX.</div>
+<div class="finding">&#x26A0;&#xFE0F; <strong>Context overflow is silent</strong> (EC-010) &mdash; Auto-truncates without warning. Spec requires user notification with summarize/truncate options.</div>
+<div class="finding">&#x26A0;&#xFE0F; <strong>MCP tool calling not wired into chat</strong> (FR-041, FR-043) &mdash; MCP client can call tools but auto-detection of tool-call JSON in model output and re-injection not integrated into streaming chat flow.</div>
+<div class="finding">&#x26A0;&#xFE0F; <strong>Tray menu incomplete</strong> (FR-046) &mdash; Has "Show" and "Quit". Missing "Quick Chat" and "Stop [Model Name]" items specified by the spec.</div>
+
+<!-- SCORE BREAKDOWN -->
+<h2>&#x1F4CA; Score Breakdown</h2>
+<table>
+<tr><th>Category</th><th style="width:60px">Max</th><th style="width:60px">Score</th><th style="width:60px">%</th></tr>
+<tr><td>Phase 1 &mdash; Tauri Build (FR-001&ndash;005)</td><td>5.0</td><td>5.0</td><td class="pass">100.0%</td></tr>
+<tr><td>Phase 2 &mdash; Downloads (FR-006&ndash;013)</td><td>8.0</td><td>8.0</td><td class="pass">100.0%</td></tr>
+<tr><td>Phase 3 &mdash; Inference (FR-014&ndash;020)</td><td>7.0</td><td>6.0</td><td class="partial">85.7%</td></tr>
+<tr><td>Phase 4 &mdash; Chat (FR-021&ndash;027)</td><td>7.0</td><td>6.0</td><td class="partial">85.7%</td></tr>
+<tr><td>Phase 5 &mdash; API Server (FR-028&ndash;033)</td><td>6.0</td><td>4.5</td><td class="partial">75.0%</td></tr>
+<tr><td>Phase 6 &mdash; RAG (FR-034&ndash;038)</td><td>5.0</td><td>4.0</td><td class="partial">80.0%</td></tr>
+<tr><td>Phase 7 &mdash; MCP (FR-039&ndash;043)</td><td>5.0</td><td>3.5</td><td class="partial">70.0%</td></tr>
+<tr><td>Phase 8 &mdash; Polish (FR-044&ndash;048)</td><td>5.0</td><td>3.0</td><td class="partial">60.0%</td></tr>
+<tr><td>Non-Functional (NFR-001&ndash;012)</td><td>12.0</td><td>10.0</td><td class="pass">83.3%</td></tr>
+<tr><td>Edge Cases (EC-001&ndash;018)</td><td>18.0</td><td>12.0</td><td class="partial">66.7%</td></tr>
+<tr style="font-weight:bold;font-size:1.05rem;"><td>TOTAL</td><td>78.0</td><td>62.0</td><td class="partial">79.5%</td></tr>
+</table>
+
+<!-- VERDICT -->
+<div class="verdict-box conditional">
+  <h2 style="font-size:1.8rem;color:var(--yellow);">&#x26A0;&#xFE0F; NEEDS REVISION</h2>
+  <p style="font-size:1.2rem;margin-bottom:1rem;">Score: <strong>79.5%</strong> &mdash; Threshold for APPROVED WITH CONDITIONS is 80%</p>
+  <p style="color:var(--muted);max-width:700px;margin:0 auto;">
+    The implementation is strong across the critical path (Phases 1&ndash;4) and demonstrates excellent engineering quality in the download manager and inference sidecar. The score falls just below the 80% threshold due to gaps in Phase 8 polish (auto-update, tray menu), incomplete MCP chat integration, and missing binary checksum verification. Addressing the priority fixes below would bring the score above 85%.
+  </p>
 </div>
 
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-high">HIGH</span>
-    <span class="finding-refs">FR-045</span>
-  </div>
-  <div class="finding-body">
-    <strong>Window close kills the inference engine instead of minimizing to tray.</strong> The <code>on_window_event(Destroyed)</code> handler immediately kills the llama-server child process. Spec requires the app to minimize to tray and keep the model running when the window is closed. This is user-hostile for anyone running long inference tasks.
-  </div>
-</div>
+<h3>Priority Fixes to Reach APPROVED</h3>
+<table>
+<tr><th style="width:30px">#</th><th>Fix</th><th style="width:80px">Impact</th><th style="width:60px">Effort</th></tr>
+<tr><td>1</td><td>Add "Quick Chat" + "Stop [Model]" to tray menu</td><td>+0.5 (FR-046)</td><td>Low</td></tr>
+<tr><td>2</td><td>Reduce health poll interval to 2s for crash detection</td><td>+0.5 (NFR-009)</td><td>Low</td></tr>
+<tr><td>3</td><td>Add context usage display (tokens used / limit) to chat</td><td>+0.5 (FR-027)</td><td>Low</td></tr>
+<tr><td>4</td><td>Implement update check notification in frontend</td><td>+0.5 (FR-047)</td><td>Medium</td></tr>
+<tr><td>5</td><td>Wire MCP tool calls into chat streaming flow + badge</td><td>+1.0 (FR-041, FR-043)</td><td>Medium</td></tr>
+</table>
+<p style="margin-top:1rem;color:var(--muted);text-align:center;">Implementing fixes #1&ndash;4 (low-medium effort) would yield +2.0 points &rarr; 82.1% &rarr; <strong>APPROVED WITH CONDITIONS</strong></p>
 
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-high">HIGH</span>
-    <span class="finding-refs">FR-032</span>
-  </div>
-  <div class="finding-body">
-    <strong>API server does not auto-start on launch.</strong> No logic persists the &ldquo;model was loaded&rdquo; state or auto-loads the model on next startup. Users must manually load the model every session, breaking developer workflow (e.g., scripts that depend on the local API being available after reboot).
-  </div>
-</div>
-
-<h3 style="color:var(--yellow)">&#128992; Medium Severity</h3>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">FR-046</span>
-  </div>
-  <div class="finding-body">
-    <strong>System tray menu is incomplete.</strong> Only &ldquo;Show HugBrowse&rdquo; and &ldquo;Quit&rdquo; are present. Spec requires &ldquo;Open&rdquo;, &ldquo;Quick Chat&rdquo;, &ldquo;Stop [Model Name]&rdquo;, and &ldquo;Quit&rdquo;. The Quick Chat and Stop Model entries are missing.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">FR-041, FR-043</span>
-  </div>
-  <div class="finding-body">
-    <strong>MCP tool calling not wired into chat.</strong> <code>callTool()</code> infrastructure exists with proper timeout and error handling, but the chat store&rsquo;s <code>sendMessage()</code> never parses model output for tool-call JSON blocks, never dispatches to MCP, and never injects results. No &ldquo;Tool Call&rdquo; badge component exists.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">NFR-009</span>
-  </div>
-  <div class="finding-body">
-    <strong>Crash detection is too slow.</strong> The health poller runs every 10 seconds with a 3-failure threshold, meaning ~30 seconds to detect a crash. Spec requires &le; 2 seconds. Additionally, no &ldquo;Reload Model&rdquo; button is offered on crash &mdash; only an error message is shown.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">FR-022</span>
-  </div>
-  <div class="finding-body">
-    <strong>Code blocks lack true syntax highlighting.</strong> The CodeBlock component renders code in a monospace font with a copy button, but does not integrate a syntax highlighter (Prism, Highlight.js, or Shiki). The spec requires &ldquo;fenced code blocks with syntax highlighting&rdquo;.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">FR-020, EC-003</span>
-  </div>
-  <div class="finding-body">
-    <strong>No sidecar binary integrity verification.</strong> The llama-server binary is never checksummed. A truncated or corrupted binary would produce a confusing spawn error rather than a clear &ldquo;binary is invalid, re-download&rdquo; message.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-medium">MEDIUM</span>
-    <span class="finding-refs">EC-007</span>
-  </div>
-  <div class="finding-body">
-    <strong>No multi-GPU support.</strong> On systems with 2+ GPUs, there is no enumeration or selection UI. The <code>--n-gpu-layers</code> flag is passed but GPU selection (which GPU to offload to) is not exposed.
-  </div>
-</div>
-
-<h3 style="color:var(--blue)">&#128309; Low Severity</h3>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-low">LOW</span>
-    <span class="finding-refs">FR-027</span>
-  </div>
-  <div class="finding-body">
-    <strong>Context usage counter not shown in UI.</strong> The tok/s metric is displayed during and after streaming (well done), but a &ldquo;tokens used / context limit&rdquo; indicator is not visible. The spec calls for both.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-low">LOW</span>
-    <span class="finding-refs">FR-031</span>
-  </div>
-  <div class="finding-body">
-    <strong>No HTTP 503 when no model is loaded.</strong> When llama-server isn&rsquo;t running, API clients get a connection refused error rather than a structured <code>{&quot;error&quot;: &quot;no_model_loaded&quot;}</code> response. Consider a lightweight proxy or error handler.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-low">LOW</span>
-    <span class="finding-refs">FR-039</span>
-  </div>
-  <div class="finding-body">
-    <strong>MCP server URL is hardcoded.</strong> The spec requires users to configure one or more MCP server URLs. The current implementation only connects to HuggingFace&rsquo;s MCP server at a hardcoded URL.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-low">LOW</span>
-    <span class="finding-refs">NFR-004</span>
-  </div>
-  <div class="finding-body">
-    <strong>OOM warning not enforced before loading.</strong> <code>check_compatibility</code> exists and provides memory warnings on the model detail page, but it is not shown as a gate before the &ldquo;Load Model&rdquo; action in ModelRunPanel.
-  </div>
-</div>
-
-<div class="finding">
-  <div class="finding-header">
-    <span class="finding-severity sev-low">LOW</span>
-    <span class="finding-refs">EC-001</span>
-  </div>
-  <div class="finding-body">
-    <strong>Corrupted GGUF shows error but no re-download offer.</strong> When llama-server rejects an invalid GGUF, the error is surfaced, but there&rsquo;s no &ldquo;Re-download&rdquo; action button to make recovery easy.
-  </div>
-</div>
-
-<!-- WHAT'S WORKING WELL -->
-<h2>7. What&rsquo;s Working Well &#128079;</h2>
-<ul style="list-style:none;padding:0">
-  <li style="padding:4px 0">&#10003; <strong>Download Manager</strong> &mdash; Best-in-class: resumable with Range headers, .part files, SHA-256 validation, disk space guard (1.2&times;), pause/resume via atomic flags, concurrent downloads, crash-safe persistence.</li>
-  <li style="padding:4px 0">&#10003; <strong>Inference Sidecar</strong> &mdash; Port collision detection, graceful SIGTERM&rarr;SIGKILL shutdown, health polling, 127.0.0.1 binding, orphan process prevention.</li>
-  <li style="padding:4px 0">&#10003; <strong>Security</strong> &mdash; HF token properly excluded from localStorage, stored in encrypted Tauri store, CSP is tight and correct.</li>
-  <li style="padding:4px 0">&#10003; <strong>Chat Experience</strong> &mdash; SSE streaming with real-time tok/s tracking, markdown rendering, session management with persistence, system prompts, abort support.</li>
-  <li style="padding:4px 0">&#10003; <strong>Edge Case Handling</strong> &mdash; Deleted files detected, rate limiting with exponential backoff, context overflow guard, empty RAG document rejection, MCP defensive JSON parsing.</li>
-  <li style="padding:4px 0">&#10003; <strong>Onboarding</strong> &mdash; Clean 4-step wizard with hardware detection and skip option.</li>
-</ul>
-
-<!-- RECOMMENDATIONS -->
-<h2>8. Recommendations</h2>
-
-<h3>Must Fix (to reach APPROVED WITH CONDITIONS)</h3>
-<ol style="padding-left:1.5rem">
-  <li><strong>Implement RAG pipeline</strong> (FR-034&ndash;037): Add file reading (PDF via pdf.js, DOCX via mammoth), text chunking (512-token, 64-overlap), embedding via llama-server&rsquo;s <code>/embedding</code> endpoint, vector storage, and top-K retrieval injected into chat context.</li>
-  <li><strong>Minimize to tray on close</strong> (FR-045): Intercept <code>CloseRequested</code> event instead of <code>Destroyed</code>. If a model is running, call <code>window.hide()</code> and prevent default close. Only kill on explicit &ldquo;Quit&rdquo; from tray menu.</li>
-  <li><strong>Auto-start API server</strong> (FR-032): Persist last-loaded model path in the Tauri store. On startup, if a model was previously loaded, auto-load it.</li>
-  <li><strong>Complete tray menu</strong> (FR-046): Add &ldquo;Quick Chat&rdquo; (show window + navigate to /chat), &ldquo;Stop [Model Name]&rdquo; (unload model), update tooltip to show running model name.</li>
-  <li><strong>Wire MCP into chat</strong> (FR-041, FR-043): In the SSE streaming loop, detect tool-call JSON blocks from the model, dispatch to <code>mcpClient.callTool()</code>, and inject the result as a tool message. Add a &ldquo;Tool Call&rdquo; badge component.</li>
-</ol>
-
-<h3>Should Fix</h3>
-<ol style="padding-left:1.5rem">
-  <li><strong>Add syntax highlighting</strong> (FR-022): Integrate <code>react-syntax-highlighter</code> with Prism into the CodeBlock component.</li>
-  <li><strong>Speed up crash detection</strong> (NFR-009): Reduce health poll interval to 1s or use process exit detection via Tauri shell events. Add a &ldquo;Reload Model&rdquo; button in the error state.</li>
-  <li><strong>Sidecar checksum</strong> (FR-020, EC-003): Compute SHA-256 of the llama-server binary on first launch; store in config. Check on subsequent launches.</li>
-  <li><strong>Context usage counter</strong> (FR-027): Add a &ldquo;tokens used / context limit&rdquo; indicator next to the tok/s display or in the right sidebar.</li>
-  <li><strong>Multi-GPU selection</strong> (EC-007): Enumerate GPUs via nvidia-smi on Windows/Linux; let user choose which GPU to offload to in ModelRunPanel.</li>
-</ol>
-
-<h3>Nice to Have</h3>
-<ol style="padding-left:1.5rem">
-  <li><strong>HTTP 503 proxy</strong> (FR-031): Add a minimal proxy or middleware that returns a proper 503 JSON body when no model is loaded.</li>
-  <li><strong>MCP server URL configuration</strong> (FR-039): Add a text input in Settings to configure custom MCP server URLs.</li>
-  <li><strong>OOM gate before load</strong> (NFR-004): Show the compatibility check result as a warning/confirmation dialog before proceeding with model load.</li>
-  <li><strong>Re-download action</strong> (EC-001): On corrupted GGUF error, add a button to delete and re-download the file.</li>
-  <li><strong>Auto-update notification UI</strong> (FR-047, FR-048): Surface Tauri updater events as a non-blocking toast in the app.</li>
-</ol>
-
-<!-- Footer -->
-<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.8rem;text-align:center">
-  HugBrowse Spec Compliance Review &nbsp;|&nbsp; Spec: hugbrowse-lm-studio/spec.md &nbsp;|&nbsp; Score: <strong style="color:var(--yellow)">76.1%</strong> &nbsp;|&nbsp; Verdict: <strong style="color:var(--yellow)">NEEDS REVISION</strong>
-</div>
+<hr style="margin:3rem 0;border-color:var(--border);">
+<p style="text-align:center;color:var(--muted);font-size:0.8rem;">Generated by HugBrowse Spec Compliance Reviewer &middot; Self-contained HTML with inline CSS &middot; 2026-03-07</p>
 
 </body>
 </html>

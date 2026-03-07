@@ -296,13 +296,17 @@ pub fn run() {
         .manage(download_state.clone())
         .manage(inference_state)
         .setup(move |app| {
-            // FR-046: System tray icon
+            // FR-046: System tray icon with model status
             let show = MenuItemBuilder::with_id("show", "Show HugBrowse").build(app)?;
+            let status = MenuItemBuilder::with_id("status", "No model loaded")
+                .enabled(false)
+                .build(app)?;
+            let sep = tauri::menu::PredefinedMenuItem::separator(app)?;
             let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-            let menu = MenuBuilder::new(app).items(&[&show, &quit]).build()?;
+            let menu = MenuBuilder::new(app).items(&[&status, &sep, &show, &quit]).build()?;
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
-                .tooltip("HugBrowse")
+                .tooltip("HugBrowse — Local LLM Runtime")
                 .on_menu_event(|app, event| {
                     match event.id().as_ref() {
                         "show" => {
