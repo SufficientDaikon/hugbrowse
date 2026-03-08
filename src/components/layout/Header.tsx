@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Store,
   Users,
+  X,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSettings } from "../../stores/settings";
@@ -17,6 +18,14 @@ import { cn } from "../ui/cn";
 import { useEffect, useRef } from "react";
 import { TierBadge } from "../tier/TierBadge";
 import { useTier } from "../../hooks/useTier";
+
+const NAV_ITEMS = [
+  { path: "/chat", icon: MessageSquare, label: "Chat", soon: false },
+  { path: "/recommended", icon: Sparkles, label: "For You", soon: false },
+  { path: "/monitor", icon: Activity, label: "Monitor", soon: false },
+  { path: "/marketplace", icon: Store, label: "Marketplace", soon: true },
+  { path: "/community", icon: Users, label: "Community", soon: true },
+] as const;
 
 export function Header() {
   const navigate = useNavigate();
@@ -59,111 +68,74 @@ export function Header() {
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-[var(--border)] bg-[var(--surface)]/80 px-4 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-[var(--border)] glass-heavy px-4">
       {/* Logo */}
       <button
         onClick={() => navigate("/")}
-        className="flex items-center gap-2 text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity"
+        className="flex items-center gap-2.5 hover:opacity-80 transition-opacity shrink-0"
       >
-        <span className="text-2xl">🤗</span>
-        <span className="bg-gradient-to-r from-hf-orange to-accent bg-clip-text text-transparent">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-hf-orange to-orange-600 shadow-sm">
+          <span className="text-base leading-none">🤗</span>
+        </div>
+        <span className="text-[15px] font-bold tracking-tight text-gradient hidden sm:inline">
           HugBrowse
         </span>
       </button>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-2xl mx-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted)]" />
+      <div className="relative flex-1 max-w-xl mx-auto">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)]" />
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search models... (Ctrl+K)"
+          placeholder="Search models… ⌘K"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           className={cn(
-            "w-full rounded-lg border border-[var(--border)] bg-[var(--background)] py-2 pl-10 pr-4 text-sm",
+            "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] py-2 pl-10 pr-10 text-sm",
             "placeholder:text-[var(--muted-foreground)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent",
+            "focus:outline-none focus:ring-2 focus:ring-hf-orange/40 focus:border-hf-orange/40",
             "transition-all duration-200",
           )}
         />
         {query && (
           <button
             onClick={() => handleSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
           >
-            ✕
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1">
-        {/* Nav links */}
-        <button
-          onClick={() => navigate("/chat")}
-          className={cn(
-            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-            location.pathname === "/chat"
-              ? "bg-accent/10 text-accent dark:text-accent-light"
-              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
-          )}
-        >
-          <MessageSquare className="h-3.5 w-3.5" />
-          Chat
-        </button>
-        <button
-          onClick={() => navigate("/recommended")}
-          className={cn(
-            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-            location.pathname === "/recommended"
-              ? "bg-accent/10 text-accent dark:text-accent-light"
-              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
-          )}
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          For You
-        </button>
-        <button
-          onClick={() => navigate("/monitor")}
-          className={cn(
-            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-            location.pathname === "/monitor"
-              ? "bg-accent/10 text-accent dark:text-accent-light"
-              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
-          )}
-        >
-          <Activity className="h-3.5 w-3.5" />
-          Monitor
-        </button>
-        <button
-          onClick={() => navigate("/marketplace")}
-          className={cn(
-            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-            location.pathname === "/marketplace"
-              ? "bg-accent/10 text-accent dark:text-accent-light"
-              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
-          )}
-        >
-          <Store className="h-3.5 w-3.5" />
-          Marketplace
-        </button>
-        <button
-          onClick={() => navigate("/community")}
-          className={cn(
-            "hidden sm:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-            location.pathname === "/community"
-              ? "bg-accent/10 text-accent dark:text-accent-light"
-              : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
-          )}
-        >
-          <Users className="h-3.5 w-3.5" />
-          Community
-        </button>
+      {/* Navigation */}
+      <nav className="flex items-center gap-0.5">
+        {NAV_ITEMS.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={cn(
+                "hidden sm:flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all duration-150",
+                isActive
+                  ? "bg-hf-orange/10 text-hf-orange dark:text-hf-orange-light"
+                  : "text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]",
+              )}
+            >
+              <item.icon className="h-3.5 w-3.5" />
+              {item.label}
+              {item.soon && (
+                <span className="text-[8px] px-1 py-px rounded bg-[var(--muted-foreground)]/15 text-[var(--muted)] font-semibold leading-none uppercase">
+                  soon
+                </span>
+              )}
+            </button>
+          );
+        })}
 
-        <div className="hidden sm:block w-px h-5 bg-[var(--border)] mx-1" />
+        <div className="hidden sm:block w-px h-5 bg-[var(--border)] mx-1.5" />
 
-        {/* Tier badge */}
         {tierInfo && (
           <button
             onClick={() => navigate("/monitor")}
@@ -186,12 +158,12 @@ export function Header() {
           className={cn(
             "rounded-lg p-2 text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)] transition-colors",
             location.pathname === "/settings" &&
-              "bg-[var(--surface-hover)] text-[var(--foreground)]",
+              "bg-hf-orange/10 text-hf-orange dark:text-hf-orange-light",
           )}
         >
           <Settings className="h-4 w-4" />
         </button>
-      </div>
+      </nav>
     </header>
   );
 }

@@ -6,6 +6,7 @@ import { HeadroomCard } from "../components/monitor/HeadroomCard";
 import { AlertToast } from "../components/monitor/AlertToast";
 import { TierClassifier } from "../components/tier/TierClassifier";
 import { useState } from "react";
+import { Activity } from "lucide-react";
 
 export function ResourceMonitorPage() {
   const { current, history } = useLiveResources(true, 2000);
@@ -15,11 +16,16 @@ export function ResourceMonitorPage() {
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">📊 Resource Monitor</h1>
-        <p className="text-sm text-[var(--muted)]">
-          Real-time system resource tracking • Updates every 2 seconds
-        </p>
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 shrink-0">
+          <Activity className="h-5 w-5 text-accent dark:text-accent-light" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold">Resource Monitor</h1>
+          <p className="text-xs text-[var(--muted)]">
+            Real-time system tracking · Updates every 2s
+          </p>
+        </div>
       </div>
 
       {/* Tier Info */}

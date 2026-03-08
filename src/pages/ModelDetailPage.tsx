@@ -46,13 +46,28 @@ export function ModelDetailPage() {
   const [copied, setCopied] = useState(false);
   const { startDownload, downloads, init: initDownloads } = useDownloads();
 
-  useEffect(() => { initDownloads(); }, [initDownloads]);
+  useEffect(() => {
+    initDownloads();
+  }, [initDownloads]);
 
-  const handleDownloadGguf = async (rfilename: string, sizeBytes: number, sha256?: string) => {
+  const handleDownloadGguf = async (
+    rfilename: string,
+    sizeBytes: number,
+    sha256?: string,
+  ) => {
     try {
-      const destDir = await appLocalDataDir().then(d => `${d}models/${modelId}`).catch(() => `models/${modelId}`);
+      const destDir = await appLocalDataDir()
+        .then((d) => `${d}models/${modelId}`)
+        .catch(() => `models/${modelId}`);
       const url = `https://huggingface.co/${modelId}/resolve/main/${rfilename}`;
-      await startDownload({ url, model_id: modelId, filename: rfilename, dest_dir: destDir, total_bytes: sizeBytes, expected_sha256: sha256 });
+      await startDownload({
+        url,
+        model_id: modelId,
+        filename: rfilename,
+        dest_dir: destDir,
+        total_bytes: sizeBytes,
+        expected_sha256: sha256,
+      });
     } catch (e) {
       console.error("Download failed:", e);
     }
@@ -60,7 +75,12 @@ export function ModelDetailPage() {
 
   const isAlreadyDownloaded = (filename: string) =>
     Object.values(downloads).some(
-      (d) => d.model_id === modelId && d.filename === filename && (d.status === "complete" || d.status === "downloading" || d.status === "paused")
+      (d) =>
+        d.model_id === modelId &&
+        d.filename === filename &&
+        (d.status === "complete" ||
+          d.status === "downloading" ||
+          d.status === "paused"),
     );
 
   if (isLoading) {
@@ -76,11 +96,13 @@ export function ModelDetailPage() {
   if (!model) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <span className="text-6xl mb-4">😕</span>
-        <h2 className="text-lg font-semibold mb-2">Model not found</h2>
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-hover)] mb-4">
+          <ArrowLeft className="h-7 w-7 text-[var(--muted)]" />
+        </div>
+        <h2 className="text-base font-semibold mb-1">Model not found</h2>
         <button
           onClick={() => navigate("/")}
-          className="text-accent hover:underline text-sm"
+          className="text-accent dark:text-accent-light hover:underline text-sm mt-2"
         >
           ← Back to search
         </button>
@@ -121,17 +143,17 @@ huggingface-cli download ${model.id}`;
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-4 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 transition-colors group"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" /> Back
       </button>
 
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-[var(--muted)]">{author}</p>
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wide">{author}</p>
+            <h1 className="text-2xl font-bold text-[var(--foreground)] mt-0.5">
               {name || model.id}
             </h1>
           </div>
@@ -139,7 +161,7 @@ huggingface-cli download ${model.id}`;
             href={`https://huggingface.co/${model.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--foreground)] transition-colors shrink-0"
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3.5 py-2 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)] transition-all shrink-0"
           >
             <ExternalLink className="h-3.5 w-3.5" /> View on HF
           </a>
@@ -243,7 +265,9 @@ huggingface-cli download ${model.id}`;
                 <tbody>
                   {files.map((file, i) => {
                     const sizeBytes = file.lfs?.size ?? file.size ?? 0;
-                    const isGguf = file.rfilename.toLowerCase().endsWith(".gguf");
+                    const isGguf = file.rfilename
+                      .toLowerCase()
+                      .endsWith(".gguf");
                     const alreadyQueued = isAlreadyDownloaded(file.rfilename);
                     return (
                       <tr
@@ -252,7 +276,14 @@ huggingface-cli download ${model.id}`;
                       >
                         <td className="px-4 py-2 font-mono text-xs text-[var(--foreground)]">
                           {file.rfilename}
-                          {isGguf && <Badge variant="default" className="ml-2 text-[10px]">GGUF</Badge>}
+                          {isGguf && (
+                            <Badge
+                              variant="default"
+                              className="ml-2 text-[10px]"
+                            >
+                              GGUF
+                            </Badge>
+                          )}
                         </td>
                         <td className="px-4 py-2 text-right text-xs text-[var(--muted)]">
                           {sizeBytes ? formatBytes(sizeBytes) : "—"}
@@ -261,7 +292,13 @@ huggingface-cli download ${model.id}`;
                           {isGguf && (
                             <button
                               disabled={alreadyQueued}
-                              onClick={() => handleDownloadGguf(file.rfilename, sizeBytes, file.lfs?.sha256)}
+                              onClick={() =>
+                                handleDownloadGguf(
+                                  file.rfilename,
+                                  sizeBytes,
+                                  file.lfs?.sha256,
+                                )
+                              }
                               className="flex items-center gap-1 ml-auto rounded-lg border border-hf-orange/40 bg-hf-orange/10 px-2.5 py-1 text-xs font-medium text-hf-orange hover:bg-hf-orange/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               <Download className="h-3 w-3" />

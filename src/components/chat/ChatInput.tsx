@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Square } from "lucide-react";
+import { Square, ArrowUp } from "lucide-react";
 import { cn } from "../ui/cn";
 
 interface ChatInputProps {
@@ -44,8 +44,8 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur-sm p-4">
-      <div className="flex gap-2 items-end max-w-4xl mx-auto">
+    <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4">
+      <div className="flex gap-2 items-end max-w-4xl mx-auto relative">
         <textarea
           ref={ref}
           value={text}
@@ -61,30 +61,37 @@ export function ChatInput({
           rows={1}
           className={cn(
             "flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--background)]",
-            "px-4 py-3 text-sm placeholder:text-[var(--muted-foreground)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent",
-            "transition-all duration-150 min-h-[44px]",
+            "px-4 py-3 pr-14 text-sm placeholder:text-[var(--muted-foreground)]",
+            "focus:outline-none focus:ring-2 focus:ring-hf-orange/30 focus:border-hf-orange/30",
+            "transition-all duration-150 min-h-[48px]",
             (disabled || isStreaming) && "opacity-60 cursor-not-allowed",
           )}
         />
-        {isStreaming ? (
-          <button
-            onClick={onStop}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
-            title="Stop generation"
-          >
-            <Square className="h-4 w-4" />
-          </button>
-        ) : (
-          <button
-            onClick={submit}
-            disabled={!text.trim() || disabled}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hf-orange text-white hover:bg-hf-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            title="Send (Enter)"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        )}
+        <div className="absolute right-2 bottom-2">
+          {isStreaming ? (
+            <button
+              onClick={onStop}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-cant-run dark:bg-cant-run-light text-white hover:opacity-90 transition-all"
+              title="Stop generation"
+            >
+              <Square className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <button
+              onClick={submit}
+              disabled={!text.trim() || disabled}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-all",
+                text.trim() && !disabled
+                  ? "bg-hf-orange text-white hover:bg-hf-orange/90 shadow-sm"
+                  : "bg-[var(--surface-hover)] text-[var(--muted-foreground)] cursor-not-allowed",
+              )}
+              title="Send (Enter)"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

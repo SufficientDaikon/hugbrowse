@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
+use tauri::Emitter;
 
 pub mod download;
 pub mod inference;
@@ -127,43 +128,46 @@ fn detect_gpu_usage() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
 }
 
 #[tauri::command]
-fn get_live_resources() -> LiveResources {
-    let mut sys = System::new_all();
-    sys.refresh_all();
-    std::thread::sleep(std::time::Duration::from_millis(200));
-    sys.refresh_cpu_usage();
+async fn get_live_resources() -> LiveResources {
+    let result = tokio::task::spawn_blocking(|| {
+        let mut sys = System::new_all();
+        sys.refresh_all();
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        sys.refresh_cpu_usage();
 
-    let cpu_percent = sys.global_cpu_usage() as f64;
-    let cpu_per_core: Vec<f64> = sys.cpus().iter().map(|c| c.cpu_usage() as f64).collect();
-    let ram_total = sys.total_memory() as f64 / 1_073_741_824.0;
-    let ram_used = (sys.total_memory() - sys.available_memory()) as f64 / 1_073_741_824.0;
+        let cpu_percent = sys.global_cpu_usage() as f64;
+        let cpu_per_core: Vec<f64> = sys.cpus().iter().map(|c| c.cpu_usage() as f64).collect();
+        let ram_total = sys.total_memory() as f64 / 1_073_741_824.0;
+        let ram_used = (sys.total_memory() - sys.available_memory()) as f64 / 1_073_741_824.0;
 
-    let (gpu_percent, gpu_temp_c, vram_used_gb, vram_total_gb) = detect_gpu_usage();
+        let (gpu_percent, gpu_temp_c, vram_used_gb, vram_total_gb) = detect_gpu_usage();
 
-    let disks = Disks::new_with_refreshed_list();
-    let (disk_free, disk_total) = disks.list().first()
-        .map(|d| (d.available_space() as f64 / 1_073_741_824.0, d.total_space() as f64 / 1_073_741_824.0))
-        .unwrap_or((0.0, 0.0));
+        let disks = Disks::new_with_refreshed_list();
+        let (disk_free, disk_total) = disks.list().first()
+            .map(|d| (d.available_space() as f64 / 1_073_741_824.0, d.total_space() as f64 / 1_073_741_824.0))
+            .unwrap_or((0.0, 0.0));
 
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64;
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
 
-    LiveResources {
-        cpu_percent: round1(cpu_percent),
-        cpu_per_core,
-        ram_used_gb: round1(ram_used),
-        ram_total_gb: round1(ram_total),
-        gpu_percent, gpu_temp_c, vram_used_gb, vram_total_gb,
-        disk_free_gb: round1(disk_free),
-        disk_total_gb: round1(disk_total),
-        timestamp,
-    }
+        LiveResources {
+            cpu_percent: round1(cpu_percent),
+            cpu_per_core,
+            ram_used_gb: round1(ram_used),
+            ram_total_gb: round1(ram_total),
+            gpu_percent, gpu_temp_c, vram_used_gb, vram_total_gb,
+            disk_free_gb: round1(disk_free),
+            disk_total_gb: round1(disk_total),
+            timestamp,
+        }
+    }).await.unwrap();
+    result
 }
 
 #[tauri::command]
-fn classify_hardware_tier(ram_gb: f64, vram_gb: Option<f64>, cpu_cores: u32) -> serde_json::Value {
+fn classify_hardware_tier(ram_gb: f64, vram_gb: Option<f64>, _cpu_cores: u32) -> serde_json::Value {
     let vram = vram_gb.unwrap_or(0.0);
     let tier = if ram_gb <= 4.0 {
         "potato"

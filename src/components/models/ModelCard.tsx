@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Download, Heart } from "lucide-react";
+import { Download, Heart, ArrowUpRight } from "lucide-react";
 import type { HFModel } from "../../lib/hf-types";
 import { Badge } from "../ui/Badge";
 import { cn } from "../ui/cn";
@@ -15,18 +15,30 @@ interface ModelCardProps {
   model: HFModel;
 }
 
-const compatDots: Record<string, string> = {
-  green: "bg-can-run dark:bg-can-run-light",
-  yellow: "bg-maybe-run dark:bg-maybe-run-light",
-  red: "bg-cant-run dark:bg-cant-run-light",
-  unknown: "bg-[var(--muted-foreground)]",
-};
-
-const compatLabels: Record<string, string> = {
-  green: "Can run on GPU",
-  yellow: "Can run on CPU",
-  red: "Too large",
-  unknown: "Size unknown",
+const compatStyles: Record<
+  string,
+  { dot: string; ring: string; label: string }
+> = {
+  green: {
+    dot: "bg-can-run dark:bg-can-run-light",
+    ring: "ring-can-run/20 dark:ring-can-run-light/20",
+    label: "Can run on GPU",
+  },
+  yellow: {
+    dot: "bg-maybe-run dark:bg-maybe-run-light",
+    ring: "ring-maybe-run/20 dark:ring-maybe-run-light/20",
+    label: "Can run on CPU",
+  },
+  red: {
+    dot: "bg-cant-run dark:bg-cant-run-light",
+    ring: "ring-cant-run/20 dark:ring-cant-run-light/20",
+    label: "Too large",
+  },
+  unknown: {
+    dot: "bg-[var(--muted-foreground)]",
+    ring: "ring-[var(--muted-foreground)]/20",
+    label: "Size unknown",
+  },
 };
 
 export function ModelCard({ model }: ModelCardProps) {
@@ -44,6 +56,7 @@ export function ModelCard({ model }: ModelCardProps) {
       )
     : "unknown";
 
+  const style = compatStyles[compat];
   const author = model.id.split("/")[0];
   const name = model.id.split("/").slice(1).join("/");
 
@@ -51,36 +64,38 @@ export function ModelCard({ model }: ModelCardProps) {
     <button
       onClick={() => navigate(`/model/${encodeURIComponent(model.id)}`)}
       className={cn(
-        "group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left",
-        "hover:border-hf-orange/50 hover:shadow-lg hover:shadow-hf-orange/5 hover:scale-[1.02]",
-        "transition-all duration-150 ease-out",
+        "group relative flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left",
+        "hover:border-hf-orange/40 hover:shadow-lg hover:shadow-hf-orange/5",
+        "transition-all duration-200 ease-out",
       )}
     >
+      {/* Hover arrow */}
+      <ArrowUpRight className="absolute top-3 right-3 h-3.5 w-3.5 text-[var(--muted-foreground)] opacity-0 group-hover:opacity-100 group-hover:text-hf-orange transition-all duration-200" />
+
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--muted)] truncate">{author}</p>
-          <p className="font-semibold text-sm text-[var(--foreground)] truncate group-hover:text-hf-orange transition-colors">
+      <div className="flex items-start gap-3 mb-3">
+        {/* Compat indicator */}
+        <div
+          className={cn(
+            "mt-1 h-2.5 w-2.5 rounded-full ring-4 shrink-0",
+            style.dot,
+            style.ring,
+          )}
+          title={style.label}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] text-[var(--muted)] truncate">{author}</p>
+          <p className="font-semibold text-sm text-[var(--foreground)] truncate group-hover:text-hf-orange transition-colors leading-tight">
             {name || model.id}
           </p>
         </div>
-        <div
-          className="flex items-center gap-1.5 shrink-0"
-          title={compatLabels[compat]}
-        >
-          <div className={cn("h-2.5 w-2.5 rounded-full", compatDots[compat])} />
-        </div>
       </div>
-
-      {/* Task Badge */}
-      {model.pipeline_tag && (
-        <Badge variant="orange" className="mb-3 self-start">
-          {model.pipeline_tag}
-        </Badge>
-      )}
 
       {/* Tags */}
       <div className="flex flex-wrap gap-1.5 mb-3">
+        {model.pipeline_tag && (
+          <Badge variant="orange">{model.pipeline_tag}</Badge>
+        )}
         {params && (
           <Badge variant="default">
             {params >= 1 ? `${params}B` : `${Math.round(params * 1000)}M`}{" "}
@@ -90,11 +105,11 @@ export function ModelCard({ model }: ModelCardProps) {
         {model.library_name && (
           <Badge variant="outline">{model.library_name}</Badge>
         )}
-        {model.tags?.includes("gguf") && <Badge variant="default">GGUF</Badge>}
+        {model.tags?.includes("gguf") && <Badge variant="green">GGUF</Badge>}
       </div>
 
       {/* Stats */}
-      <div className="mt-auto flex items-center gap-4 text-xs text-[var(--muted)]">
+      <div className="mt-auto flex items-center gap-4 pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--muted)]">
         <span className="flex items-center gap-1">
           <Download className="h-3 w-3" />
           {formatNumber(model.downloads)}

@@ -5,6 +5,7 @@ import { registryClient } from "../../lib/marketplace/registry-client";
 import { MarketplaceListingCard } from "../../components/marketplace/ListingCard";
 import type { CreatorProfile } from "../../lib/marketplace/types";
 import { Users, TrendingUp, Sparkles, UserPlus, Heart } from "lucide-react";
+import { ComingSoonBanner } from "../../components/ui/ComingSoonBanner";
 
 export function CommunityPage() {
   const { listings } = useMarketplace();
@@ -57,6 +58,9 @@ export function CommunityPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="shrink-0 px-6 py-4 border-b border-[var(--border)]">
+        <div className="mb-3">
+          <ComingSoonBanner feature="Community features" />
+        </div>
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Users className="h-5 w-5 text-accent" /> Community
         </h1>

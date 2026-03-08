@@ -13,20 +13,22 @@ interface UpdateInfo {
 
 /** FR-062: Detect if app was just updated and show changelog */
 function usePostUpdateChangelog() {
-  const [changelog, setChangelog] = useState<{ version: string; body: string } | null>(null);
+  const currentVersion = "0.1.0"; // Would be read from Tauri config
 
-  useEffect(() => {
+  const [changelog, setChangelog] = useState<{ version: string; body: string } | null>(() => {
     const lastVersion = localStorage.getItem("hugbrowse-last-version");
-    const currentVersion = "0.1.0"; // Would be read from Tauri config
     if (lastVersion && lastVersion !== currentVersion) {
-      // App was updated — show what's new
-      setChangelog({
+      return {
         version: currentVersion,
         body: `Welcome to HugBrowse ${currentVersion}!\n\n• Community Marketplace — browse, install, and share extensions\n• Plugin system with sandboxed execution\n• Creator Dashboard for publishing content\n• Privacy consent and crash reporting\n• Keyboard shortcuts (Ctrl+/ to view)\n• Offline indicator\n• And many more improvements!`,
-      });
+      };
     }
+    return null;
+  });
+
+  useEffect(() => {
     localStorage.setItem("hugbrowse-last-version", currentVersion);
-  }, []);
+  }, [currentVersion]);
 
   return { changelog, dismissChangelog: () => setChangelog(null) };
 }

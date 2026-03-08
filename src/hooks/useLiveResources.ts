@@ -58,6 +58,7 @@ export function useLiveResources(enabled = true, intervalMs = 2000) {
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- polling external system data
     poll(); // initial
     const id = setInterval(poll, intervalMs);
 

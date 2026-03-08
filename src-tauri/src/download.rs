@@ -247,10 +247,12 @@ async fn do_download(
 
     while let Some(chunk_result) = stream.next().await {
         if cancel_flag.load(Ordering::Relaxed) {
-            let mut st = state.lock().unwrap();
-            if let Some(e) = st.downloads.get_mut(&id) {
-                e.status = DownloadStatus::Cancelled;
-                emit_and_persist(&app, e, &state);
+            {
+                let mut st = state.lock().unwrap();
+                if let Some(e) = st.downloads.get_mut(&id) {
+                    e.status = DownloadStatus::Cancelled;
+                    emit_and_persist(&app, e, &state);
+                }
             }
             drop(file);
             let _ = tokio::fs::remove_file(&part_path).await;
@@ -343,20 +345,28 @@ async fn do_download(
         let part_clone = part_path.clone();
         let actual = tokio::task::spawn_blocking(move || {
             use sha2::{Digest, Sha256};
-            let data = std::fs::read(&part_clone)?;
+            use std::io::Read;
+            let mut file = std::fs::File::open(&part_clone)?;
             let mut h = Sha256::new();
-            h.update(&data);
+            let mut buf = [0u8; 65536];
+            loop {
+                let n = file.read(&mut buf)?;
+                if n == 0 { break; }
+                h.update(&buf[..n]);
+            }
             Ok::<String, std::io::Error>(hex::encode(h.finalize()))
         })
         .await;
         match actual {
             Ok(Ok(hash)) if hash == expected_hash => {}
             Ok(Ok(hash)) => {
-                let mut st = state.lock().unwrap();
-                if let Some(e) = st.downloads.get_mut(&id) {
-                    e.status = DownloadStatus::Failed;
-                    e.error = Some(format!("SHA-256 mismatch: expected {expected_hash}, got {hash}"));
-                    emit_and_persist(&app, e, &state);
+                {
+                    let mut st = state.lock().unwrap();
+                    if let Some(e) = st.downloads.get_mut(&id) {
+                        e.status = DownloadStatus::Failed;
+                        e.error = Some(format!("SHA-256 mismatch: expected {expected_hash}, got {hash}"));
+                        emit_and_persist(&app, e, &state);
+                    }
                 }
                 let _ = tokio::fs::remove_file(&part_path).await;
                 return;

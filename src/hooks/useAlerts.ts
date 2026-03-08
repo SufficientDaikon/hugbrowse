@@ -66,6 +66,8 @@ export function useAlerts(current: LiveResources | null) {
     }
 
     if (newAlerts.length > 0) {
+      // Alerts are derived from external system metrics — valid effect pattern
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAlerts((prev) => [
         ...prev.filter((a) => !newAlerts.some((n) => n.type === a.type)),
         ...newAlerts,

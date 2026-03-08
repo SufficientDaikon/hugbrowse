@@ -1,6 +1,7 @@
 import type { HFModel } from "../../lib/hf-types";
 import { ModelCard } from "./ModelCard";
 import { ModelCardSkeleton } from "./ModelCardSkeleton";
+import { SearchX } from "lucide-react";
 
 interface ModelGridProps {
   models: HFModel[];
@@ -26,12 +27,15 @@ export function ModelGrid({
   if (models.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <span className="text-6xl mb-4">🔍</span>
-        <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-hover)] mb-4">
+          <SearchX className="h-7 w-7 text-[var(--muted)]" />
+        </div>
+        <h3 className="text-base font-semibold text-[var(--foreground)] mb-1">
           No models found
         </h3>
-        <p className="text-sm text-[var(--muted)]">
-          Try adjusting your search or filters
+        <p className="text-sm text-[var(--muted)] max-w-xs">
+          Try adjusting your search query or filters to find what you're looking
+          for
         </p>
       </div>
     );

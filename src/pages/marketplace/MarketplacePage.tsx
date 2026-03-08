@@ -19,6 +19,7 @@ import {
   WifiOff,
   Package,
 } from "lucide-react";
+import { ComingSoonBanner } from "../../components/ui/ComingSoonBanner";
 
 const CATEGORIES: { id: ContentCategory | null; label: string; icon: React.ReactNode }[] = [
   { id: null, label: "All", icon: <Store className="h-3.5 w-3.5" /> },
@@ -87,6 +88,9 @@ export function MarketplacePage() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
+        <div className="mb-3">
+          <ComingSoonBanner feature="The Marketplace" />
+        </div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Store className="h-6 w-6 text-accent" />
@@ -347,7 +351,7 @@ export function MarketplacePage() {
 }
 
 function InstalledExtensionRow({ extension }: { extension: import("../../lib/marketplace/types").InstalledExtension }) {
-  const { uninstallExtension, enableExtension, disableExtension, listings } = useMarketplace();
+  const { listings } = useMarketplace();
 
   // EC-13: Check if creator deleted the published extension
   const listingExists = extension.listingId
@@ -389,18 +393,16 @@ function InstalledExtensionRow({ extension }: { extension: import("../../lib/mar
       </div>
       <div className="flex gap-1.5">
         <button
-          onClick={() => extension.enabled ? disableExtension(extension.id) : enableExtension(extension.id)}
-          className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors ${
-            extension.enabled
-              ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
-              : "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20"
-          }`}
+          disabled
+          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-gray-500/10 text-gray-400 cursor-not-allowed"
+          title="Coming Soon"
         >
           {extension.enabled ? "Enabled" : "Disabled"}
         </button>
         <button
-          onClick={() => uninstallExtension(extension.id)}
-          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+          disabled
+          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-gray-500/10 text-gray-400 cursor-not-allowed"
+          title="Coming Soon"
         >
           Uninstall
         </button>

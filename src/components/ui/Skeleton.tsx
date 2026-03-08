@@ -4,7 +4,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-lg bg-[var(--surface-hover)]",
+        "animate-pulse rounded-xl bg-[var(--surface-hover)]",
         className,
       )}
     />

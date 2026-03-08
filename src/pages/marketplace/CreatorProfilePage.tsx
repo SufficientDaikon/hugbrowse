@@ -14,6 +14,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { ComingSoonBanner } from "../../components/ui/ComingSoonBanner";
 
 export function CreatorProfilePage() {
   const { creatorId } = useParams<{ creatorId: string }>();
@@ -57,6 +58,9 @@ export function CreatorProfilePage() {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4">
+        <div className="mb-3">
+          <ComingSoonBanner feature="Creator profiles" />
+        </div>
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)] mb-3 transition-colors"

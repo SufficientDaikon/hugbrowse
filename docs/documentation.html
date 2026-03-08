@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HugBrowse — Documentation</title>
+<style>
+/* ═══════════════════════════════════════════════════════
+   HugBrowse Documentation — Self-contained CSS
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f8fafc;
+  --bg-code: #f1f5f9;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-bg: #eef2ff;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --sidebar-w: 260px;
+  --header-h: 64px;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.dark {
+  --bg: #0f172a;
+  --bg-alt: #1e293b;
+  --bg-code: #1e293b;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-bg: #1e1b4b;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 24px); }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+  transition: background .3s, color .3s;
+}
+
+/* ── Header ─────────────────────────────────── */
+.top-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+}
+.top-header .logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text);
+}
+.top-header .logo span { font-size: 1.6rem; }
+.top-header .actions { display: flex; gap: 8px; align-items: center; }
+.theme-btn {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text);
+  transition: all .2s;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+.github-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background .2s;
+}
+.github-link:hover { background: var(--accent-hover); }
+
+/* ── Sidebar ────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  width: var(--sidebar-w);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+  padding: 24px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+  z-index: 50;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 20px 0 8px;
+}
+.sidebar h3:first-child { margin-top: 0; }
+.sidebar a {
+  display: block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  transition: all .15s;
+}
+.sidebar a:hover, .sidebar a.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ── Main Content ───────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  margin-top: var(--header-h);
+  padding: 40px 48px 80px;
+  max-width: 900px;
+}
+
+/* ── Typography ─────────────────────────────── */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent), #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 56px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  scroll-margin-top: calc(var(--header-h) + 24px);
+}
+h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 32px 0 12px;
+  color: var(--text);
+}
+p { margin: 12px 0; }
+
+/* ── Badges ─────────────────────────────────── */
+.badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 24px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.badge.accent { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+
+/* ── Feature cards ──────────────────────────── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.feature-card {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform .2s, box-shadow .2s;
+}
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.feature-card .icon {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+.feature-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.feature-card p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Screenshots ────────────────────────────── */
+.screenshot-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin: 24px 0;
+}
+.screenshot-item {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+.screenshot-item img {
+  width: 100%;
+  display: block;
+  transition: transform .3s;
+}
+.screenshot-item:hover img { transform: scale(1.01); }
+.screenshot-caption {
+  padding: 12px 16px;
+  background: var(--bg-alt);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Code blocks ────────────────────────────── */
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 16px 0;
+}
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+pre code { background: none; padding: 0; }
+
+/* ── Tables ─────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:hover { background: var(--bg-alt); }
+
+/* ── Lists ──────────────────────────────────── */
+ul, ol { padding-left: 24px; margin: 12px 0; }
+li { margin: 6px 0; }
+li strong { color: var(--text); }
+
+/* ── Architecture diagram ───────────────────── */
+.arch-box {
+  background: var(--bg-alt);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+}
+.arch-box pre {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* ── Compat colors ──────────────────────────── */
+.compat-table .green { color: var(--green); font-weight: 600; }
+.compat-table .yellow { color: var(--yellow); font-weight: 600; }
+.compat-table .red { color: var(--red); font-weight: 600; }
+
+/* ── Callouts ───────────────────────────────── */
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.callout.info { background: #eff6ff; border-left: 4px solid #3b82f6; }
+.callout.warning { background: #fefce8; border-left: 4px solid #eab308; }
+.callout.tip { background: #f0fdf4; border-left: 4px solid #22c55e; }
+.dark .callout.info { background: #172554; }
+.dark .callout.warning { background: #422006; }
+.dark .callout.tip { background: #052e16; }
+.callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+/* ── Keyboard shortcuts ─────────────────────── */
+kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* ── Project tree ───────────────────────────── */
+.tree {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.tree .dir { color: var(--accent); font-weight: 600; }
+.tree .comment { color: var(--text-muted); font-style: italic; }
+
+/* ── Glossary table ─────────────────────────── */
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.glossary-item {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+.glossary-item strong {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+.glossary-item p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+  line-height: 1.5;
+}
+
+/* ── Quick Start steps ──────────────────────── */
+.steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+}
+.steps li {
+  counter-increment: step;
+  padding: 12px 0 12px 48px;
+  position: relative;
+  border-left: 2px solid var(--border);
+  margin-left: 16px;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: -14px;
+  top: 12px;
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.steps li:last-child { border-left-color: transparent; }
+
+/* ── Footer ─────────────────────────────────── */
+.footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 24px 20px 60px; }
+  h1 { font-size: 2rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Mobile hamburger placeholder ───────────── */
+.mobile-menu-btn {
+  display: none;
+  background: none; border: none;
+  font-size: 1.4rem; cursor: pointer; color: var(--text);
+}
+@media (max-width: 900px) {
+  .mobile-menu-btn { display: block; }
+}
+
+/* ── Scroll progress ────────────────────────── */
+.progress-bar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: 101;
+  transition: transform 0.1s linear;
+}
+
+/* ── V2: Tier table ─────────────────────────── */
+.tier-table td:first-child { white-space: nowrap; }
+.tier-row-budget      { border-left: 4px solid #94a3b8; }
+.tier-row-laptop      { border-left: 4px solid #22c55e; }
+.tier-row-gaming      { border-left: 4px solid #3b82f6; }
+.tier-row-workstation { border-left: 4px solid #8b5cf6; }
+.tier-row-server      { border-left: 4px solid #f59e0b; }
+
+/* ── V2: Gauge demo grid ────────────────────── */
+.gauge-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+  text-align: center;
+}
+@media (max-width: 700px) { .gauge-demo-grid { grid-template-columns: repeat(2, 1fr); } }
+.gauge-demo-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.gauge-demo-item svg { width: 88px; height: 88px; }
+.gauge-demo-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.gauge-demo-val { font-size: 1rem; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
+
+/* ── V2: Speed badges ───────────────────────── */
+.badge.speed-fast   { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+.badge.speed-good   { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+.badge.speed-usable { background: #fef9c3; color: #a16207; border-color: #fde047; }
+.badge.speed-slow   { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+.dark .badge.speed-fast   { background: #052e16; color: #4ade80; border-color: #166534; }
+.dark .badge.speed-good   { background: #172554; color: #93c5fd; border-color: #1e40af; }
+.dark .badge.speed-usable { background: #422006; color: #fbbf24; border-color: #92400e; }
+.dark .badge.speed-slow   { background: #450a0a; color: #f87171; border-color: #991b1b; }
+
+/* ── V2: Quality stars ──────────────────────── */
+.stars     { color: #f59e0b; font-size: 0.9rem; letter-spacing: 1px; }
+.stars-dim { color: var(--border); font-size: 0.9rem; letter-spacing: 1px; }
+
+/* ── V2: Quant comparison table ─────────────── */
+.quant-quality-5 { color: #22c55e; font-weight: 700; }
+.quant-quality-4 { color: #84cc16; font-weight: 600; }
+.quant-quality-3 { color: #eab308; font-weight: 600; }
+.quant-quality-2 { color: #f97316; font-weight: 600; }
+.quant-quality-1 { color: #ef4444; font-weight: 600; }
+
+/* ── V2: Calculator widget ──────────────────── */
+.v2-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  color: #fff;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.calc-widget {
+  background: var(--bg-alt);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin: 24px 0;
+}
+.calc-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0;
+}
+.calc-slider-row label {
+  min-width: 56px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.calc-slider-row input[type=range] {
+  flex: 1;
+  height: 6px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.calc-val {
+  min-width: 72px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.calc-tier-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  margin: 20px 0 16px;
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+.calc-tier-icon { font-size: 2.2rem; line-height: 1; }
+.calc-tier-name { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+.calc-tier-sub  { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+.calc-table-wrap { margin-top: 16px; overflow-x: auto; }
+.calc-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.calc-table thead th { padding: 8px 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+.calc-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.calc-table tr.can-gpu  td:first-child { border-left: 3px solid var(--green); }
+.calc-table tr.can-cpu  td:first-child { border-left: 3px solid var(--yellow); }
+.calc-table tr.no-run   td:first-child { border-left: 3px solid var(--red); }
+.calc-table tr.can-gpu  { background: rgba(34,197,94,.05); }
+.calc-table tr.can-cpu  { background: rgba(234,179,8,.05); }
+.calc-table tr.no-run   { background: rgba(239,68,68,.04); }
+.calc-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.pill-gpu  { background: #dcfce7; color: #15803d; }
+.pill-cpu  { background: #fef9c3; color: #92400e; }
+.pill-no   { background: #fee2e2; color: #b91c1c; }
+.dark .pill-gpu  { background: #052e16; color: #4ade80; }
+.dark .pill-cpu  { background: #422006; color: #fbbf24; }
+.dark .pill-no   { background: #450a0a; color: #f87171; }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ══════════ Header ══════════ -->
+<header class="top-header">
+  <a href="#" class="logo">
+    <span>🤗</span> HugBrowse Docs
+  </a>
+  <div class="actions">
+    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+  </div>
+</header>
+
+<!-- ══════════ Sidebar ══════════ -->
+<nav class="sidebar" id="sidebar">
+  <h3>Getting Started</h3>
+  <a href="#overview">Overview</a>
+  <a href="#screenshots">Screenshots</a>
+  <a href="#quick-start">Quick Start</a>
+
+  <h3>Features</h3>
+  <a href="#features">All Features</a>
+  <a href="#keyboard">Keyboard Shortcuts</a>
+
+  <h3>Architecture</h3>
+  <a href="#architecture">System Design</a>
+  <a href="#project-structure">Project Structure</a>
+
+  <h3>Guides</h3>
+  <a href="#configuration">Configuration</a>
+  <a href="#api">API Integration</a>
+  <a href="#can-it-run">Can It Run?</a>
+  <a href="#explain-mode">Explain Mode</a>
+
+  <h3>V2 Features</h3>
+  <a href="#tiers">Hardware Tiers</a>
+  <a href="#monitor">Resource Monitor</a>
+  <a href="#recommended">Recommended Models</a>
+  <a href="#enhanced-compat">Enhanced Compat</a>
+  <a href="#calculator">PC Calculator</a>
+
+  <h3>Development</h3>
+  <a href="#development">Dev Guide</a>
+  <a href="#building">Building</a>
+
+  <h3>Help</h3>
+  <a href="#troubleshooting">Troubleshooting</a>
+</nav>
+
+<!-- ══════════ Main Content ══════════ -->
+<main class="main">
+
+  <!-- Hero -->
+  <section id="overview">
+    <h1>🤗 HugBrowse</h1>
+    <p class="subtitle">A beautiful desktop app for browsing Hugging Face models — with hardware compatibility checks and plain-English ML explanations.</p>
+
+    <div class="badge-row">
+      <span class="badge accent">v0.1.0</span>
+      <span class="badge">Tauri 2</span>
+      <span class="badge">React 18</span>
+      <span class="badge">TypeScript</span>
+      <span class="badge">Tailwind CSS</span>
+      <span class="badge">Rust</span>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <div>
+        <strong>What is HugBrowse?</strong> Think of it as an "app store for AI models" — but focused on telling you what you can actually run on your hardware. Find models, check compatibility, and understand ML jargon without leaving the app.
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section id="screenshots">
+    <h2>📸 Screenshots</h2>
+
+    <div class="screenshot-grid">
+      <div class="screenshot-item">
+        <img src="img/home-light.png" alt="Home page — Light mode" loading="lazy">
+        <div class="screenshot-caption">☀️ Home — Trending models in light mode</div>
+      </div>
+      <div class="screenshot-item">
+        <img src="img/home-dark.png" alt="Home page — Dark mode" loading="lazy">
+        <div class="screenshot-caption">🌙 Home — Dark mode for late-night browsing</div>
+      </div>
+      <div class="screenshot-item">
+        <img src="img/model-detail.png" alt="Model detail page" loading="lazy">
+        <div class="screenshot-caption">📖 Model detail — README, files, and usage tabs</div>
+      </div>
+      <div class="screenshot-item">
+        <img src="img/can-it-run.png" alt="Can It Run compatibility panel" loading="lazy">
+        <div class="screenshot-caption">🖥️ "Can It Run?" — Hardware compatibility check</div>
+      </div>
+      <div class="screenshot-item">
+        <img src="img/settings.png" alt="Settings page" loading="lazy">
+        <div class="screenshot-caption">⚙️ Settings — Token, theme, and MCP configuration</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quick-start">
+    <h2>🚀 Quick Start</h2>
+
+    <h3>Prerequisites</h3>
+    <ul>
+      <li><strong>Node.js</strong> 18+ and npm</li>
+      <li><strong>Rust</strong> 1.77+ and Cargo (for desktop builds)</li>
+      <li><strong>Visual Studio Build Tools 2022</strong> with C++ workload (Windows only)</li>
+    </ul>
+
+    <h3>Run in Browser</h3>
+    <ol class="steps">
+      <li>Clone the repository and navigate to the <code>hugbrowse</code> folder</li>
+      <li>Install dependencies: <pre>npm install</pre></li>
+      <li>Start the dev server: <pre>npm run dev</pre></li>
+      <li>Open <a href="http://localhost:5173">http://localhost:5173</a> in your browser</li>
+    </ol>
+
+    <h3>Run as Desktop App</h3>
+    <pre>npm run tauri:dev</pre>
+    <p>This compiles the Rust backend and opens a native window (~10MB app).</p>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <div><strong>No token needed!</strong> HugBrowse works without a HuggingFace API token. Add one in Settings for access to gated models and higher rate limits.</div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <h2>✨ Features</h2>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🔍</div>
+        <h4>Smart Search</h4>
+        <p>Real-time search with 300ms debounce, 15 task categories, 9 library filters, and 4 sort options. Press Ctrl+K to focus instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <h4>Model Cards</h4>
+        <p>At-a-glance cards showing author, task type, parameter count, library, downloads, likes, and a compatibility dot (green/yellow/red).</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📖</div>
+        <h4>Full Detail View</h4>
+        <p>README rendering, file browser, Python/CLI code snippets with copy button, and direct HuggingFace.co links.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🖥️</div>
+        <h4>Can It Run?</h4>
+        <p>One-click hardware check. Detects CPU, RAM, GPU/VRAM automatically. Switch quantization levels to find the right fit.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💡</div>
+        <h4>Explain Mode</h4>
+        <p>25 ML terms explained in plain English. Hover over highlighted terms to see tooltips with short and detailed explanations.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <h4>Theme Support</h4>
+        <p>System, Light, and Dark modes. Theme persists across sessions via localStorage.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔌</div>
+        <h4>MCP Integration</h4>
+        <p>Optional connection to HuggingFace's MCP server for enriched model data. Graceful fallback when offline.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">♾️</div>
+        <h4>Infinite Scroll</h4>
+        <p>Loads 24 models at a time with automatic pagination. Smooth skeleton loading animations while fetching.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Keyboard Shortcuts -->
+  <section id="keyboard">
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <table>
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>K</kbd></td><td>Focus the search bar</td></tr>
+        <tr><td><kbd>Escape</kbd></td><td>Blur the search bar</td></tr>
+        <tr><td>Click theme icon</td><td>Cycle: System → Light → Dark</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture">
+    <h2>🏗️ Architecture</h2>
+    <div class="arch-box">
+<pre>
+┌─────────────────────────────────────────────────────┐
+│                   Tauri 2 Shell                      │
+│  ┌───────────────────────────────────────────────┐  │
+│  │              React Frontend                    │  │
+│  │  ┌─────────┐ ┌──────────┐ ┌───────────────┐  │  │
+│  │  │ Search  │ │  Detail  │ │   Settings    │  │  │
+│  │  │  Page   │ │  Page    │ │    Page       │  │  │
+│  │  └────┬────┘ └────┬─────┘ └──────┬────────┘  │  │
+│  │       └────────┬───┘              │           │  │
+│  │           TanStack Query Cache    │           │  │
+│  │                │                  │           │  │
+│  │    ┌───────────┴──────────────┐   │           │  │
+│  │    │   HF REST API Client     │   │           │  │
+│  │    └───────────┬──────────────┘   │           │  │
+│  └────────────────┼──────────────────┼───────────┘  │
+│                   │                  │              │
+│  ┌────────────────┼──────────────────┼───────────┐  │
+│  │         Rust Backend              │           │  │
+│  │  ┌─────────────┐  ┌──────────────┴────────┐  │  │
+│  │  │ System Info  │  │   MCP Client (HTTP)   │  │  │
+│  │  │ CPU/RAM/GPU  │  │   HuggingFace MCP     │  │  │
+│  │  └─────────────┘  └───────────────────────┘  │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+              │                        │
+    HuggingFace REST API    HuggingFace MCP Server
+    huggingface.co/api      huggingface.co/mcp
+</pre>
+    </div>
+    <p>The app is split into two layers:</p>
+    <ul>
+      <li><strong>React Frontend</strong> — UI, routing, API calls, caching (TanStack Query), state management (Zustand)</li>
+      <li><strong>Rust Backend</strong> — System hardware detection via <code>sysinfo</code> crate, WMI for GPU info on Windows</li>
+    </ul>
+  </section>
+
+  <!-- Project Structure -->
+  <section id="project-structure">
+    <h2>📁 Project Structure</h2>
+    <div class="tree">
+<span class="dir">hugbrowse/</span>
+├── <span class="dir">src-tauri/</span>                    <span class="comment"># Rust backend</span>
+│   ├── <span class="dir">src/</span>
+│   │   ├── lib.rs               <span class="comment"># System info + compat commands</span>
+│   │   └── main.rs              <span class="comment"># Tauri entry point</span>
+│   ├── Cargo.toml               <span class="comment"># Rust dependencies</span>
+│   └── tauri.conf.json          <span class="comment"># Tauri configuration</span>
+│
+├── <span class="dir">src/</span>                          <span class="comment"># React frontend (34 files)</span>
+│   ├── App.tsx                   <span class="comment"># Root: routing + providers</span>
+│   ├── main.tsx                  <span class="comment"># Entry point</span>
+│   ├── index.css                 <span class="comment"># Tailwind + custom theme</span>
+│   │
+│   ├── <span class="dir">components/</span>               <span class="comment"># 13 React components</span>
+│   │   ├── <span class="dir">ui/</span>                   <span class="comment"># Badge, Skeleton, Tooltip, ErrorBoundary</span>
+│   │   ├── <span class="dir">layout/</span>               <span class="comment"># AppShell, Header, Sidebar</span>
+│   │   ├── <span class="dir">models/</span>               <span class="comment"># ModelCard, ModelGrid, Skeleton</span>
+│   │   ├── <span class="dir">compatibility/</span>        <span class="comment"># CanItRun panel</span>
+│   │   ├── <span class="dir">explain/</span>              <span class="comment"># ExplainText + glossary (25 terms)</span>
+│   │   └── <span class="dir">search/</span>               <span class="comment"># SortDropdown</span>
+│   │
+│   ├── <span class="dir">pages/</span>                    <span class="comment"># SearchPage, ModelDetailPage, SettingsPage</span>
+│   ├── <span class="dir">hooks/</span>                    <span class="comment"># useModels, useModelDetail, useSystemInfo, useMCP</span>
+│   ├── <span class="dir">lib/</span>                      <span class="comment"># hf-api, hf-types, mcp-client, compatibility, constants</span>
+│   └── <span class="dir">stores/</span>                   <span class="comment"># settings (Zustand + persist), search</span>
+│
+├── <span class="dir">docs/</span>                         <span class="comment"># This documentation</span>
+├── package.json
+├── vite.config.ts
+└── .env.example
+    </div>
+  </section>
+
+  <!-- Configuration -->
+  <section id="configuration">
+    <h2>⚙️ Configuration</h2>
+
+    <h3>HuggingFace API Token</h3>
+    <ol class="steps">
+      <li>Go to <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a></li>
+      <li>Create a token with <strong>Read</strong> permissions</li>
+      <li>In HugBrowse → <strong>Settings</strong> → paste your token → click <strong>Validate</strong></li>
+      <li>Token is stored locally (never sent to third parties)</li>
+    </ol>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>A token enables: gated models (LLaMA, Gemma), private repos, higher rate limits, and MCP server connection.</div>
+    </div>
+
+    <h3>Without a Token</h3>
+    <p>All public models are accessible. Rate limit: ~100 requests/hour. Gated and private models are hidden.</p>
+
+    <h3>Desktop Configuration</h3>
+    <p>The Tauri config lives in <code>src-tauri/tauri.conf.json</code>:</p>
+    <ul>
+      <li>Window: 1200×800 (min 800×600)</li>
+      <li>CSP: allows <code>huggingface.co</code> domains</li>
+      <li>Plugins: shell, store (secure token storage)</li>
+    </ul>
+  </section>
+
+  <!-- API -->
+  <section id="api">
+    <h2>🔗 API Integration</h2>
+
+    <h3>HuggingFace REST API (Primary)</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/models</code></td><td>Search and list models</td></tr>
+        <tr><td><code>GET /api/models/{id}</code></td><td>Full model metadata</td></tr>
+        <tr><td><code>GET /api/models/{id}/tree/main</code></td><td>File listing</td></tr>
+        <tr><td><code>GET /{id}/raw/main/README.md</code></td><td>Model README</td></tr>
+        <tr><td><code>GET /api/whoami</code></td><td>Validate token</td></tr>
+      </tbody>
+    </table>
+    <p>All requests go through <code>src/lib/hf-api.ts</code>. Responses are cached by TanStack Query (5–10 minute stale time).</p>
+
+    <h3>HuggingFace MCP Server (Optional)</h3>
+    <p><strong>URL:</strong> <code>https://huggingface.co/mcp</code></p>
+    <p>Uses JSON-RPC 2.0 over HTTP POST. Provides enriched model metadata when available. The app works perfectly without it.</p>
+  </section>
+
+  <!-- Can It Run -->
+  <section id="can-it-run">
+    <h2>🖥️ "Can It Run?" — How It Works</h2>
+
+    <h3>Step 1: Estimate Model Size</h3>
+    <pre>model_size_gb = parameters_in_billions × bytes_per_parameter</pre>
+    <table class="compat-table">
+      <thead><tr><th>Quantization</th><th>Bytes / Param</th><th>Example: 7B model</th></tr></thead>
+      <tbody>
+        <tr><td>FP32 (full precision)</td><td>4.0</td><td>28.0 GB</td></tr>
+        <tr><td>FP16 (half precision)</td><td>2.0</td><td>14.0 GB</td></tr>
+        <tr><td>Q8 (8-bit)</td><td>1.0</td><td>7.0 GB</td></tr>
+        <tr><td>Q6_K</td><td>0.75</td><td>5.25 GB</td></tr>
+        <tr><td>Q5_K_M</td><td>0.625</td><td>4.38 GB</td></tr>
+        <tr><td><strong>Q4_K_M</strong> (most popular)</td><td>0.5</td><td>3.5 GB</td></tr>
+        <tr><td>Q3_K_M</td><td>0.375</td><td>2.63 GB</td></tr>
+        <tr><td>Q2_K (smallest)</td><td>0.25</td><td>1.75 GB</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Step 2: Add Overhead</h3>
+    <pre>needed_gb = model_size_gb × 1.2   // 20% for KV cache + runtime</pre>
+
+    <h3>Step 3: Compare Against Your Hardware</h3>
+    <table class="compat-table">
+      <thead><tr><th>Condition</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>GPU VRAM ≥ needed_gb</td><td><span class="green">🟢 GREEN</span> — Runs on GPU (fast)</td></tr>
+        <tr><td>RAM ≥ needed_gb × 1.1</td><td><span class="yellow">🟡 YELLOW</span> — Runs on CPU (slower)</td></tr>
+        <tr><td>Neither fits</td><td><span class="red">🔴 RED</span> — Too large (suggests smaller quant)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Example</h3>
+    <div class="callout warning">
+      <span class="callout-icon">🧮</span>
+      <div>
+        <strong>Meta-Llama-3-8B at FP16:</strong><br>
+        8.03B × 2 bytes = 16.06 GB → with overhead = <strong>19.3 GB needed</strong><br>
+        Your PC: 8GB RAM, no GPU → <span class="red">🔴 Too Large</span><br>
+        Suggestion: "Try Q4_K_M — needs only ~4.8 GB"
+      </div>
+    </div>
+  </section>
+
+  <!-- Explain Mode -->
+  <section id="explain-mode">
+    <h2>💡 Explain Mode — ML Glossary</h2>
+    <p>HugBrowse includes 25 ML terms explained in plain English. Hover over any highlighted term in the app to see a tooltip.</p>
+
+    <div class="glossary-grid">
+      <div class="glossary-item">
+        <strong>Parameters</strong>
+        <p>Numbers the model learned during training. 7B = 7 billion. More = smarter but bigger.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Quantization</strong>
+        <p>Shrinking a model by using less precise numbers. Like JPEG compression for AI.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>GGUF</strong>
+        <p>File format for running AI on regular computers without a powerful GPU.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Safetensors</strong>
+        <p>Safe model file format that can't contain hidden malicious code.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>LoRA</strong>
+        <p>Lightweight add-on that customizes a model without retraining. Like a game mod.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>VRAM</strong>
+        <p>Graphics card memory. More = you can run bigger models at full speed.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Inference</strong>
+        <p>Using a trained model to get results. Chatting with AI = inference.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>FP16 / BF16</strong>
+        <p>Half-precision numbers. Half the memory of full precision, minimal quality loss.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Context Length</strong>
+        <p>How much text the model sees at once. 4096 tokens ≈ 3,000 words.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Tokens</strong>
+        <p>Small text chunks the model processes. 1 token ≈ ¾ of a word.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>Fine-tuned</strong>
+        <p>A model further trained on specific data. Turns a generalist into a specialist.</p>
+      </div>
+      <div class="glossary-item">
+        <strong>KV Cache</strong>
+        <p>Memory trick to speed up text generation. Uses extra VRAM per conversation.</p>
+      </div>
+    </div>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">…and 13 more terms available in the app's glossary.</p>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       V2 FEATURES
+       ═══════════════════════════════════════════ -->
+
+  <!-- Hardware Tier System -->
+  <section id="tiers">
+    <h2>🏆 Hardware Tier System <span class="v2-badge">V2</span></h2>
+    <p>HugBrowse V2 automatically classifies your PC into one of five hardware tiers on first launch. This drives every recommendation and compatibility decision in the app — you never have to manually enter specs.</p>
+
+    <table class="tier-table">
+      <thead>
+        <tr>
+          <th>Tier</th>
+          <th>Icon</th>
+          <th>RAM</th>
+          <th>VRAM</th>
+          <th>Max Model</th>
+          <th>Best Quant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="tier-row-budget">
+          <td><strong>Budget PC</strong></td>
+          <td style="font-size:1.3rem">🥔</td>
+          <td>≤ 4 GB</td>
+          <td>None</td>
+          <td>3B</td>
+          <td><code>Q2_K</code></td>
+        </tr>
+        <tr class="tier-row-laptop">
+          <td><strong>Laptop</strong></td>
+          <td style="font-size:1.3rem">💻</td>
+          <td>≤ 16 GB</td>
+          <td>≤ 4 GB</td>
+          <td>7B</td>
+          <td><code>Q4_K_M</code></td>
+        </tr>
+        <tr class="tier-row-gaming">
+          <td><strong>Gaming PC</strong></td>
+          <td style="font-size:1.3rem">🎮</td>
+          <td>≤ 32 GB</td>
+          <td>≤ 12 GB</td>
+          <td>13B</td>
+          <td><code>Q4_K_M</code></td>
+        </tr>
+        <tr class="tier-row-workstation">
+          <td><strong>Workstation</strong></td>
+          <td style="font-size:1.3rem">🏢</td>
+          <td>≤ 64 GB</td>
+          <td>≤ 24 GB</td>
+          <td>70B</td>
+          <td><code>Q4_K_M</code></td>
+        </tr>
+        <tr class="tier-row-server">
+          <td><strong>Server</strong></td>
+          <td style="font-size:1.3rem">🖥️</td>
+          <td>&gt; 64 GB</td>
+          <td>&gt; 24 GB</td>
+          <td>200B+</td>
+          <td><code>FP16</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Auto-Detection</h3>
+    <p>The Rust backend queries your OS for total RAM and GPU VRAM on startup via <code>sysinfo</code> (and WMI on Windows for VRAM). Detection takes &lt;50 ms and requires no permissions.</p>
+    <div class="callout tip">
+      <span class="callout-icon">⚙️</span>
+      <div><strong>Override your tier:</strong> Go to <strong>Settings → Hardware Tier</strong> and pick any tier manually. Useful if auto-detection misses a secondary GPU or if you want to see what a higher-tier machine would see.</div>
+    </div>
+
+    <h3>Tier Boundaries</h3>
+    <p>Classification checks VRAM first (GPU-accelerated inference is far faster), then falls back to RAM for CPU-only machines. A laptop with an eGPU is classified by eGPU VRAM, not integrated graphics.</p>
+  </section>
+
+  <!-- Resource Monitor -->
+  <section id="monitor">
+    <h2>📊 Resource Monitor <span class="v2-badge">V2</span></h2>
+    <p>The Resource Monitor panel (accessible from the sidebar or <kbd>Ctrl</kbd>+<kbd>M</kbd>) gives you a live view of system headroom before and while running models.</p>
+
+    <h3>Circular Gauges</h3>
+    <p>Four SVG ring-gauges update every 2 seconds. Color transitions are threshold-based:</p>
+
+    <div class="gauge-demo-grid">
+      <!-- CPU gauge — green ~45% -->
+      <div class="gauge-demo-item">
+        <svg viewBox="0 0 88 88" fill="none">
+          <circle cx="44" cy="44" r="36" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="44" cy="44" r="36" stroke="#22c55e" stroke-width="8"
+            stroke-dasharray="226" stroke-dashoffset="124"
+            stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          <text x="44" y="49" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">45%</text>
+        </svg>
+        <div class="gauge-demo-label">CPU</div>
+      </div>
+      <!-- RAM gauge — yellow ~68% -->
+      <div class="gauge-demo-item">
+        <svg viewBox="0 0 88 88" fill="none">
+          <circle cx="44" cy="44" r="36" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="44" cy="44" r="36" stroke="#eab308" stroke-width="8"
+            stroke-dasharray="226" stroke-dashoffset="72"
+            stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          <text x="44" y="49" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">68%</text>
+        </svg>
+        <div class="gauge-demo-label">RAM</div>
+      </div>
+      <!-- GPU gauge — green ~32% -->
+      <div class="gauge-demo-item">
+        <svg viewBox="0 0 88 88" fill="none">
+          <circle cx="44" cy="44" r="36" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="44" cy="44" r="36" stroke="#22c55e" stroke-width="8"
+            stroke-dasharray="226" stroke-dashoffset="154"
+            stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          <text x="44" y="49" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">32%</text>
+        </svg>
+        <div class="gauge-demo-label">GPU</div>
+      </div>
+      <!-- VRAM gauge — red ~88% -->
+      <div class="gauge-demo-item">
+        <svg viewBox="0 0 88 88" fill="none">
+          <circle cx="44" cy="44" r="36" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="44" cy="44" r="36" stroke="#ef4444" stroke-width="8"
+            stroke-dasharray="226" stroke-dashoffset="27"
+            stroke-linecap="round" transform="rotate(-90 44 44)"/>
+          <text x="44" y="49" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">88%</text>
+        </svg>
+        <div class="gauge-demo-label">VRAM</div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>Usage</th><th>Gauge Color</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>0 – 59%</td><td><span style="color:var(--green);font-weight:700">● Green</span></td><td>Plenty of headroom</td></tr>
+        <tr><td>60 – 84%</td><td><span style="color:var(--yellow);font-weight:700">● Yellow</span></td><td>Moderate load — monitor closely</td></tr>
+        <tr><td>85 – 100%</td><td><span style="color:var(--red);font-weight:700">● Red</span></td><td>High pressure — may cause slowdowns</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Usage History Canvas</h3>
+    <p>Below the gauges, a <code>&lt;canvas&gt;</code>-based rolling chart shows the last <strong>30 minutes</strong> of CPU + RAM usage sampled every 2 seconds (900 data points). Each resource gets its own colour-coded line. Hover to inspect a specific timestamp.</p>
+
+    <h3>"What Can I Load?" Headroom Panel</h3>
+    <p>This panel reads <em>current</em> free VRAM and RAM (not total) and dynamically shows the largest model quant you could start <em>right now</em>:</p>
+    <pre>free_vram_gb = total_vram - used_vram
+free_ram_gb  = total_ram  - used_ram
+max_loadable_gb = max(free_vram_gb, free_ram_gb * 0.9)
+→ show all quants where model_size ≤ max_loadable_gb</pre>
+
+    <h3>Configurable Alerts</h3>
+    <p>In <strong>Settings → Alerts</strong> you can set threshold sliders for each resource (RAM, VRAM). When usage crosses your threshold, a toast notification appears and the gauge ring pulses red. Alerts are opt-in and off by default.</p>
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>Polling is paused automatically when the app window is minimised or the display sleeps, preventing unnecessary CPU wake-ups.</div>
+    </div>
+  </section>
+
+  <!-- Recommended Models -->
+  <section id="recommended">
+    <h2>⭐ Recommended Models <span class="v2-badge">V2</span></h2>
+    <p>The <strong>Recommended</strong> tab shows a curated shortlist tailored to <em>your</em> hardware tier. Models are pre-filtered so you only ever see options you can actually run — no wasted time on incompatible downloads.</p>
+
+    <h3>How Curation Works</h3>
+    <ul>
+      <li>A static catalogue maps each tier to a set of vetted, community-trusted models</li>
+      <li>The catalogue is updated with each app release; no internet catalogue fetch required</li>
+      <li>Gated models (e.g. Llama 3) only appear if your API token is validated</li>
+    </ul>
+
+    <h3>Task Categories</h3>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">💬</div>
+        <h4>Text Generation</h4>
+        <p>Chat, summarisation, creative writing. Includes Llama, Mistral, Phi, Gemma families — matched to your tier.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎨</div>
+        <h4>Image Generation</h4>
+        <p>Stable Diffusion variants and FLUX models. Filtered by VRAM — SD-1.5 for 4 GB, SDXL for 8 GB+, FLUX for 12 GB+.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💻</div>
+        <h4>Code &amp; Translation</h4>
+        <p>StarCoder2, DeepSeek-Coder, CodeGemma for code; NLLB, Helsinki-NLP for translation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🎙️</div>
+        <h4>Speech</h4>
+        <p>Whisper variants (tiny→large) for transcription; Bark and Kokoro for text-to-speech. CPU-friendly options included.</p>
+      </div>
+    </div>
+
+    <h3>Speed Estimate Badges</h3>
+    <p>Each recommended model card shows a speed estimate based on your tier's compute profile:</p>
+    <div class="badge-row">
+      <span class="badge speed-fast">⚡ Fast &gt;30 tok/s</span>
+      <span class="badge speed-good">✅ Good 15–30 tok/s</span>
+      <span class="badge speed-usable">⏱ Usable 5–15 tok/s</span>
+      <span class="badge speed-slow">🐢 Slow &lt;5 tok/s</span>
+    </div>
+    <p>Speed estimates are based on community benchmarks for each tier; actual speed depends on CPU/GPU generation, RAM bandwidth, and concurrent load.</p>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>Tip:</strong> Click <strong>"Why recommended?"</strong> on any card to see a one-paragraph plain-English reason why the model suits your hardware and use case.</div>
+    </div>
+  </section>
+
+  <!-- Enhanced Compatibility -->
+  <section id="enhanced-compat">
+    <h2>🔬 Enhanced Compatibility <span class="v2-badge">V2</span></h2>
+    <p>V2 significantly upgrades the "Can It Run?" panel with a full quantization comparison table, quality ratings, tier context, and a pre-download disk check.</p>
+
+    <h3>Quantization Comparison Table</h3>
+    <p>Instead of a single quant result, V2 shows a row per quantization level so you can pick the right trade-off:</p>
+    <table class="compat-table">
+      <thead>
+        <tr>
+          <th>Quant</th>
+          <th>Size (7B model)</th>
+          <th>VRAM Needed</th>
+          <th>Speed</th>
+          <th>Quality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>FP32</code></td>
+          <td>28.0 GB</td>
+          <td>33.6 GB</td>
+          <td><span class="badge speed-slow" style="padding:2px 8px;font-size:.75rem">🐢 Slow</span></td>
+          <td><span class="quant-quality-5">★★★★★</span></td>
+        </tr>
+        <tr>
+          <td><code>FP16</code></td>
+          <td>14.0 GB</td>
+          <td>16.8 GB</td>
+          <td><span class="badge speed-usable" style="padding:2px 8px;font-size:.75rem">⏱ Usable</span></td>
+          <td><span class="quant-quality-5">★★★★★</span></td>
+        </tr>
+        <tr>
+          <td><code>Q8_0</code></td>
+          <td>7.0 GB</td>
+          <td>8.4 GB</td>
+          <td><span class="badge speed-good" style="padding:2px 8px;font-size:.75rem">✅ Good</span></td>
+          <td><span class="quant-quality-4">★★★★</span><span class="stars-dim">★</span></td>
+        </tr>
+        <tr>
+          <td><code>Q6_K</code></td>
+          <td>5.25 GB</td>
+          <td>6.3 GB</td>
+          <td><span class="badge speed-good" style="padding:2px 8px;font-size:.75rem">✅ Good</span></td>
+          <td><span class="quant-quality-3">★★★</span><span class="stars-dim">★★</span></td>
+        </tr>
+        <tr>
+          <td><code>Q5_K_M</code></td>
+          <td>4.38 GB</td>
+          <td>5.25 GB</td>
+          <td><span class="badge speed-good" style="padding:2px 8px;font-size:.75rem">✅ Good</span></td>
+          <td><span class="quant-quality-3">★★★</span><span class="stars-dim">★★</span></td>
+        </tr>
+        <tr>
+          <td><strong><code>Q4_K_M</code></strong> ⭐</td>
+          <td>3.5 GB</td>
+          <td>4.2 GB</td>
+          <td><span class="badge speed-fast" style="padding:2px 8px;font-size:.75rem">⚡ Fast</span></td>
+          <td><span class="quant-quality-3">★★★</span><span class="stars-dim">★★</span></td>
+        </tr>
+        <tr>
+          <td><code>Q3_K_M</code></td>
+          <td>2.63 GB</td>
+          <td>3.15 GB</td>
+          <td><span class="badge speed-fast" style="padding:2px 8px;font-size:.75rem">⚡ Fast</span></td>
+          <td><span class="quant-quality-2">★★</span><span class="stars-dim">★★★</span></td>
+        </tr>
+        <tr>
+          <td><code>Q2_K</code></td>
+          <td>1.75 GB</td>
+          <td>2.1 GB</td>
+          <td><span class="badge speed-fast" style="padding:2px 8px;font-size:.75rem">⚡ Fast</span></td>
+          <td><span class="quant-quality-1">★</span><span class="stars-dim">★★★★</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:.85rem;color:var(--text-muted)">⭐ Q4_K_M is the sweet-spot pick for most users — best speed/quality ratio.</p>
+
+    <h3>Quality Rating Scale</h3>
+    <table>
+      <thead><tr><th>Quant Family</th><th>Stars</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>FP32 / FP16</td><td><span class="quant-quality-5">★★★★★</span></td><td>Lossless — reference quality</td></tr>
+        <tr><td>Q8</td><td><span class="quant-quality-4">★★★★</span><span class="stars-dim">★</span></td><td>Near-lossless, imperceptible difference</td></tr>
+        <tr><td>Q6 / Q5</td><td><span class="quant-quality-3">★★★</span><span class="stars-dim">★★</span></td><td>Minimal degradation, very hard to notice</td></tr>
+        <tr><td>Q4</td><td><span class="quant-quality-3">★★★</span><span class="stars-dim">★★</span></td><td>Good practical quality, slight creativity loss</td></tr>
+        <tr><td>Q3</td><td><span class="quant-quality-2">★★</span><span class="stars-dim">★★★</span></td><td>Noticeable quality loss on complex reasoning</td></tr>
+        <tr><td>Q2</td><td><span class="quant-quality-1">★</span><span class="stars-dim">★★★★</span></td><td>Heavy degradation — last resort for RAM-constrained PCs</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tier Context Banner</h3>
+    <p>Each model card now shows which tier it was designed for, so you understand at a glance whether you're running it as intended or pushing it:</p>
+    <div class="callout info">
+      <span class="callout-icon">🎮</span>
+      <div><strong>Designed for: Gaming PC or higher</strong> — You are on Laptop tier. Use Q4_K_M or Q3_K_M for acceptable performance.</div>
+    </div>
+
+    <h3>Disk Space Check</h3>
+    <p>Before triggering a download, HugBrowse checks available disk space on your primary drive. If the selected quantization file is larger than free space minus a 2 GB safety margin, you'll see a warning prompt rather than a failed download.</p>
+    <div class="callout warning">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Low disk space:</strong> Q4_K_M needs 3.5 GB but only 2.1 GB is free. Free up space or choose Q3_K_M (2.6 GB).</div>
+    </div>
+  </section>
+
+  <!-- Calculator -->
+  <section id="calculator">
+    <h2>🧮 "What Can My PC Run?" Calculator <span class="v2-badge">V2</span></h2>
+    <p>Enter your hardware specs below and instantly see which model sizes and quantization levels are viable — sorted by what runs on your GPU vs CPU.</p>
+
+    <div class="calc-widget">
+      <div class="calc-slider-row">
+        <label>RAM</label>
+        <input type="range" id="calcRam" min="2" max="256" value="16" step="2" oninput="runCalc()">
+        <span class="calc-val" id="calcRamVal">16 GB</span>
+      </div>
+      <div class="calc-slider-row">
+        <label>VRAM</label>
+        <input type="range" id="calcVram" min="0" max="80" value="8" step="1" oninput="runCalc()">
+        <span class="calc-val" id="calcVramVal">8 GB</span>
+      </div>
+
+      <div class="calc-tier-banner" id="calcTierBanner">
+        <div class="calc-tier-icon" id="calcTierIcon">🎮</div>
+        <div>
+          <div class="calc-tier-name" id="calcTierName">Gaming PC</div>
+          <div class="calc-tier-sub" id="calcTierSub">16 GB RAM · 8 GB VRAM</div>
+        </div>
+      </div>
+
+      <div class="calc-table-wrap">
+        <table class="calc-table">
+          <thead>
+            <tr>
+              <th>Quantization</th>
+              <th>Model size (7B)</th>
+              <th>Max params at this quant</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="calcTbody"></tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:14px;font-size:.8rem;color:var(--text-muted)">
+        🟢 <strong>GPU</strong> — fits in VRAM (fast inference) &nbsp;
+        🟡 <strong>CPU</strong> — fits in RAM only (slower) &nbsp;
+        🔴 <strong>No</strong> — exceeds available memory
+      </p>
+    </div>
+  </section>
+
+  <!-- Development Guide (existing, unchanged) -->
+  <section id="development">
+    <h2>🛠️ Development Guide</h2>
+
+    <h3>Install Dependencies</h3>
+    <pre>npm install                  # Frontend
+cd src-tauri && cargo fetch  # Rust (optional, auto-fetched)</pre>
+
+    <h3>Development Server</h3>
+    <pre>npm run dev          # Frontend only → http://localhost:5173
+npm run tauri:dev    # Full Tauri desktop app</pre>
+
+    <h3>Type Checking &amp; Linting</h3>
+    <pre>npx tsc --noEmit     # TypeScript errors
+npm run lint         # ESLint</pre>
+
+    <h3>Key Libraries</h3>
+    <table>
+      <thead><tr><th>Library</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>@tanstack/react-query</code></td><td>API fetching, caching, infinite scroll</td></tr>
+        <tr><td><code>zustand</code></td><td>State management (settings, search)</td></tr>
+        <tr><td><code>react-router-dom</code></td><td>Client-side routing</td></tr>
+        <tr><td><code>react-markdown</code></td><td>Render model READMEs</td></tr>
+        <tr><td><code>lucide-react</code></td><td>Icons</td></tr>
+        <tr><td><code>sysinfo</code> (Rust)</td><td>System hardware detection</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Building -->
+  <section id="building">
+    <h2>📦 Building for Production</h2>
+
+    <h3>Frontend Only</h3>
+    <pre>npm run build     # Output: dist/ (~160KB gzipped)</pre>
+
+    <h3>Tauri Desktop Installer (Windows)</h3>
+    <div class="callout warning">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>Windows only:</strong> You need MSVC Build Tools 2022 with the C++ workload and Windows 10 SDK installed.</div>
+    </div>
+    <pre># Set up MSVC environment first
+$msvc = "C:\...\MSVC\14.39.33519"
+$winsdk = "C:\...\Windows Kits\10"
+$env:PATH = "$winsdk\bin\x64;$msvc\bin\Hostx64\x64;$env:PATH"
+$env:LIB = "$winsdk\Lib\um\x64;$winsdk\Lib\ucrt\x64;$msvc\lib\x64"
+$env:INCLUDE = "$winsdk\Include\ucrt;...\um;...\shared;$msvc\include"
+
+# Build installer
+npm run tauri:build     # Output: src-tauri/target/release/bundle/msi/</pre>
+  </section>
+
+  <!-- Troubleshooting -->
+  <section id="troubleshooting">
+    <h2>🔧 Troubleshooting</h2>
+
+    <h3>"linker <code>link.exe</code> not found"</h3>
+    <p>Install Visual Studio Build Tools from <a href="https://visualstudio.microsoft.com/visual-cpp-build-tools/" target="_blank">visualstudio.microsoft.com</a>. Select "Desktop development with C++".</p>
+
+    <h3>"cannot open input file <code>kernel32.lib</code>"</h3>
+    <p>The Windows SDK path isn't set. Run the MSVC environment setup commands from the <a href="#building">Building</a> section.</p>
+
+    <h3>Models not loading</h3>
+    <ul>
+      <li>Check your internet connection</li>
+      <li>HuggingFace may be rate-limiting — add a token in Settings</li>
+      <li>Check browser console (<kbd>F12</kbd>) for error details</li>
+    </ul>
+
+    <h3>Dark mode not working</h3>
+    <p>Click the theme icon in the header to cycle through System → Light → Dark. Theme is stored in <code>localStorage</code> under <code>hugbrowse-settings</code>.</p>
+
+    <h3>"Can It Run?" shows "Unknown"</h3>
+    <p>The model's parameter count couldn't be determined. This happens when the model doesn't include safetensors metadata or the name doesn't contain a size indicator (e.g., "7B").</p>
+  </section>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Built with ❤️ using Tauri, React, TypeScript, and Tailwind CSS</p>
+    <p style="margin-top: 4px;">HugBrowse — Making AI models accessible to everyone</p>
+  </div>
+
+</main>
+
+<!-- ══════════ Scripts ══════════ -->
+<script>
+// Theme toggle
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById('themeBtn');
+  body.classList.toggle('dark');
+  const isDark = body.classList.contains('dark');
+  btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+  localStorage.setItem('hugbrowse-docs-theme', isDark ? 'dark' : 'light');
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('hugbrowse-docs-theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.body.classList.add('dark');
+    document.getElementById('themeBtn').textContent = '☀️ Light';
+  }
+})();
+
+// Scroll progress bar
+window.addEventListener('scroll', function() {
+  const scrollTop = document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const progress = scrollTop / scrollHeight;
+  document.getElementById('progressBar').style.transform = 'scaleX(' + progress + ')';
+});
+
+// ── V2 Calculator ────────────────────────────
+var QUANTS = [
+  { name: 'FP32',    bpp: 4.0   },
+  { name: 'FP16',    bpp: 2.0   },
+  { name: 'Q8_0',    bpp: 1.0   },
+  { name: 'Q6_K',    bpp: 0.75  },
+  { name: 'Q5_K_M',  bpp: 0.625 },
+  { name: 'Q4_K_M ⭐', bpp: 0.5 },
+  { name: 'Q3_K_M',  bpp: 0.375 },
+  { name: 'Q2_K',    bpp: 0.25  }
+];
+
+var TIERS = [
+  { name: 'Budget PC',    icon: '🥔', minRam: 0,  maxRam: 4,  minVram: 0, maxVram: 0  },
+  { name: 'Laptop',       icon: '💻', minRam: 0,  maxRam: 16, minVram: 0, maxVram: 4  },
+  { name: 'Gaming PC',    icon: '🎮', minRam: 0,  maxRam: 32, minVram: 0, maxVram: 12 },
+  { name: 'Workstation',  icon: '🏢', minRam: 0,  maxRam: 64, minVram: 0, maxVram: 24 },
+  { name: 'Server',       icon: '🖥️', minRam: 64, maxRam: Infinity, minVram: 24, maxVram: Infinity }
+];
+
+function detectTier(ram, vram) {
+  if (ram > 64 || vram > 24) return TIERS[4];
+  if (ram > 32 || vram > 12) return TIERS[3];
+  if (ram > 16 || vram > 4)  return TIERS[2];
+  if (ram > 4  || vram > 0)  return TIERS[1];
+  return TIERS[0];
+}
+
+function maxParamsGB(availGB, bpp) {
+  // available_gb = params_B * bpp * 1.2  →  params_B = avail / (bpp * 1.2)
+  return availGB / (bpp * 1.2);
+}
+
+function fmtSize(gb) {
+  if (gb < 1) return (gb * 1024).toFixed(0) + ' MB';
+  return gb.toFixed(1) + ' GB';
+}
+
+function fmtParams(b) {
+  if (b >= 1000) return (b / 1000).toFixed(1) + 'T';
+  if (b >= 1)    return b.toFixed(1) + 'B';
+  return (b * 1000).toFixed(0) + 'M';
+}
+
+function runCalc() {
+  var ram  = parseInt(document.getElementById('calcRam').value,  10);
+  var vram = parseInt(document.getElementById('calcVram').value, 10);
+  document.getElementById('calcRamVal').textContent  = ram  + ' GB';
+  document.getElementById('calcVramVal').textContent = vram + ' GB';
+
+  var tier = detectTier(ram, vram);
+  document.getElementById('calcTierIcon').textContent = tier.icon;
+  document.getElementById('calcTierName').textContent = tier.name;
+  document.getElementById('calcTierSub').textContent  = ram + ' GB RAM · ' + vram + ' GB VRAM';
+
+  var rows = '';
+  QUANTS.forEach(function(q) {
+    var modelSizeFor7B = 7 * q.bpp; // GB for a 7B model
+    var gpuMax  = maxParamsGB(vram, q.bpp);
+    var cpuMax  = maxParamsGB(ram,  q.bpp);
+    var canGpu  = vram > 0 && gpuMax >= 1;
+    var canCpu  = cpuMax >= 1;
+    var cls     = canGpu ? 'can-gpu' : (canCpu ? 'can-cpu' : 'no-run');
+    var pillCls = canGpu ? 'pill-gpu' : (canCpu ? 'pill-cpu' : 'pill-no');
+    var pillTxt = canGpu ? '🟢 GPU' : (canCpu ? '🟡 CPU' : '🔴 No');
+    var maxP    = canGpu ? gpuMax : (canCpu ? cpuMax : 0);
+    rows += '<tr class="' + cls + '">'
+      + '<td><code>' + q.name + '</code></td>'
+      + '<td>' + fmtSize(modelSizeFor7B) + '</td>'
+      + '<td>' + (maxP >= 1 ? 'up to <strong>' + fmtParams(maxP) + '</strong>' : '—') + '</td>'
+      + '<td><span class="calc-pill ' + pillCls + '">' + pillTxt + '</span></td>'
+      + '</tr>';
+  });
+  document.getElementById('calcTbody').innerHTML = rows;
+}
+
+// Run once on load
+runCalc();
+
+// Active sidebar link
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sidebar a');
+
+function updateActiveLink() {
+  let current = '';
+  sections.forEach(section => {
+    const top = section.offsetTop - 100;
+    if (window.scrollY >= top) {
+      current = section.getAttribute('id');
+    }
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateActiveLink);
+updateActiveLink();
+</script>
+
+</body>
+</html>

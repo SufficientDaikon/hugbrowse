@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSettings } from "../stores/settings";
 import { hfApi } from "../lib/hf-api";
 import { useMCP } from "../hooks/useMCP";
@@ -47,15 +47,8 @@ export function SettingsPage() {
   const [tokenInput, setTokenInput] = useState(hfToken || "");
   const [validating, setValidating] = useState(false);
   const [tokenStatus, setTokenStatus] = useState<"idle" | "valid" | "invalid">(
-    "idle",
+    hfToken ? "valid" : "idle",
   );
-
-  useEffect(() => {
-    if (hfToken) {
-      setTokenInput(hfToken);
-      setTokenStatus("valid");
-    }
-  }, [hfToken]);
 
   const validateToken = async () => {
     if (!tokenInput.trim()) {
@@ -93,27 +86,35 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-2xl">
-      <h1 className="text-xl font-bold text-[var(--foreground)] mb-6">
-        Settings
-      </h1>
+    <div className="p-6 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-hf-orange/10 shrink-0">
+          <RefreshCw className="h-5 w-5 text-hf-orange" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-[var(--foreground)]">
+            Settings
+          </h1>
+          <p className="text-xs text-[var(--muted)]">Manage your HugBrowse configuration</p>
+        </div>
+      </div>
 
       {/* HuggingFace Token */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Key className="h-5 w-5 text-hf-orange" />
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Key className="h-4 w-4 text-hf-orange" />
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">
             HuggingFace API Token
           </h2>
         </div>
-        <p className="text-sm text-[var(--muted)] mb-4">
+        <p className="text-xs text-[var(--muted)] mb-4 leading-relaxed">
           Add your token to access gated models, private repos, and get higher
           rate limits. Get one at{" "}
           <a
             href="https://huggingface.co/settings/tokens"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent hover:underline"
+            className="text-accent dark:text-accent-light hover:underline"
           >
             huggingface.co/settings/tokens
           </a>
@@ -175,7 +176,7 @@ export function SettingsPage() {
       </section>
 
       {/* Theme */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <h2 className="text-base font-semibold text-[var(--foreground)] mb-4">
           Theme
         </h2>
@@ -199,7 +200,7 @@ export function SettingsPage() {
       </section>
 
       {/* Search History */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-[var(--foreground)]">
             Search History
@@ -230,7 +231,7 @@ export function SettingsPage() {
       </section>
 
       {/* MCP Server Status */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <Plug className="h-5 w-5 text-accent" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -297,7 +298,7 @@ export function SettingsPage() {
       </section>
 
       {/* FR-039: MCP Server URLs */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <Plug className="h-5 w-5 text-purple-500" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -341,7 +342,7 @@ export function SettingsPage() {
       </section>
 
       {/* EC-005: Proxy Configuration */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <RefreshCw className="h-5 w-5 text-blue-500" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -361,7 +362,7 @@ export function SettingsPage() {
       </section>
 
       {/* Hardware Tier Override */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <Cpu className="h-5 w-5 text-purple-500" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -402,7 +403,7 @@ export function SettingsPage() {
       </section>
 
       {/* FR-032: Auto-load Last Model */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <Cpu className="h-5 w-5 text-accent" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -428,7 +429,7 @@ export function SettingsPage() {
       </section>
 
       {/* Alert Thresholds */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 mb-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
           <Bell className="h-5 w-5 text-yellow-500" />
           <h2 className="text-base font-semibold text-[var(--foreground)]">
@@ -475,7 +476,7 @@ export function SettingsPage() {
       </section>
 
       {/* About */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <h2 className="text-base font-semibold text-[var(--foreground)] mb-2">
           About
         </h2>
@@ -505,7 +506,7 @@ export function SettingsPage() {
       </section>
 
       {/* FR-057: Privacy Settings */}
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <h2 className="text-base font-semibold text-[var(--foreground)] mb-3">
           Privacy
         </h2>

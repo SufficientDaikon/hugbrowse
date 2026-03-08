@@ -1,12 +1,10 @@
 /** FR-097: Creator Dashboard */
-import { useState } from "react";
 import { useMarketplace } from "../../stores/marketplace";
 import { BarChart3, TrendingUp, Star, Package, Eye } from "lucide-react";
-import { PublishWizard } from "../../components/marketplace/PublishWizard";
+import { ComingSoonBanner } from "../../components/ui/ComingSoonBanner";
 
 export function CreatorDashboard() {
   const { installed, listings } = useMarketplace();
-  const [showPublish, setShowPublish] = useState(false);
 
   // FR-097: Show creator's published content, download stats, ratings
   const myListings = listings.filter((l) => l.authorId === "local-user");
@@ -18,6 +16,9 @@ export function CreatorDashboard() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="shrink-0 px-6 py-4 border-b border-[var(--border)]">
+        <div className="mb-3">
+          <ComingSoonBanner feature="The Creator Dashboard" />
+        </div>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -28,8 +29,9 @@ export function CreatorDashboard() {
             </p>
           </div>
           <button
-            onClick={() => setShowPublish(true)}
-            className="px-4 py-2 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors"
+            disabled
+            className="px-4 py-2 rounded-xl bg-accent/50 text-white text-sm font-medium cursor-not-allowed"
+            title="Coming Soon"
           >
             + Publish New
           </button>
@@ -64,10 +66,11 @@ export function CreatorDashboard() {
             <Package className="h-10 w-10 text-[var(--border)] mx-auto mb-3" />
             <p className="text-sm text-[var(--muted)]">You haven't published anything yet</p>
             <button
-              onClick={() => setShowPublish(true)}
-              className="mt-3 text-xs text-accent hover:underline"
+              disabled
+              className="mt-3 text-xs text-gray-400 cursor-not-allowed"
+              title="Coming Soon"
             >
-              Publish your first extension
+              Publish your first extension (Coming Soon)
             </button>
           </div>
         ) : (
@@ -93,7 +96,7 @@ export function CreatorDashboard() {
         )}
       </div>
 
-      <PublishWizard isOpen={showPublish} onClose={() => setShowPublish(false)} />
+
     </div>
   );
 }

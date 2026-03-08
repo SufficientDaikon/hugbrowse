@@ -48,10 +48,9 @@ function formatSize(bytes: number): string {
 }
 
 export function MarketplaceDetail({ listing, onBack }: Props) {
-  const { installed, installExtension } = useMarketplace();
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [installing, setInstalling] = useState(false);
+  const { installed } = useMarketplace();
   const [activeTab, setActiveTab] = useState<"details" | "reviews" | "versions">("details");
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [userRating, setUserRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [showReportForm, setShowReportForm] = useState(false);
@@ -65,15 +64,6 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
   useEffect(() => {
     registryClient.fetchReviews(listing.id).then(setReviews);
   }, [listing.id]);
-
-  const handleInstall = async () => {
-    setInstalling(true);
-    try {
-      await installExtension(listing);
-    } finally {
-      setInstalling(false);
-    }
-  };
 
   const handleSubmitReview = () => {
     if (userRating === 0) return;
@@ -161,12 +151,12 @@ export function MarketplaceDetail({ listing, onBack }: Props) {
                 </span>
               ) : (
                 <button
-                  onClick={handleInstall}
-                  disabled={installing}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
+                  disabled
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent/50 text-white text-sm font-medium cursor-not-allowed"
+                  title="Coming Soon — extension installation is not yet available"
                 >
                   <Download className="h-4 w-4" />
-                  {installing ? "Installing..." : "Install"}
+                  Coming Soon
                 </button>
               )}
             </div>

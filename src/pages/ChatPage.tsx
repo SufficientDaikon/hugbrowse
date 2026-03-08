@@ -5,7 +5,14 @@ import { SessionSidebar } from "../components/chat/SessionSidebar";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { ChatInput } from "../components/chat/ChatInput";
 import { ModelRunPanel } from "../components/models/ModelRunPanel";
-import { Bot, Settings2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Bot,
+  Settings2,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  Globe,
+} from "lucide-react";
 
 export function ChatPage() {
   const {
@@ -32,12 +39,11 @@ export function ChatPage() {
   }, [sessions.length, createSession]);
 
   // Scroll to bottom on new messages
+  const lastMessageContent =
+    session?.messages[session.messages.length - 1]?.content;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [
-    session?.messages.length,
-    session?.messages[session.messages.length - 1]?.content,
-  ]);
+  }, [session?.messages.length, lastMessageContent]);
 
   const handleSend = async (text: string) => {
     if (!session || !isRunning) return;
@@ -52,12 +58,12 @@ export function ChatPage() {
         {!isRunning ? (
           /* No model running — show setup prompt */
           <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
-              <Bot className="h-8 w-8 text-accent" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-purple-500/20">
+              <Bot className="h-10 w-10 text-accent dark:text-accent-light" />
             </div>
             <div className="text-center max-w-sm">
-              <h2 className="text-lg font-semibold mb-2">No Model Running</h2>
-              <p className="text-sm text-[var(--muted)]">
+              <h2 className="text-xl font-bold mb-2">No Model Running</h2>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
                 Load a model below to start chatting. Download GGUF files from
                 the model browser first.
               </p>
@@ -77,12 +83,14 @@ export function ChatPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto">
               {session.messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-[var(--muted)]">
-                  <Bot className="h-10 w-10 opacity-30" />
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-[var(--muted)]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-hover)]">
+                    <Bot className="h-7 w-7 opacity-40" />
+                  </div>
                   <p className="text-sm">
                     Send a message to start the conversation.
                   </p>
-                  <p className="text-xs opacity-60 font-mono">
+                  <p className="text-xs opacity-60 font-mono px-3 py-1.5 rounded-lg bg-[var(--surface-hover)]">
                     {info.model_name} · port {info.port}
                   </p>
                 </div>
@@ -109,18 +117,18 @@ export function ChatPage() {
 
       {/* Right sidebar — model status when running */}
       {isRunning && (
-        <aside className="w-72 shrink-0 border-l border-[var(--border)] bg-[var(--surface)] p-4 space-y-4 overflow-y-auto">
+        <aside className="w-72 shrink-0 border-l border-[var(--border)] bg-[var(--surface)] p-4 space-y-3 overflow-y-auto">
           <ModelRunPanel />
 
-          {/* FR-026: System Prompt Editor */}
+          {/* System Prompt Editor */}
           {session && (
-            <div className="rounded-xl border border-[var(--border)] p-3">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] overflow-hidden">
               <button
                 onClick={() => setShowSystemPrompt(!showSystemPrompt)}
-                className="flex items-center gap-2 w-full text-left"
+                className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <Settings2 className="h-3.5 w-3.5 text-[var(--muted)]" />
-                <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider flex-1">
+                <h4 className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider flex-1">
                   System Prompt
                 </h4>
                 {showSystemPrompt ? (
@@ -130,24 +138,30 @@ export function ChatPage() {
                 )}
               </button>
               {showSystemPrompt && (
-                <textarea
-                  value={session.systemPrompt}
-                  onChange={(e) =>
-                    setSystemPrompt(session.id, e.target.value)
-                  }
-                  placeholder="You are a helpful assistant..."
-                  rows={4}
-                  className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
-                />
+                <div className="px-3 pb-3">
+                  <textarea
+                    value={session.systemPrompt}
+                    onChange={(e) =>
+                      setSystemPrompt(session.id, e.target.value)
+                    }
+                    placeholder="You are a helpful assistant..."
+                    rows={4}
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-2 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
+                  />
+                </div>
               )}
             </div>
           )}
+
           {/* Context usage estimate */}
           {session && session.messages.length > 0 && (
-            <div className="rounded-xl border border-[var(--border)] p-3">
-              <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2">
-                Context Usage
-              </h4>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="h-3 w-3 text-[var(--muted)]" />
+                <h4 className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
+                  Context Usage
+                </h4>
+              </div>
               {(() => {
                 const chars = session.messages.reduce(
                   (n, m) => n + m.content.length,
@@ -159,11 +173,17 @@ export function ChatPage() {
                   100,
                   Math.round((estTokens / maxTokens) * 100),
                 );
+                const barColor =
+                  pct > 80
+                    ? "bg-cant-run dark:bg-cant-run-light"
+                    : pct > 50
+                      ? "bg-maybe-run dark:bg-maybe-run-light"
+                      : "bg-can-run dark:bg-can-run-light";
                 return (
                   <>
-                    <div className="w-full bg-[var(--border)] rounded-full h-1.5 mb-1">
+                    <div className="w-full bg-[var(--surface-hover)] rounded-full h-1.5 mb-1.5">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${pct > 80 ? "bg-red-500" : pct > 50 ? "bg-yellow-500" : "bg-green-500"}`}
+                        className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -176,14 +196,18 @@ export function ChatPage() {
               })()}
             </div>
           )}
-          <div className="rounded-xl border border-[var(--border)] p-3">
-            <h4 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-2">
-              API Endpoint
-            </h4>
-            <p className="font-mono text-xs text-accent break-all">
+
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="h-3 w-3 text-[var(--muted)]" />
+              <h4 className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
+                API Endpoint
+              </h4>
+            </div>
+            <p className="font-mono text-xs text-accent dark:text-accent-light break-all bg-[var(--surface-hover)] rounded-lg px-2.5 py-1.5">
               http://127.0.0.1:{info.port}/v1
             </p>
-            <p className="text-xs text-[var(--muted)] mt-1">
+            <p className="text-[11px] text-[var(--muted)] mt-1.5">
               OpenAI-compatible — works with any client
             </p>
           </div>
