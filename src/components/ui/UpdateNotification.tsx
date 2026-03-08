@@ -13,7 +13,7 @@ interface UpdateInfo {
 
 /** FR-062: Detect if app was just updated and show changelog */
 function usePostUpdateChangelog() {
-  const currentVersion = "0.2.0"; // Would be read from Tauri config
+  const currentVersion = "0.3.0"; // Would be read from Tauri config
 
   const [changelog, setChangelog] = useState<{
     version: string;
