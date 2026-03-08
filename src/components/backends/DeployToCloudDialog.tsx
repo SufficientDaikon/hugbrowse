@@ -52,7 +52,7 @@ export function DeployToCloudDialog({ modelId, open, onClose }: Props) {
   const [showToken, setShowToken] = useState(false);
   const [deployState, setDeployState] = useState<DeployState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [deployedBackend, setDeployedBackend] = useState<ComputeBackend | null>(
+  const [_deployedBackend, setDeployedBackend] = useState<ComputeBackend | null>(
     null,
   );
 

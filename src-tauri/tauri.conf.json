@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "HugBrowse",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.hugbrowse.app",
   "build": {
     "frontendDist": "../dist",
@@ -18,6 +18,13 @@
       "desktop": {
         "schemes": ["hugbrowse"]
       }
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/SufficientDaikon/hugbrowse/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": ""
     }
   },
   "app": {

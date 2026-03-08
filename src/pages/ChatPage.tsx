@@ -111,7 +111,7 @@ export function ChatPage() {
                 {session && (
                   <div className="flex-1 text-center">
                     <h2 className="text-sm font-medium text-[var(--foreground)] truncate">
-                      {session.name}
+                      {session.title}
                     </h2>
                   </div>
                 )}

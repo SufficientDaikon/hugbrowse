@@ -8,7 +8,6 @@ import {
   Cpu,
   Circle,
   Plus,
-  Edit2,
   Trash2,
   Check,
   AlertTriangle,
@@ -19,7 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "../ui/cn";
-import type { BackendType, BackendStatus } from "../../stores/backends";
+import type { BackendStatus } from "../../stores/backends";
 
 const TYPE_ICONS = {
   local_sidecar: Cpu,

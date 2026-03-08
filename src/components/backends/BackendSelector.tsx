@@ -6,11 +6,10 @@ import {
   Cpu,
   ChevronDown,
   Circle,
-  Plus,
   Settings,
 } from "lucide-react";
 import { cn } from "../ui/cn";
-import type { BackendType, BackendStatus } from "../../stores/backends";
+import type { BackendStatus } from "../../stores/backends";
 
 interface Props {
   className?: string;

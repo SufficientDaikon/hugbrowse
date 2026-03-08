@@ -13,9 +13,12 @@ interface UpdateInfo {
 
 /** FR-062: Detect if app was just updated and show changelog */
 function usePostUpdateChangelog() {
-  const currentVersion = "0.1.0"; // Would be read from Tauri config
+  const currentVersion = "0.2.0"; // Would be read from Tauri config
 
-  const [changelog, setChangelog] = useState<{ version: string; body: string } | null>(() => {
+  const [changelog, setChangelog] = useState<{
+    version: string;
+    body: string;
+  } | null>(() => {
     const lastVersion = localStorage.getItem("hugbrowse-last-version");
     if (lastVersion && lastVersion !== currentVersion) {
       return {
@@ -104,8 +107,13 @@ export function UpdateNotification() {
           <div className="max-w-md w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl overflow-hidden">
             <div className="flex items-center gap-2 p-4 border-b border-[var(--border)] bg-accent/5">
               <Sparkles className="h-5 w-5 text-accent" />
-              <h2 className="text-sm font-semibold">What's New in v{changelog.version}</h2>
-              <button onClick={dismissChangelog} className="ml-auto text-[var(--muted)] hover:text-[var(--foreground)]">
+              <h2 className="text-sm font-semibold">
+                What's New in v{changelog.version}
+              </h2>
+              <button
+                onClick={dismissChangelog}
+                className="ml-auto text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -128,61 +136,61 @@ export function UpdateNotification() {
 
       {/* FR-047: Update available notification */}
       <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg p-4 animate-in slide-in-from-bottom-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <RefreshCw className="h-5 w-5 text-accent shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              Update Available
-            </p>
-            <p className="text-xs text-[var(--muted)]">
-              Version {update.version} is ready
-            </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-accent shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--foreground)]">
+                Update Available
+              </p>
+              <p className="text-xs text-[var(--muted)]">
+                Version {update.version} is ready
+              </p>
+            </div>
           </div>
-        </div>
-        <button
-          onClick={() => setDismissed(true)}
-          className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {update.body && (
-        <p className="mt-2 text-xs text-[var(--muted)] line-clamp-3">
-          {update.body}
-        </p>
-      )}
-
-      {downloading ? (
-        <div className="mt-3">
-          <div className="h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-accent transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-1 text-[10px] text-[var(--muted)] text-right">
-            {progress}%
-          </p>
-        </div>
-      ) : (
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={downloadAndInstall}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent/90 transition-colors"
-          >
-            <Download className="h-3 w-3" /> Download & Install
-          </button>
           <button
             onClick={() => setDismissed(true)}
-            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+            className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
           >
-            Later
+            <X className="h-4 w-4" />
           </button>
         </div>
-      )}
-    </div>
+
+        {update.body && (
+          <p className="mt-2 text-xs text-[var(--muted)] line-clamp-3">
+            {update.body}
+          </p>
+        )}
+
+        {downloading ? (
+          <div className="mt-3">
+            <div className="h-1.5 rounded-full bg-[var(--border)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[10px] text-[var(--muted)] text-right">
+              {progress}%
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={downloadAndInstall}
+              className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent/90 transition-colors"
+            >
+              <Download className="h-3 w-3" /> Download & Install
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+            >
+              Later
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }

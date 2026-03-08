@@ -8,6 +8,7 @@
     "shell:allow-open",
     "shell:allow-execute",
     "shell:allow-kill",
-    "store:default"
+    "store:default",
+    "updater:default"
   ]
 }
