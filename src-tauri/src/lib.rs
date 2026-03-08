@@ -2,6 +2,7 @@ use serde::Serialize;
 use sysinfo::{System, Disks};
 use crate::download::{ManagedDownloads, DownloadManagerState};
 use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
+use crate::backend::{ManagedBackends, BackendManager};
 use std::sync::{Arc, Mutex};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -10,6 +11,7 @@ use tauri::Emitter;
 
 pub mod download;
 pub mod inference;
+pub mod backend;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -292,6 +294,7 @@ pub fn run() {
         info: InferenceInfo::default(),
         child: None,
     }));
+    let backend_state: ManagedBackends = Arc::new(Mutex::new(BackendManager::new()));
     let inference_on_exit = inference_state.clone();
 
     tauri::Builder::default()
@@ -300,6 +303,7 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .manage(download_state.clone())
         .manage(inference_state)
+        .manage(backend_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -348,6 +352,15 @@ pub fn run() {
 
             // Restore persisted downloads from previous session (FR-013)
             crate::download::load_persisted_downloads(app.handle(), &download_state);
+            
+            // Load persisted backend configurations (FR-CO-045, FR-CO-046)  
+            let backend_state_clone = backend_state.clone();
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = crate::backend::load_persisted_backends(&app_handle, &backend_state_clone).await {
+                    eprintln!("Failed to load persisted backends: {}", e);
+                }
+            });
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -398,6 +411,19 @@ pub fn run() {
             inference::get_gpus,
             inference::check_model_memory,
             inference::check_api_ready,
+            backend::get_backends,
+            backend::add_backend,
+            backend::remove_backend,
+            backend::set_active_backend,
+            backend::test_backend_connection,
+            backend::proxy_chat_completions,
+            backend::save_backend_credential,
+            backend::get_active_backend,
+            backend::deploy_hf_endpoint,
+            backend::check_hf_endpoint_status,
+            backend::pause_hf_endpoint,
+            backend::resume_hf_endpoint,
+            backend::delete_hf_endpoint,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

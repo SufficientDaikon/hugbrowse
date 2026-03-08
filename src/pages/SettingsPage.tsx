@@ -5,6 +5,7 @@ import { useMCP } from "../hooks/useMCP";
 import { useTier } from "../hooks/useTier";
 import { cn } from "../components/ui/cn";
 import { TIER_INFO, DEFAULT_ALERT_THRESHOLDS } from "../lib/constants";
+import { BackendSettings } from "../components/backends/BackendSettings";
 import type { HardwareTier } from "../lib/hf-types";
 import {
   Check,
@@ -19,6 +20,7 @@ import {
   RefreshCw,
   Cpu,
   Bell,
+  Cloud,
 } from "lucide-react";
 
 export function SettingsPage() {
@@ -95,7 +97,9 @@ export function SettingsPage() {
           <h1 className="text-xl font-bold text-[var(--foreground)]">
             Settings
           </h1>
-          <p className="text-xs text-[var(--muted)]">Manage your HugBrowse configuration</p>
+          <p className="text-xs text-[var(--muted)]">
+            Manage your HugBrowse configuration
+          </p>
         </div>
       </div>
 
@@ -370,8 +374,11 @@ export function SettingsPage() {
           </h2>
         </div>
         <p className="text-sm text-[var(--muted)] mb-4">
-          Your detected tier: <strong>{tierInfo?.icon} {tierInfo?.name ?? "Detecting..."}</strong>.
-          Override if auto-detection is wrong.
+          Your detected tier:{" "}
+          <strong>
+            {tierInfo?.icon} {tierInfo?.name ?? "Detecting..."}
+          </strong>
+          . Override if auto-detection is wrong.
         </p>
         <div className="flex gap-2 flex-wrap">
           <button
@@ -385,7 +392,12 @@ export function SettingsPage() {
           >
             🔍 Auto-detect
           </button>
-          {(Object.entries(TIER_INFO) as [HardwareTier, typeof TIER_INFO[HardwareTier]][]).map(([tier, info]) => (
+          {(
+            Object.entries(TIER_INFO) as [
+              HardwareTier,
+              (typeof TIER_INFO)[HardwareTier],
+            ][]
+          ).map(([tier, info]) => (
             <button
               key={tier}
               onClick={() => setTierOverride(tier)}
@@ -428,6 +440,20 @@ export function SettingsPage() {
         )}
       </section>
 
+      {/* Compute Backends */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Cloud className="h-5 w-5 text-blue-500" />
+          <h2 className="text-base font-semibold text-[var(--foreground)]">
+            ☁️ Compute Backends
+          </h2>
+        </div>
+        <p className="text-sm text-[var(--muted)] mb-4">
+          Manage local and remote inference endpoints. Switch between local models and cloud APIs.
+        </p>
+        <BackendSettings />
+      </section>
+
       {/* Alert Thresholds */}
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
@@ -440,11 +466,11 @@ export function SettingsPage() {
           Get notified when resource usage exceeds these thresholds.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {([
+          {[
             { key: "cpu" as const, label: "CPU %", icon: "⚡" },
             { key: "ram" as const, label: "RAM %", icon: "🧠" },
             { key: "vram" as const, label: "VRAM %", icon: "💾" },
-          ]).map(({ key, label, icon }) => (
+          ].map(({ key, label, icon }) => (
             <div key={key} className="rounded-lg bg-[var(--background)] p-3">
               <label className="text-xs text-[var(--muted)] flex items-center gap-1 mb-2">
                 <span>{icon}</span> {label} threshold
@@ -455,13 +481,18 @@ export function SettingsPage() {
                 max={99}
                 value={alertThresholds[key]}
                 onChange={(e) =>
-                  setAlertThresholds({ ...alertThresholds, [key]: Number(e.target.value) })
+                  setAlertThresholds({
+                    ...alertThresholds,
+                    [key]: Number(e.target.value),
+                  })
                 }
                 className="w-full accent-accent"
               />
               <div className="flex items-center justify-between mt-1">
                 <span className="text-xs text-[var(--muted)]">50%</span>
-                <span className="text-sm font-mono font-medium">{alertThresholds[key]}%</span>
+                <span className="text-sm font-mono font-medium">
+                  {alertThresholds[key]}%
+                </span>
                 <span className="text-xs text-[var(--muted)]">99%</span>
               </div>
             </div>
@@ -495,7 +526,7 @@ export function SettingsPage() {
         </p>
         <a
           href={`https://github.com/hugbrowse/hugbrowse/issues/new?title=Bug+Report&body=${encodeURIComponent(
-            `**App Version:** 0.1.0\n**OS:** ${navigator.platform}\n**User Agent:** ${navigator.userAgent.slice(0, 100)}\n\n**Description:**\n\n**Steps to Reproduce:**\n`
+            `**App Version:** 0.1.0\n**OS:** ${navigator.platform}\n**User Agent:** ${navigator.userAgent.slice(0, 100)}\n\n**Description:**\n\n**Steps to Reproduce:**\n`,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -512,9 +543,21 @@ export function SettingsPage() {
         </h2>
         <div className="space-y-3">
           {[
-            { key: "hugbrowse-analytics-consent", label: "Usage Analytics", desc: "Anonymous app usage patterns" },
-            { key: "hugbrowse-crash-consent", label: "Crash Reports", desc: "Automatic error reports" },
-            { key: "hugbrowse-community-consent", label: "Community", desc: "Browse and install from marketplace" },
+            {
+              key: "hugbrowse-analytics-consent",
+              label: "Usage Analytics",
+              desc: "Anonymous app usage patterns",
+            },
+            {
+              key: "hugbrowse-crash-consent",
+              label: "Crash Reports",
+              desc: "Automatic error reports",
+            },
+            {
+              key: "hugbrowse-community-consent",
+              label: "Community",
+              desc: "Browse and install from marketplace",
+            },
           ].map(({ key, label, desc }) => (
             <label key={key} className="flex items-center justify-between">
               <div>

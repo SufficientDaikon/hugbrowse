@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useRag } from "./rag";
 import { retrieveChunks, buildRagContext } from "../lib/rag-engine";
 import { mcpClient } from "../lib/mcp-client";
+import { useBackends, type BackendType } from "./backends";
 
 export type Role = "user" | "assistant" | "system" | "tool";
 
@@ -18,6 +21,10 @@ export interface ChatMessage {
   /** FR-043: Flag for tool-call messages */
   isToolCall?: boolean;
   toolName?: string;
+  /** NEW: Track which backend generated this response */
+  backendId?: string;
+  backendName?: string;
+  backendType?: BackendType;
 }
 
 export interface ChatSession {
@@ -43,7 +50,6 @@ interface ChatStore {
   sendMessage: (
     sessionId: string,
     content: string,
-    port: number,
   ) => Promise<void>;
   stopStreaming: () => void;
 }
@@ -116,9 +122,16 @@ export const useChatStore = create<ChatStore>()(
           ),
         })),
 
-      sendMessage: async (sessionId, content, port) => {
+      sendMessage: async (sessionId, content) => {
         const session = get().sessions.find((s) => s.id === sessionId);
         if (!session) return;
+
+        // Get active backend info for tracking
+        const activeBackend = useBackends.getState().activeBackend;
+        if (!activeBackend) {
+          console.error("No active backend selected");
+          return;
+        }
 
         const userMsg: ChatMessage = {
           id: uid(),
@@ -133,6 +146,9 @@ export const useChatStore = create<ChatStore>()(
           content: "",
           timestamp: Date.now(),
           isStreaming: true,
+          backendId: activeBackend.id,
+          backendName: activeBackend.name,
+          backendType: activeBackend.backend_type,
         };
 
         const patchSession = (patch: (s: ChatSession) => ChatSession) =>
@@ -187,74 +203,83 @@ export const useChatStore = create<ChatStore>()(
           totalChars -= removed.content.length;
         }
 
+        let unlisten: UnlistenFn | null = null;
+        let tokenCount = 0;
+        const streamStart = performance.now();
+        let firstTokenTime: number | null = null;
+
         try {
-          const res = await fetch(
-            `http://127.0.0.1:${port}/v1/chat/completions`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                model: "local",
-                messages: history,
-                stream: true,
-                temperature: 0.7,
-              }),
-              signal: _abortController.signal,
-            },
-          );
-
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-          }
-
-          const reader = res.body!.getReader();
-          const dec = new TextDecoder();
-          let buf = "";
-          let tokenCount = 0;
-          const streamStart = performance.now();
-          let firstTokenTime: number | null = null;
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf += dec.decode(value, { stream: true });
-            const lines = buf.split("\n");
-            buf = lines.pop() ?? "";
-
-            for (const line of lines) {
-              if (!line.startsWith("data: ")) continue;
-              const data = line.slice(6).trim();
-              if (data === "[DONE]") break;
-              try {
-                const parsed = JSON.parse(data);
-                const delta = parsed?.choices?.[0]?.delta?.content;
-                if (delta) {
-                  tokenCount++;
-                  // NFR-001: Track first token latency
-                  if (tokenCount === 1) {
-                    firstTokenTime = performance.now() - streamStart;
-                  }
-                  const elapsed = (performance.now() - streamStart) / 1000;
-                  const tps = elapsed > 0 ? tokenCount / elapsed : 0;
-                  patchSession((s) => ({
-                    ...s,
-                    messages: s.messages.map((m) =>
-                      m.id === asstId
-                        ? {
-                            ...m,
-                            content: m.content + delta,
-                            tokensPerSecond: Math.round(tps * 10) / 10,
-                            ...(firstTokenTime !== null ? { firstTokenMs: Math.round(firstTokenTime) } : {}),
-                          }
-                        : m,
-                    ),
-                  }));
+          // Set up event listeners for streaming response
+          const unlistenDelta = await listen<{ content: string; done: boolean }>(
+            "chat-stream-delta",
+            (event) => {
+              const { content: delta } = event.payload;
+              if (delta && !_abortController?.signal.aborted) {
+                tokenCount++;
+                // NFR-001: Track first token latency
+                if (tokenCount === 1) {
+                  firstTokenTime = performance.now() - streamStart;
                 }
-              } catch {
-                /* non-JSON SSE line */
+                const elapsed = (performance.now() - streamStart) / 1000;
+                const tps = elapsed > 0 ? tokenCount / elapsed : 0;
+                patchSession((s) => ({
+                  ...s,
+                  messages: s.messages.map((m) =>
+                    m.id === asstId
+                      ? {
+                          ...m,
+                          content: m.content + delta,
+                          tokensPerSecond: Math.round(tps * 10) / 10,
+                          ...(firstTokenTime !== null ? { firstTokenMs: Math.round(firstTokenTime) } : {}),
+                        }
+                      : m,
+                  ),
+                }));
               }
             }
-          }
+          );
+
+          const unlistenDone = await listen<{ content: string; done: boolean }>(
+            "chat-stream-done",
+            () => {
+              // Stream completed successfully
+              if (unlisten) unlisten();
+            }
+          );
+
+          const unlistenError = await listen<{ error: string }>(
+            "chat-stream-error",
+            (event) => {
+              const { error } = event.payload;
+              if (!_abortController?.signal.aborted) {
+                patchSession((s) => ({
+                  ...s,
+                  messages: s.messages.map((m) =>
+                    m.id === asstId
+                      ? { ...m, content: `⚠️ Error: ${error}` }
+                      : m,
+                  ),
+                }));
+              }
+              if (unlisten) unlisten();
+            }
+          );
+
+          // Composite unlisten function
+          unlisten = () => {
+            unlistenDelta();
+            unlistenDone();
+            unlistenError();
+          };
+
+          // Start the proxy chat completion
+          await invoke("proxy_chat_completions", {
+            messages_json: JSON.stringify(history),
+            model: null, // Use backend's default model
+            temperature: 0.7,
+            stream: true,
+          });
+
         } catch (err) {
           if ((err as Error).name !== "AbortError") {
             patchSession((s) => ({
@@ -267,6 +292,9 @@ export const useChatStore = create<ChatStore>()(
             }));
           }
         } finally {
+          // Clean up event listeners
+          if (unlisten) unlisten();
+
           // FR-041: Check if LLM response contains a tool call pattern
           const finalSession = get().sessions.find(
             (s) => s.id === sessionId,

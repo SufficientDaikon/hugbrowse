@@ -5,6 +5,22 @@ All notable changes to HugBrowse will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-09
+
+### Added
+
+- **Cloud Offload** — run inference on remote servers instead of (or alongside) local hardware
+  - Compute Backend abstraction: Local Sidecar, HuggingFace Endpoints, Custom URL
+  - Backend selector dropdown in chat interface with status indicators and latency
+  - Add/remove/switch backends from Settings → Compute Backends
+  - Connection testing with latency measurement for custom endpoints
+  - One-click "Deploy to Cloud" from any model detail page via HuggingFace Inference Endpoints
+  - HF Endpoint lifecycle management: deploy, check status, pause, resume, delete
+  - Streaming chat proxy through Tauri backend (solves CORS, centralizes auth)
+  - Backend tracking on chat messages — see which backend generated each response
+  - Persistent backend configuration across app restarts
+  - Secure API key storage for remote endpoints
+
 ## [0.1.0] - 2026-03-08
 
 ### Added

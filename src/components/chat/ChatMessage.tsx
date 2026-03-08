@@ -91,6 +91,15 @@ export function ChatMessage({ message }: Props) {
             {message.toolName}
           </span>
         )}
+        
+        {/* Backend indicator for assistant messages */}
+        {!isUser && !isTool && message.backendName && (
+          <div className="mb-2">
+            <span className="text-xs text-[var(--muted)]">
+              via {message.backendName}
+            </span>
+          </div>
+        )}
         {isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (

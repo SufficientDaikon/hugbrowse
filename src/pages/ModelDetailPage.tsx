@@ -26,11 +26,13 @@ import {
   FileText,
   Code,
   FolderOpen,
+  Cloud,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { appLocalDataDir } from "@tauri-apps/api/path";
+import { DeployToCloudDialog } from "../components/backends/DeployToCloudDialog";
 
 type Tab = "readme" | "files" | "usage";
 
@@ -44,6 +46,7 @@ export function ModelDetailPage() {
   const { data: files } = useModelFiles(modelId);
   const [tab, setTab] = useState<Tab>("readme");
   const [copied, setCopied] = useState(false);
+  const [showDeployDialog, setShowDeployDialog] = useState(false);
   const { startDownload, downloads, init: initDownloads } = useDownloads();
 
   useEffect(() => {
@@ -145,26 +148,37 @@ huggingface-cli download ${model.id}`;
         onClick={() => navigate(-1)}
         className="flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 transition-colors group"
       >
-        <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" /> Back
+        <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />{" "}
+        Back
       </button>
 
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wide">{author}</p>
+            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wide">
+              {author}
+            </p>
             <h1 className="text-2xl font-bold text-[var(--foreground)] mt-0.5">
               {name || model.id}
             </h1>
           </div>
-          <a
-            href={`https://huggingface.co/${model.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3.5 py-2 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)] transition-all shrink-0"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> View on HF
-          </a>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowDeployDialog(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-orange-500/40 bg-orange-500/10 px-3.5 py-2 text-xs font-medium text-orange-500 hover:bg-orange-500/20 transition-all"
+            >
+              <Cloud className="h-3.5 w-3.5" /> Deploy to Cloud
+            </button>
+            <a
+              href={`https://huggingface.co/${model.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3.5 py-2 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)] transition-all"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> View on HF
+            </a>
+          </div>
         </div>
 
         {/* Tags & Stats */}
@@ -368,6 +382,12 @@ huggingface-cli download ${model.id}`;
           </div>
         </div>
       )}
+
+      <DeployToCloudDialog
+        modelId={model.id}
+        open={showDeployDialog}
+        onClose={() => setShowDeployDialog(false)}
+      />
     </div>
   );
 }

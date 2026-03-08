@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { useSettings } from "./settings";
+import { useBackends } from "./backends";
 
 export type InferenceStatus = "unloaded" | "loading" | "running" | "error";
 
@@ -68,6 +69,9 @@ export const useInference = create<InferenceStore>()((set) => ({
       set({ info });
       // FR-032: Remember last loaded model for auto-start
       useSettings.getState().setLastModelPath(modelPath);
+      
+      // Sync with backends store - refresh local sidecar status
+      await useBackends.getState().fetchBackends();
     } catch (e) {
       // EC-001: Surface model loading errors (corrupted GGUF, etc.)
       const errorMsg = String(e);
@@ -87,6 +91,9 @@ export const useInference = create<InferenceStore>()((set) => ({
   unload: async () => {
     const info = await invoke<InferenceInfo>("unload_model");
     set({ info });
+    
+    // Sync with backends store - refresh local sidecar status
+    await useBackends.getState().fetchBackends();
   },
 
   refresh: async () => {
