@@ -19,7 +19,6 @@ export function SessionSidebar() {
     deleteFolder,
     renameFolder,
     duplicateSession,
-    moveToFolder,
   } = useChatStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");

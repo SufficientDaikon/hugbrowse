@@ -226,20 +226,20 @@ huggingface-cli download ${model.id}`;
       {/* Quick Download Section — GGUF files */}
       {(() => {
         const ggufFiles = (files ?? []).filter((f) =>
-          (f.rfilename ?? "").toLowerCase().endsWith(".gguf"),
+          (f.path ?? f.rfilename ?? "").toLowerCase().endsWith(".gguf"),
         );
         if (ggufFiles.length === 0) return null;
         return (
-          <div className="mb-6 rounded-xl border border-hf-orange/30 bg-hf-orange/5 p-5">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--foreground)] mb-3">
-              <Download className="h-4 w-4 text-hf-orange" /> Download Model
-              <span className="text-xs font-normal text-[var(--muted)]">
-                ({ggufFiles.length} GGUF file{ggufFiles.length !== 1 ? "s" : ""} available)
-              </span>
+          <div className="mb-6 rounded-xl border-2 border-hf-orange/40 bg-hf-orange/5 p-5">
+            <h3 className="flex items-center gap-2 text-base font-bold text-[var(--foreground)] mb-1">
+              <Download className="h-5 w-5 text-hf-orange" /> Download Now
             </h3>
+            <p className="text-xs text-[var(--muted)] mb-3">
+              {ggufFiles.length} GGUF file{ggufFiles.length !== 1 ? "s" : ""} available — pick a quantization and click to download
+            </p>
             <div className="flex flex-wrap gap-2">
               {ggufFiles.slice(0, 6).map((file) => {
-                const filename = file.rfilename ?? "";
+                const filename = file.path ?? file.rfilename ?? "";
                 const sizeBytes = file.lfs?.size ?? file.size ?? 0;
                 const alreadyQueued = isAlreadyDownloaded(filename);
                 const shortName = filename.split("/").pop() ?? filename;
@@ -250,10 +250,10 @@ huggingface-cli download ${model.id}`;
                     onClick={() =>
                       handleDownloadGguf(filename, sizeBytes, file.lfs?.sha256)
                     }
-                    className="flex items-center gap-2 rounded-lg border border-hf-orange/40 bg-[var(--surface)] px-3 py-2 text-xs font-medium text-hf-orange hover:bg-hf-orange/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-2 rounded-lg border border-hf-orange/40 bg-hf-orange/10 px-4 py-2.5 text-sm font-semibold text-hf-orange hover:bg-hf-orange/20 hover:border-hf-orange/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="max-w-[200px] truncate">{shortName}</span>
+                    <Download className="h-4 w-4" />
+                    <span className="max-w-[220px] truncate">{shortName}</span>
                     {sizeBytes > 0 && (
                       <span className="text-[var(--muted)] text-[10px]">
                         {formatBytes(sizeBytes)}
@@ -336,7 +336,7 @@ huggingface-cli download ${model.id}`;
                 <tbody>
                   {files.map((file, i) => {
                     const sizeBytes = file.lfs?.size ?? file.size ?? 0;
-                    const filename = file.rfilename ?? "";
+                    const filename = file.path ?? file.rfilename ?? "";
                     const isGguf = filename
                       .toLowerCase()
                       .endsWith(".gguf");

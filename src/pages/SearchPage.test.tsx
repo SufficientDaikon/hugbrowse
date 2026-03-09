@@ -59,7 +59,7 @@ describe("SearchPage", () => {
       isFetchingNextPage: false,
       hasNextPage: false,
       fetchNextPage: vi.fn(),
-    } as ReturnType<typeof useModels>);
+    } as unknown as ReturnType<typeof useModels>);
 
     const { container } = renderSearchPage();
     // ModelGrid shows skeletons (divs with animate-pulse)
@@ -75,7 +75,7 @@ describe("SearchPage", () => {
       isFetchingNextPage: false,
       hasNextPage: false,
       fetchNextPage: vi.fn(),
-    } as ReturnType<typeof useModels>);
+    } as unknown as ReturnType<typeof useModels>);
 
     renderSearchPage();
     expect(screen.getByText("No models found")).toBeInTheDocument();

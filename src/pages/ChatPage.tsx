@@ -150,32 +150,61 @@ export function ChatPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {!canSendMessage ? (
           /* No backend available or not ready — show setup prompt */
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 overflow-y-auto">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-purple-500/20">
+          <div className="flex flex-1 flex-col items-center justify-center gap-5 p-8 overflow-y-auto">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-purple-500/20">
               {activeBackend?.backend_type === "local_sidecar" ? (
-                <Bot className="h-10 w-10 text-accent dark:text-accent-light" />
+                <Bot className="h-8 w-8 text-accent dark:text-accent-light" />
               ) : (
-                <Globe className="h-10 w-10 text-accent dark:text-accent-light" />
+                <Globe className="h-8 w-8 text-accent dark:text-accent-light" />
               )}
             </div>
-            <div className="text-center max-w-sm">
-              <h2 className="text-xl font-bold mb-2">
+            <div className="text-center max-w-md">
+              <h2 className="text-lg font-bold mb-1">
                 {!activeBackend 
-                  ? "No Backend Selected" 
+                  ? "Welcome to HugBrowse" 
                   : activeBackend.backend_type === "local_sidecar" 
-                    ? "No Model Running" 
-                    : "Backend Not Ready"
+                    ? "Get Started — Load a Model" 
+                    : "Backend Not Connected"
                 }
               </h2>
               <p className="text-sm text-[var(--muted)] leading-relaxed">
                 {!activeBackend 
-                  ? "Select a compute backend to start chatting."
+                  ? "Select a compute backend to start chatting with AI."
                   : activeBackend.backend_type === "local_sidecar"
-                    ? "Load a model to start chatting. Browse, import, or auto-detect models below."
-                    : `Backend "${activeBackend.name}" is ${activeBackend.status}. Check connection or try another backend.`
+                    ? "Follow these steps to chat with a local AI model:"
+                    : `"${activeBackend.name}" status: ${activeBackend.status.replace(/_/g, " ")}. Try reconnecting or switch backends.`
                 }
               </p>
             </div>
+
+            {/* Step-by-step guide for local sidecar */}
+            {activeBackend?.backend_type === "local_sidecar" && (
+              <div className="w-full max-w-md">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3 mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-hf-orange/20 text-hf-orange text-xs font-bold shrink-0">1</span>
+                    <div>
+                      <p className="text-sm font-medium">Download a GGUF model</p>
+                      <p className="text-xs text-[var(--muted)]">Browse Hugging Face for GGUF models or import one from your computer.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-hf-orange/20 text-hf-orange text-xs font-bold shrink-0">2</span>
+                    <div>
+                      <p className="text-sm font-medium">Load the model</p>
+                      <p className="text-xs text-[var(--muted)]">Select a downloaded model from the panel below and click "Load Model".</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-hf-orange/20 text-hf-orange text-xs font-bold shrink-0">3</span>
+                    <div>
+                      <p className="text-sm font-medium">Start chatting!</p>
+                      <p className="text-xs text-[var(--muted)]">Once loaded, type a message below to begin.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* FR-009 / FR-010 / FR-011: Action buttons for model discovery */}
             {(!activeBackend || activeBackend.backend_type === "local_sidecar") && (
@@ -184,11 +213,11 @@ export function ChatPage() {
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => navigate("/")}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:bg-[var(--surface-hover)] transition-colors"
+                    className="flex flex-col items-center gap-2 rounded-xl border-2 border-hf-orange/40 bg-hf-orange/5 p-4 hover:bg-hf-orange/10 transition-colors"
                     aria-label="Browse Models"
                   >
-                    <Search className="h-5 w-5 text-accent dark:text-accent-light" />
-                    <span className="text-xs font-medium">Browse Models</span>
+                    <Search className="h-5 w-5 text-hf-orange" />
+                    <span className="text-xs font-semibold text-hf-orange">Browse Models</span>
                   </button>
                   <button
                     onClick={handleImportGguf}
@@ -298,6 +327,14 @@ export function ChatPage() {
 
                 {/* Existing model run panel */}
                 <ModelRunPanel />
+              </div>
+            )}
+
+            {/* Show backend selector for non-local backends */}
+            {activeBackend && activeBackend.backend_type !== "local_sidecar" && (
+              <div className="w-full max-w-md space-y-3">
+                <p className="text-xs text-[var(--muted)] text-center">Switch backend or check connection:</p>
+                <BackendSelector className="flex justify-center" />
               </div>
             )}
           </div>

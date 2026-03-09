@@ -847,7 +847,7 @@ fn spawn_instance_health_checker(
 
 /// TTL checker — runs every 30s, unloads idle models exceeding their TTL.
 pub fn spawn_ttl_checker(app: AppHandle, state: ManagedModelManager) {
-    tokio::spawn(async move {
+    tauri::async_runtime::spawn(async move {
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(30)).await;
 

@@ -25,6 +25,8 @@ export interface HFModel {
 
 export interface HFModelFile {
   rfilename: string;
+  /** Tree API returns `path` instead of `rfilename` */
+  path?: string;
   size?: number;
   blobId?: string;
   lfs?: {

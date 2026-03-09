@@ -1,9 +1,10 @@
+import type React from "react";
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary } from "./ErrorBoundary";
 
-function ProblemChild() {
+function ProblemChild(): React.ReactElement {
   throw new Error("Test explosion");
 }
 
