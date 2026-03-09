@@ -480,9 +480,16 @@ pub async fn proxy_chat_completions(
         BackendType::HfEndpoint | BackendType::CustomUrl => {
             let url = backend.url
                 .ok_or("Remote backend missing URL")?;
-            let endpoint_url = format!("{}/v1/chat/completions", url.trim_end_matches('/'));
-            
-            proxy_to_endpoint(endpoint_url, messages, model, temperature, stream, api_key, app_handle).await
+            let base = url.trim_end_matches('/');
+            // If URL already ends with /v1, append only /chat/completions
+            let endpoint_url = if base.ends_with("/v1") {
+                format!("{}/chat/completions", base)
+            } else {
+                format!("{}/v1/chat/completions", base)
+            };
+            // Use the backend's model_name if no explicit model is provided
+            let effective_model = model.or(backend.model_name);
+            proxy_to_endpoint(endpoint_url, messages, effective_model, temperature, stream, api_key, app_handle).await
         }
     }
 }
