@@ -5,7 +5,7 @@ All notable changes to HugBrowse will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2025-07-19
 
 ### Added
 
@@ -96,6 +96,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - HTTP client module communicating with HugBrowse API server (OpenAI-compatible + native endpoints)
   - Configurable server URL via `--url` flag (default `http://127.0.0.1:8080`)
   - Built with clap 4 for argument parsing, reqwest for HTTP, tokio async runtime
+
+- **Advanced Features** (Phase 8/8 — v1.0.0 Release)
+  - Speculative decoding support — `draftModel` option in LoadOptions, `--model-draft` flag passed to llama-server
+  - Per-model inference metrics — total tokens generated, average tokens/sec, running average calculation
+  - New `mm_record_metrics` Tauri command for recording inference performance
+  - HugLink cross-device module — `huglink.rs` with device discovery data model, enable/disable, preferred device, rename
+  - New Tauri commands: `huglink_set_enabled`, `huglink_is_enabled`, `huglink_list_devices`, `huglink_set_preferred`, `huglink_rename`, `huglink_status`
+  - Plugin system — `plugin_host.rs` with plugin manifest parsing (plugin.json), lifecycle management (install/enable/disable/uninstall), directory scanning, sandboxed plugin configuration
+  - New Tauri commands: `plugin_list`, `plugin_enable`, `plugin_disable`, `plugin_uninstall`, `plugin_rescan`, `plugin_get`, `plugin_set_config`
+  - Enhanced RAG engine — configurable chunking strategies (fixed-size, sentence-boundary, semantic/paragraph), configurable chunk/overlap sizes, embedding model selection placeholder, `setRagConfig`/`getRagConfig` API
+  - HugLink Zustand store (`huglink.ts`) and HugLinkPanel component in Developer page
+  - Plugin Zustand store (`pluginStore.ts`) and PluginManager component in Developer page
+  - Inference MetricsDashboard component — aggregate stats (loaded models, total requests, total tokens, avg t/s), memory usage bars, per-model metrics with speculative decoding indicator
+  - Enhanced status bar — loaded model count, API server status indicator with port, version badge updated to v1.0.0
+  - Version bumped to 1.0.0 in package.json and Cargo.toml
 
 ## [0.3.0] - 2026-03-09
 

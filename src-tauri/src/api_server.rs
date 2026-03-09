@@ -738,6 +738,7 @@ async fn post_api_models_load(
         identifier: req.identifier,
         ttl: req.ttl,
         gpu_device: None,
+        draft_model: None,
     };
 
     // We need to call the model manager's load logic.

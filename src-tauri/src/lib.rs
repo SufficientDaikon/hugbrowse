@@ -8,6 +8,8 @@ use crate::api_server::{ManagedApiServer, ApiServer};
 use crate::auth_manager::{ManagedAuthManager, AuthManager};
 use crate::config_manager::{ManagedConfigManager, ConfigManager};
 use crate::mcp_host::{ManagedMcpHost, McpHost};
+use crate::huglink::{ManagedHugLinkHost, HugLinkHost};
+use crate::plugin_host::{ManagedPluginHost, PluginHost};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -22,6 +24,8 @@ pub mod api_server;
 pub mod auth_manager;
 pub mod config_manager;
 pub mod mcp_host;
+pub mod huglink;
+pub mod plugin_host;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -645,6 +649,8 @@ pub fn run() {
     let auth_manager_state: ManagedAuthManager = Arc::new(tokio::sync::Mutex::new(AuthManager::new()));
     let config_manager_state: ManagedConfigManager = Arc::new(tokio::sync::Mutex::new(ConfigManager::new()));
     let mcp_host_state: ManagedMcpHost = Arc::new(tokio::sync::Mutex::new(McpHost::new()));
+    let huglink_state: ManagedHugLinkHost = Arc::new(tokio::sync::Mutex::new(HugLinkHost::new()));
+    let plugin_host_state: ManagedPluginHost = Arc::new(tokio::sync::Mutex::new(PluginHost::new(std::path::PathBuf::from("plugins"))));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
 
@@ -661,6 +667,8 @@ pub fn run() {
         .manage(auth_manager_state.clone())
         .manage(config_manager_state.clone())
         .manage(mcp_host_state.clone())
+        .manage(huglink_state.clone())
+        .manage(plugin_host_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -755,9 +763,19 @@ pub fn run() {
 
             // Phase 6: Initialize MCP host
             let mcp_clone = mcp_host_state.clone();
+            let app_data_dir3 = app_data_dir2.clone();
             tauri::async_runtime::spawn(async move {
                 let mut host = mcp_clone.lock().await;
-                host.init(app_data_dir2.join("config"));
+                host.init(app_data_dir3.join("config"));
+            });
+
+            // Phase 8: Scan for installed plugins
+            let plugin_clone = plugin_host_state.clone();
+            let plugins_dir = app_data_dir2.join("plugins");
+            tauri::async_runtime::spawn(async move {
+                let mut host = plugin_clone.lock().await;
+                host.plugins_dir = plugins_dir;
+                let _ = host.scan_plugins();
             });
             
             Ok(())
@@ -857,6 +875,20 @@ pub fn run() {
             mcp_host::mcp_get_config,
             mcp_host::mcp_set_approval_mode,
             mcp_host::mcp_get_approval_mode,
+            model_manager::mm_record_metrics,
+            huglink::huglink_set_enabled,
+            huglink::huglink_is_enabled,
+            huglink::huglink_list_devices,
+            huglink::huglink_set_preferred,
+            huglink::huglink_rename,
+            huglink::huglink_status,
+            plugin_host::plugin_list,
+            plugin_host::plugin_enable,
+            plugin_host::plugin_disable,
+            plugin_host::plugin_uninstall,
+            plugin_host::plugin_rescan,
+            plugin_host::plugin_get,
+            plugin_host::plugin_set_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

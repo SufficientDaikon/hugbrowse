@@ -4,12 +4,22 @@
  * FR-032..FR-036: Document attachment, chunking, embedding, context injection, source citations.
  */
 
+export type ChunkStrategy = 'fixed' | 'sentence' | 'semantic';
+
 export interface RagChunk {
   id: string;
   docId: string;
   text: string;
   index: number;
   tokens: string[];
+}
+
+export interface RagConfig {
+  chunkStrategy: ChunkStrategy;
+  chunkTokens: number;
+  overlapTokens: number;
+  topK: number;
+  embeddingModel: string | null;
 }
 
 // In-memory chunk store keyed by docId
@@ -43,22 +53,46 @@ function restoreChunks(): void {
 // Restore on module load
 restoreChunks();
 
-// FR-035: ~4 chars per token; 512 tokens ≈ 2048 chars, 64 tokens ≈ 256 chars
+/** Default RAG configuration. */
+let ragConfig: RagConfig = {
+  chunkStrategy: 'fixed',
+  chunkTokens: 512,
+  overlapTokens: 64,
+  topK: 5,
+  embeddingModel: null,
+};
+
+/** Update RAG configuration. */
+export function setRagConfig(config: Partial<RagConfig>): void {
+  ragConfig = { ...ragConfig, ...config };
+}
+
+/** Get current RAG configuration. */
+export function getRagConfig(): RagConfig {
+  return { ...ragConfig };
+}
+
+// FR-035: ~4 chars per token
 const CHARS_PER_TOKEN = 4;
-const CHUNK_TOKENS = 512;
-const OVERLAP_TOKENS = 64;
-const CHUNK_SIZE = CHUNK_TOKENS * CHARS_PER_TOKEN;
-const CHUNK_OVERLAP = OVERLAP_TOKENS * CHARS_PER_TOKEN;
 
 /**
  * FR-033: Split text into overlapping chunks.
+ * Supports strategies: 'fixed' (char-based), 'sentence' (sentence boundary), 'semantic' (paragraph).
  */
 export function chunkText(
   text: string,
   docId: string,
-  chunkSize = CHUNK_SIZE,
-  overlap = CHUNK_OVERLAP,
+  chunkSize = ragConfig.chunkTokens * CHARS_PER_TOKEN,
+  overlap = ragConfig.overlapTokens * CHARS_PER_TOKEN,
+  strategy: ChunkStrategy = ragConfig.chunkStrategy,
 ): RagChunk[] {
+  if (strategy === 'sentence') {
+    return chunkBySentence(text, docId, chunkSize);
+  }
+  if (strategy === 'semantic') {
+    return chunkByParagraph(text, docId, chunkSize);
+  }
+  // Default: fixed-size chunking
   const chunks: RagChunk[] = [];
   let i = 0;
   let idx = 0;
@@ -66,15 +100,53 @@ export function chunkText(
     const end = Math.min(i + chunkSize, text.length);
     const slice = text.slice(i, end);
     const tokens = tokenize(slice);
-    chunks.push({
-      id: `${docId}-${idx}`,
-      docId,
-      text: slice,
-      index: idx,
-      tokens,
-    });
+    chunks.push({ id: `${docId}-${idx}`, docId, text: slice, index: idx, tokens });
     idx++;
     i += chunkSize - overlap;
+  }
+  return chunks;
+}
+
+/** Chunk by sentence boundaries — group sentences until chunk size is reached. */
+function chunkBySentence(text: string, docId: string, maxSize: number): RagChunk[] {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const chunks: RagChunk[] = [];
+  let current = '';
+  let idx = 0;
+  for (const sentence of sentences) {
+    if (current.length + sentence.length > maxSize && current.length > 0) {
+      const tokens = tokenize(current);
+      chunks.push({ id: `${docId}-${idx}`, docId, text: current.trim(), index: idx, tokens });
+      idx++;
+      current = '';
+    }
+    current += sentence;
+  }
+  if (current.trim()) {
+    const tokens = tokenize(current);
+    chunks.push({ id: `${docId}-${idx}`, docId, text: current.trim(), index: idx, tokens });
+  }
+  return chunks;
+}
+
+/** Chunk by paragraph — split on double newlines, group small paragraphs. */
+function chunkByParagraph(text: string, docId: string, maxSize: number): RagChunk[] {
+  const paragraphs = text.split(/\n\n+/).filter((p) => p.trim());
+  const chunks: RagChunk[] = [];
+  let current = '';
+  let idx = 0;
+  for (const para of paragraphs) {
+    if (current.length + para.length > maxSize && current.length > 0) {
+      const tokens = tokenize(current);
+      chunks.push({ id: `${docId}-${idx}`, docId, text: current.trim(), index: idx, tokens });
+      idx++;
+      current = '';
+    }
+    current += (current ? '\n\n' : '') + para;
+  }
+  if (current.trim()) {
+    const tokens = tokenize(current);
+    chunks.push({ id: `${docId}-${idx}`, docId, text: current.trim(), index: idx, tokens });
   }
   return chunks;
 }
@@ -203,8 +275,8 @@ export function indexDocumentFromWorker(docId: string, text: string): Promise<nu
         type: "index",
         docId,
         text,
-        chunkSize: CHUNK_SIZE,
-        overlap: CHUNK_OVERLAP,
+        chunkSize: ragConfig.chunkTokens * CHARS_PER_TOKEN,
+        overlap: ragConfig.overlapTokens * CHARS_PER_TOKEN,
       });
     } catch {
       // Fallback to sync if workers not supported

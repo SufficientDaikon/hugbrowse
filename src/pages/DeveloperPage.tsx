@@ -3,6 +3,9 @@ import { useApiServer, type RequestLogEntry } from "../stores/apiServer";
 import { TokenManager } from "../components/developer/TokenManager";
 import { PresetManager } from "../components/developer/PresetManager";
 import { McpManager } from "../components/developer/McpManager";
+import HugLinkPanel from "../components/developer/HugLinkPanel";
+import PluginManager from "../components/developer/PluginManager";
+import MetricsDashboard from "../components/developer/MetricsDashboard";
 import { cn } from "../components/ui/cn";
 import {
   Play,
@@ -214,6 +217,21 @@ export function DeveloperPage() {
 
       {/* MCP Servers */}
       <McpManager />
+
+      {/* Inference Metrics */}
+      <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <MetricsDashboard />
+      </section>
+
+      {/* HugLink */}
+      <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <HugLinkPanel />
+      </section>
+
+      {/* Plugins */}
+      <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <PluginManager />
+      </section>
 
       {/* Request Log */}
       <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 space-y-3">

@@ -3,12 +3,17 @@ import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { useSystemInfo } from "../../hooks/useSystemInfo";
 import { Badge } from "../ui/Badge";
-import { Cpu, MemoryStick, MonitorSmartphone } from "lucide-react";
+import { Cpu, MemoryStick, MonitorSmartphone, Server, Layers } from "lucide-react";
+import { useApiServer } from "../../stores/apiServer";
+import { useModelManager } from "../../stores/modelManager";
 
 export function AppShell() {
   const { data: sysInfo } = useSystemInfo();
   const location = useLocation();
   const showSidebar = location.pathname === "/";
+  const { running: serverRunning, port: serverPort } = useApiServer();
+  const { loadedModels } = useModelManager();
+  const modelCount = (loadedModels ?? []).length;
 
   return (
     <div className="flex h-screen flex-col">
@@ -40,9 +45,19 @@ export function AppShell() {
               </span>
             </>
           )}
+          <span className="w-px h-3 bg-[var(--border)]" />
+          <span className="flex items-center gap-1.5">
+            <Layers className="h-3 w-3 text-blue-500" />
+            {modelCount} model{modelCount !== 1 ? 's' : ''} loaded
+          </span>
+          <span className="w-px h-3 bg-[var(--border)]" />
+          <span className="flex items-center gap-1.5">
+            <Server className="h-3 w-3" style={{ color: serverRunning ? '#22c55e' : '#71717a' }} />
+            API {serverRunning ? `●:${serverPort}` : 'off'}
+          </span>
           <div className="ml-auto">
             <Badge variant="outline" className="text-[10px]">
-              v0.1.0
+              v1.0.0
             </Badge>
           </div>
         </footer>
