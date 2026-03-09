@@ -35,3 +35,7 @@ src-tauri/gen/
 # Screenshots / test artifacts
 screenshot*.png
 test_*.py
+
+src-cli/target/
+mcp-server/node_modules/
+mcp-server/dist/
