@@ -65,8 +65,9 @@ export function ModelCard({ model }: ModelCardProps) {
       onClick={() => navigate(`/model/${encodeURIComponent(model.id)}`)}
       className={cn(
         "group relative flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-left",
-        "hover:border-hf-orange/40 hover:shadow-lg hover:shadow-hf-orange/5",
-        "transition-all duration-200 ease-out",
+        "card-elevated",
+        "hover:border-hf-orange/30",
+        "transition-colors duration-200",
       )}
     >
       {/* Hover arrow */}

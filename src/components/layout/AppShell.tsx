@@ -13,13 +13,13 @@ export function AppShell() {
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto bg-[var(--background)]">
+        <main className="flex-1 overflow-y-auto bg-[var(--background)] surface-mesh">
           <Outlet />
         </main>
       </div>
       {/* Status Bar */}
       {sysInfo && (
-        <footer className="flex h-7 items-center gap-4 border-t border-[var(--border)] bg-[var(--surface)] px-4 text-[11px] text-[var(--muted)]">
+        <footer className="flex h-7 items-center gap-4 border-t border-[var(--border-subtle)] bg-[var(--surface)] px-5 text-[11px] text-[var(--muted)]">
           <span className="flex items-center gap-1.5">
             <Cpu className="h-3 w-3 text-accent dark:text-accent-light" />
             {sysInfo.cpu_name}

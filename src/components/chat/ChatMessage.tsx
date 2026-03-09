@@ -56,7 +56,7 @@ export function ChatMessage({ message }: Props) {
   const isTool = message.role === "tool" || message.isToolCall;
 
   return (
-    <div className={cn("flex gap-3 px-4 py-3", isUser && "flex-row-reverse")}>
+    <div className={cn("flex gap-3 px-5 py-4", isUser && "flex-row-reverse")}>
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
@@ -81,7 +81,7 @@ export function ChatMessage({ message }: Props) {
           "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
           isUser
             ? "bg-hf-orange/10 text-[var(--foreground)] rounded-tr-md"
-            : "bg-[var(--surface)] border border-[var(--border)] rounded-tl-md",
+            : "bg-[var(--surface-raised)] border border-[var(--border-subtle)] rounded-tl-md shadow-[var(--shadow-card)]",
         )}
       >
         {/* Tool Call badge */}

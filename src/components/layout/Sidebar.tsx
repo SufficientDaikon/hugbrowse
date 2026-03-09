@@ -14,7 +14,7 @@ export function Sidebar() {
     activeFilters.tasks.length > 0 || activeFilters.libraries.length > 0;
 
   return (
-    <aside className="w-60 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-3">
+    <aside className="w-60 shrink-0 overflow-y-auto border-r border-[var(--border-subtle)] bg-[var(--surface)] p-3">
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-3.5 w-3.5 text-[var(--muted)]" />

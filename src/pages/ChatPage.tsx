@@ -105,7 +105,7 @@ export function ChatPage() {
         ) : (
           <>
             {/* Chat Header */}
-            <div className="border-b border-[var(--border)] px-4 py-3">
+            <div className="border-b border-[var(--border-subtle)] px-4 py-3">
               <div className="flex items-center gap-3">
                 <BackendSelector />
                 {session && (
@@ -158,7 +158,7 @@ export function ChatPage() {
 
       {/* Right sidebar — model status when running or backend info */}
       {(isRunning || (activeBackend && activeBackend.backend_type !== "local_sidecar")) && (
-        <aside className="w-72 shrink-0 border-l border-[var(--border)] bg-[var(--surface)] p-4 space-y-3 overflow-y-auto">
+        <aside className="w-72 shrink-0 border-l border-[var(--border-subtle)] bg-[var(--surface)] p-4 space-y-3 overflow-y-auto">
           <ModelRunPanel />
 
           {/* System Prompt Editor */}

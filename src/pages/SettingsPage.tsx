@@ -88,7 +88,7 @@ export function SettingsPage() {
   ];
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="px-8 py-8 max-w-2xl mx-auto animate-fade-in">
       <div className="flex items-center gap-3 mb-8">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-hf-orange/10 shrink-0">
           <RefreshCw className="h-5 w-5 text-hf-orange" />

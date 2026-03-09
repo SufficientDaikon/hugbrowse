@@ -44,7 +44,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="border-t border-[var(--border-subtle)] bg-[var(--surface)] p-4">
       <div className="flex gap-2 items-end max-w-4xl mx-auto relative">
         <textarea
           ref={ref}
@@ -60,10 +60,10 @@ export function ChatInput({
           }
           rows={1}
           className={cn(
-            "flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--background)]",
+            "flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--surface-inset)]",
             "px-4 py-3 pr-14 text-sm placeholder:text-[var(--muted-foreground)]",
-            "focus:outline-none focus:ring-2 focus:ring-hf-orange/30 focus:border-hf-orange/30",
-            "transition-all duration-150 min-h-[48px]",
+            "focus:outline-none focus:ring-2 focus:ring-hf-orange/30 focus:border-hf-orange/30 focus:shadow-[var(--shadow-orange-glow)]",
+            "transition-all duration-200 ease-smooth min-h-[48px]",
             (disabled || isStreaming) && "opacity-60 cursor-not-allowed",
           )}
         />

@@ -68,7 +68,7 @@ export function Header() {
   const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-[var(--border)] glass-heavy px-4">
+    <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-[var(--border-subtle)] glass-heavy px-5">
       {/* Logo */}
       <button
         onClick={() => navigate("/")}
@@ -92,10 +92,10 @@ export function Header() {
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           className={cn(
-            "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] py-2 pl-10 pr-10 text-sm",
+            "w-full rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] py-2.5 pl-10 pr-10 text-sm",
             "placeholder:text-[var(--muted-foreground)]",
-            "focus:outline-none focus:ring-2 focus:ring-hf-orange/40 focus:border-hf-orange/40",
-            "transition-all duration-200",
+            "focus:outline-none focus:ring-2 focus:ring-hf-orange/30 focus:border-hf-orange/30 focus:shadow-[var(--shadow-orange-glow)]",
+            "transition-all duration-200 ease-smooth",
           )}
         />
         {query && (

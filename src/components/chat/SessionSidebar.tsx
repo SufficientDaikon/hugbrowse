@@ -28,8 +28,8 @@ export function SessionSidebar() {
   };
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col border-r border-[var(--border)] bg-[var(--surface)]">
-      <div className="p-3 border-b border-[var(--border)]">
+    <aside className="w-56 shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--surface)]">
+      <div className="p-3 border-b border-[var(--border-subtle)]">
         <button
           onClick={() => createSession()}
           className="w-full flex items-center gap-2 rounded-lg bg-hf-orange/10 text-hf-orange hover:bg-hf-orange/20 px-3 py-2 text-sm font-medium transition-colors"

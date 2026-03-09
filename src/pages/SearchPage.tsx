@@ -42,9 +42,9 @@ export function SearchPage() {
       : "Trending Models";
 
   return (
-    <div className="p-6">
+    <div className="p-8 animate-fade-in">
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-hf-orange/10">
             {query ? (
