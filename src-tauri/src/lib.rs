@@ -6,6 +6,7 @@ use crate::backend::{ManagedBackends, BackendManager};
 use crate::model_manager::{ManagedModelManager, ModelManager};
 use crate::api_server::{ManagedApiServer, ApiServer};
 use crate::auth_manager::{ManagedAuthManager, AuthManager};
+use crate::config_manager::{ManagedConfigManager, ConfigManager};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -18,6 +19,7 @@ pub mod backend;
 pub mod model_manager;
 pub mod api_server;
 pub mod auth_manager;
+pub mod config_manager;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -639,6 +641,7 @@ pub fn run() {
     let model_manager_state: ManagedModelManager = Arc::new(tokio::sync::Mutex::new(ModelManager::new()));
     let api_server_state: ManagedApiServer = Arc::new(tokio::sync::Mutex::new(ApiServer::new()));
     let auth_manager_state: ManagedAuthManager = Arc::new(tokio::sync::Mutex::new(AuthManager::new()));
+    let config_manager_state: ManagedConfigManager = Arc::new(tokio::sync::Mutex::new(ConfigManager::new()));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
 
@@ -653,6 +656,7 @@ pub fn run() {
         .manage(model_manager_state.clone())
         .manage(api_server_state.clone())
         .manage(auth_manager_state.clone())
+        .manage(config_manager_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -735,6 +739,14 @@ pub fn run() {
                     eprintln!("Failed to load auth tokens: {}", e);
                 }
             });
+
+            // Phase 4: Initialize config manager
+            let config_clone = config_manager_state.clone();
+            let app_data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            tauri::async_runtime::spawn(async move {
+                let mut mgr = config_clone.lock().await;
+                mgr.init(app_data_dir);
+            });
             
             Ok(())
         })
@@ -811,6 +823,20 @@ pub fn run() {
             auth_manager::auth_delete_token,
             auth_manager::auth_get_config,
             auth_manager::auth_set_config,
+            config_manager::config_get_settings,
+            config_manager::config_update_settings,
+            config_manager::config_list_presets,
+            config_manager::config_create_preset,
+            config_manager::config_update_preset,
+            config_manager::config_delete_preset,
+            config_manager::config_get_per_model,
+            config_manager::config_set_per_model,
+            config_manager::config_parse_model_yaml,
+            config_manager::config_save_model_yaml,
+            config_manager::config_export_settings,
+            config_manager::config_import_settings,
+            config_manager::config_export_preset,
+            config_manager::config_import_preset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

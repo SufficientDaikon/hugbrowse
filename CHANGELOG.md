@@ -48,6 +48,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `TokenManager` component in Developer page — create, revoke, delete tokens with permission grid
   - Token creation displays plaintext token once with copy-to-clipboard support
 
+- **Configuration & Presets** (Phase 4/8 of v1.0)
+  - New `config_manager.rs` Rust module — unified configuration system
+  - `AppSettings` struct with categories: General, Models, Server, Appearance, Downloads, Advanced
+  - Persistent settings to `~/.hugbrowse/config/settings.json` with safe defaults
+  - `model.yaml` parser and generator — portable model descriptors with load/inference defaults
+  - Inference presets system — CRUD with JSON persistence in `~/.hugbrowse/config/presets/`
+  - Per-model settings with merge priority: per-model > model.yaml > preset > global defaults
+  - Settings import/export support
+  - Preset import/export support
+  - New Tauri commands: `config_get_settings`, `config_update_settings`, `config_list_presets`, `config_create_preset`, `config_update_preset`, `config_delete_preset`, `config_get_per_model`, `config_set_per_model`, `config_parse_model_yaml`, `config_save_model_yaml`, `config_export_settings`, `config_import_settings`, `config_export_preset`, `config_import_preset`
+  - New `configStore` and `presetStore` Zustand stores for frontend state management
+  - New `PresetManager` component in Developer page — create, delete, expand presets with parameter display
+  - Added `serde_yaml` and `chrono` Rust dependencies
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed
