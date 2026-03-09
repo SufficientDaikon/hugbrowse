@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApiServer, type RequestLogEntry } from "../stores/apiServer";
+import { TokenManager } from "../components/developer/TokenManager";
 import { cn } from "../components/ui/cn";
 import {
   Play,
@@ -202,6 +203,9 @@ export function DeveloperPage() {
           </div>
         )}
       </section>
+
+      {/* Authentication */}
+      <TokenManager />
 
       {/* Request Log */}
       <section className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 space-y-3">

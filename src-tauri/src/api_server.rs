@@ -7,7 +7,7 @@
 
 use axum::{
     extract::{Json, State as AxumState},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     response::{
         sse::{Event, KeepAlive, Sse},
         IntoResponse, Response,
@@ -29,6 +29,7 @@ use uuid::Uuid;
 use crate::model_manager::{
     LoadOptions, LoadedModel, ManagedModelManager, ModelStatus,
 };
+use crate::auth_manager::{ManagedAuthManager, Permission};
 
 // ── Server Configuration ──────────────────────────────────────────────
 
@@ -71,6 +72,7 @@ impl Default for ServerConfig {
 #[derive(Clone)]
 pub struct ApiState {
     pub model_manager: ManagedModelManager,
+    pub auth_manager: ManagedAuthManager,
     pub app_handle: AppHandle,
     pub config: Arc<Mutex<ServerConfig>>,
     pub request_log: Arc<Mutex<VecDeque<RequestLogEntry>>>,
@@ -268,6 +270,7 @@ fn build_router(state: ApiState) -> Router {
 pub async fn start_server(
     app: AppHandle,
     model_manager: ManagedModelManager,
+    auth_manager: ManagedAuthManager,
     server_state: &ManagedApiServer,
 ) -> Result<(), String> {
     let mut srv = server_state.lock().await;
@@ -282,6 +285,7 @@ pub async fn start_server(
 
     let api_state = ApiState {
         model_manager,
+        auth_manager,
         app_handle: app.clone(),
         config: Arc::new(Mutex::new(config.clone())),
         request_log: Arc::new(Mutex::new(VecDeque::with_capacity(200))),
@@ -416,10 +420,39 @@ async fn log_request(
     let _ = state.app_handle.emit("api-request-logged", &entry);
 }
 
+/// Check auth for a request. Returns Ok(()) if authorized, Err(Response) if not.
+async fn check_request_auth(
+    state: &ApiState,
+    headers: &axum::http::HeaderMap,
+    permission: Option<&Permission>,
+) -> Result<(), Response> {
+    let auth_header = headers
+        .get("authorization")
+        .and_then(|v| v.to_str().ok());
+
+    match crate::auth_manager::check_auth(&state.auth_manager, auth_header, permission).await {
+        Ok(_) => Ok(()),
+        Err((status_code, message)) => {
+            let status = match status_code {
+                401 => StatusCode::UNAUTHORIZED,
+                403 => StatusCode::FORBIDDEN,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            Err(ApiError::new(message, "auth_error", status_code).response(status))
+        }
+    }
+}
+
 // ── OpenAI-Compatible Route Handlers ──────────────────────────────────
 
 /// GET /v1/models — list loaded models in OpenAI format.
-async fn get_v1_models(AxumState(state): AxumState<ApiState>) -> Response {
+async fn get_v1_models(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::Inference)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
     let mgr = state.model_manager.lock().await;
     let models: Vec<ModelObject> = mgr
@@ -448,8 +481,12 @@ async fn get_v1_models(AxumState(state): AxumState<ApiState>) -> Response {
 /// POST /v1/chat/completions — chat completions with streaming (SSE) support.
 async fn post_v1_chat_completions(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<ChatCompletionsRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::Inference)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
     let model_hint = req.model.as_deref();
 
@@ -535,8 +572,12 @@ async fn post_v1_chat_completions(
 /// POST /v1/completions — text completions.
 async fn post_v1_completions(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<CompletionsRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::Inference)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
     let model_hint = req.model.as_deref();
 
@@ -602,8 +643,12 @@ async fn post_v1_completions(
 /// POST /v1/embeddings — text embeddings.
 async fn post_v1_embeddings(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<EmbeddingsRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::Inference)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
     let model_hint = req.model.as_deref();
 
@@ -673,8 +718,12 @@ async fn get_api_models(AxumState(state): AxumState<ApiState>) -> Response {
 /// POST /api/v1/models/load — load a model via API.
 async fn post_api_models_load(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<NativeLoadRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::ModelManagement)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
 
     let gpu_str = req.gpu.map(|g| {
@@ -731,8 +780,12 @@ async fn post_api_models_load(
 /// POST /api/v1/models/unload — unload a model via API.
 async fn post_api_models_unload(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<NativeUnloadRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::ModelManagement)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
 
     let instance_id = if let Some(id) = req.instance_id {
@@ -779,8 +832,12 @@ async fn post_api_models_unload(
 /// POST /api/v1/chat — native stateful chat with model loading events.
 async fn post_api_chat(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<NativeChatRequest>,
 ) -> Response {
+    if let Err(r) = check_request_auth(&state, &headers, Some(&Permission::Inference)).await {
+        return r;
+    }
     let start = std::time::Instant::now();
     let model_hint = req.model.as_deref();
 
@@ -936,9 +993,10 @@ async fn stream_from_llama_server(
 pub async fn api_server_start(
     app: AppHandle,
     model_manager: tauri::State<'_, ManagedModelManager>,
+    auth_manager: tauri::State<'_, ManagedAuthManager>,
     server: tauri::State<'_, ManagedApiServer>,
 ) -> Result<(), String> {
-    start_server(app, model_manager.inner().clone(), server.inner()).await
+    start_server(app, model_manager.inner().clone(), auth_manager.inner().clone(), server.inner()).await
 }
 
 /// Stop the API server.

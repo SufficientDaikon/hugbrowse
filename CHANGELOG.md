@@ -36,6 +36,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New Developer page with server controls, status indicator, base URL display, and request log viewer
   - Developer navigation tab in header
 
+- **Authentication & Security** (Phase 3/8 of v1.0)
+  - New `auth_manager.rs` Rust module — token-based API authentication system
+  - SHA-256 hashed token storage — plaintext shown once on creation, never persisted
+  - Encrypted persistence via `tauri-plugin-store` (auth-tokens.json)
+  - Per-token permission scoping: `inference`, `model_management`, `server_admin`, `downloads`
+  - Auth enforcement on all API server routes — returns 401/403 for invalid/insufficient tokens
+  - Auth toggle — enable/disable authentication globally without deleting tokens
+  - New Tauri commands: `auth_create_token`, `auth_revoke_token`, `auth_delete_token`, `auth_list_tokens`, `auth_set_enabled`, `auth_is_enabled`
+  - New `auth` Zustand store for frontend token management state
+  - New `TokenManager` component in Developer page — create, revoke, delete tokens with permission grid
+  - Token creation displays plaintext token once with copy-to-clipboard support
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed

@@ -5,6 +5,7 @@ use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
 use crate::backend::{ManagedBackends, BackendManager};
 use crate::model_manager::{ManagedModelManager, ModelManager};
 use crate::api_server::{ManagedApiServer, ApiServer};
+use crate::auth_manager::{ManagedAuthManager, AuthManager};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -16,6 +17,7 @@ pub mod inference;
 pub mod backend;
 pub mod model_manager;
 pub mod api_server;
+pub mod auth_manager;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -636,6 +638,7 @@ pub fn run() {
     let backend_state: ManagedBackends = Arc::new(Mutex::new(BackendManager::new()));
     let model_manager_state: ManagedModelManager = Arc::new(tokio::sync::Mutex::new(ModelManager::new()));
     let api_server_state: ManagedApiServer = Arc::new(tokio::sync::Mutex::new(ApiServer::new()));
+    let auth_manager_state: ManagedAuthManager = Arc::new(tokio::sync::Mutex::new(AuthManager::new()));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
 
@@ -649,6 +652,7 @@ pub fn run() {
         .manage(backend_state.clone())
         .manage(model_manager_state.clone())
         .manage(api_server_state.clone())
+        .manage(auth_manager_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -722,6 +726,15 @@ pub fn run() {
             // Phase 1: Start TTL checker for model manager
             let ttl_app = app.handle().clone();
             crate::model_manager::spawn_ttl_checker(ttl_app, mm_for_ttl);
+
+            // Phase 3: Load persisted auth tokens
+            let auth_app = app.handle().clone();
+            let auth_clone = auth_manager_state.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = crate::auth_manager::load_tokens(&auth_app, &auth_clone).await {
+                    eprintln!("Failed to load auth tokens: {}", e);
+                }
+            });
             
             Ok(())
         })
@@ -792,6 +805,12 @@ pub fn run() {
             api_server::api_server_status,
             api_server::api_server_update_config,
             api_server::api_server_get_log,
+            auth_manager::auth_create_token,
+            auth_manager::auth_list_tokens,
+            auth_manager::auth_revoke_token,
+            auth_manager::auth_delete_token,
+            auth_manager::auth_get_config,
+            auth_manager::auth_set_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
