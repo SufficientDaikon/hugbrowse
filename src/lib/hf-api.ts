@@ -31,7 +31,18 @@ class HuggingFaceAPI {
     maxRetries = 3,
   ): Promise<Response> {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      const res = await fetch(url, init);
+      let res: Response;
+      try {
+        res = await fetch(url, init);
+      } catch (networkError) {
+        // Network-level failure (DNS, connection refused, etc.)
+        if (attempt < maxRetries) {
+          const waitMs = Math.min(1000 * 2 ** attempt, 30000);
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+        throw new Error(`Network error after ${maxRetries + 1} attempts: ${String(networkError)}`);
+      }
       if (res.status === 429 && attempt < maxRetries) {
         const retryAfter = res.headers.get("Retry-After");
         const waitMs = retryAfter
@@ -101,9 +112,13 @@ class HuggingFaceAPI {
       const res = await this.fetchWithRetry(`${HF_API_BASE}/whoami`, {
         headers: this.headers(),
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.warn(`[hf-api] Token validation failed: HTTP ${res.status} ${res.statusText}`);
+        return null;
+      }
       return res.json();
-    } catch {
+    } catch (err) {
+      console.warn("[hf-api] Token validation error:", String(err));
       return null;
     }
   }

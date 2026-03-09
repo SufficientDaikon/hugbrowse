@@ -102,12 +102,32 @@ export function ChatPage() {
     setShowDetectResults(true);
   }, [autoDetectAll]);
 
-  // FR-013: Load a detected model
-  const handleLoadDetected = useCallback(async (name: string, path?: string) => {
-    const modelPath = path ?? name;
-    const modelName = name.split("/").pop() ?? name;
+  // FR-013: Load a detected model or connect to Ollama
+  const handleLoadDetected = useCallback(async (serverType: string, name: string, path?: string) => {
     setShowDetectResults(false);
-    await load({ modelPath, modelName });
+    if (serverType === "ollama") {
+      // Ollama models are served by the running Ollama daemon — connect as a backend
+      try {
+        const { addBackend, setActiveBackend } = useBackends.getState();
+        const backend = await addBackend(
+          `Ollama: ${name}`,
+          "http://127.0.0.1:11434/v1",
+          undefined,
+          "custom_url",
+        );
+        await setActiveBackend(backend.id);
+        setImportStatus(`Connected to Ollama model "${name}"`);
+        setTimeout(() => setImportStatus(null), 5000);
+      } catch (e) {
+        setImportStatus(`Failed to connect to Ollama: ${String(e)}`);
+        setTimeout(() => setImportStatus(null), 5000);
+      }
+    } else {
+      // LM Studio / manual imports have a local GGUF path
+      const modelPath = path ?? name;
+      const modelName = name.split("/").pop() ?? name;
+      await load({ modelPath, modelName });
+    }
   }, [load]);
 
   const totalDetectedModels = detectResults.reduce(
@@ -252,10 +272,10 @@ export function ChatPage() {
                                     </p>
                                   </div>
                                   <button
-                                    onClick={() => handleLoadDetected(model.name, model.path)}
+                                    onClick={() => handleLoadDetected(server.type, model.name, model.path)}
                                     className="shrink-0 rounded-lg bg-hf-orange px-3 py-1.5 text-xs font-medium text-white hover:bg-hf-orange/90 transition-colors"
                                   >
-                                    Load
+                                    {server.type === "ollama" ? "Connect" : "Load"}
                                   </button>
                                 </div>
                               ))}

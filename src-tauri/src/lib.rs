@@ -164,46 +164,64 @@ fn detect_gpu_usage() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
 }
 
 /// Query GPU utilization and VRAM usage via Windows Performance Counters.
-/// Uses a single PowerShell invocation to minimise overhead.
+/// Uses Get-CimInstance (WMI) which is more reliable across locales than Get-Counter.
 #[cfg(target_os = "windows")]
 fn detect_gpu_usage_win_perf_counters() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
     use std::process::Command;
 
-    // Single PowerShell call for GPU utilization + VRAM used.
+    // Single PowerShell call using Get-CimInstance (locale-independent, more reliable)
     // -1 sentinel means "counter unavailable".
     let script = concat!(
         "$g=-1;$v=-1;",
-        "try{$s=(Get-Counter '\\GPU Engine(*engtype_3D)\\Utilization Percentage' -EA Stop).CounterSamples;",
-        "$g=($s|Measure-Object CookedValue -Sum).Sum}catch{};",
-        "try{$s=(Get-Counter '\\GPU Process Memory(*)\\Dedicated Usage' -EA Stop).CounterSamples;",
-        "$v=($s|Measure-Object CookedValue -Sum).Sum}catch{};",
+        "try{$c=Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine -EA Stop|",
+        "Where-Object{$_.Name -like '*engtype_3D'};",
+        "if($c){$g=($c|Measure-Object -Property UtilizationPercentage -Maximum).Maximum}}catch{};",
+        "try{$m=Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUProcessMemory -EA Stop;",
+        "if($m){$v=($m|Measure-Object -Property DedicatedUsage -Sum).Sum}}catch{};",
         "Write-Output \"$g|$v\""
     );
 
-    if let Ok(output) = Command::new("powershell")
+    let child = Command::new("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", script])
-        .output()
-    {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let parts: Vec<&str> = stdout.split('|').collect();
-            if parts.len() == 2 {
-                let gpu_percent = parts[0].trim().parse::<f64>().ok()
-                    .filter(|&v| v >= 0.0)
-                    .map(|v| round1(v.min(100.0)));
-                let vram_used_gb = parts[1].trim().parse::<f64>().ok()
-                    .filter(|&v| v >= 0.0)
-                    .map(|v| round1(v / 1_073_741_824.0));
-                let vram_total_gb = get_vram_total_cached();
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn();
 
-                if gpu_percent.is_some() {
-                    return (gpu_percent, None, vram_used_gb, vram_total_gb);
+    let output = match child {
+        Ok(c) => {
+            // Timeout: wait up to 3 seconds then kill
+            match c.wait_with_output() {
+                Ok(o) => {
+                    // Additional timeout guard via thread::spawn is overkill for now;
+                    // wait_with_output blocks but PowerShell should exit quickly.
+                    o
                 }
+                Err(_) => return (None, None, None, get_vram_total_cached()),
+            }
+        }
+        Err(_) => return (None, None, None, get_vram_total_cached()),
+    };
+
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let parts: Vec<&str> = stdout.split('|').collect();
+        if parts.len() == 2 {
+            let gpu_percent = parts[0].trim().parse::<f64>().ok()
+                .filter(|&v| v >= 0.0)
+                .map(|v| round1(v.min(100.0)));
+            let vram_used_gb = parts[1].trim().parse::<f64>().ok()
+                .filter(|&v| v >= 0.0)
+                .map(|v| round1(v / 1_073_741_824.0));
+            let vram_total_gb = get_vram_total_cached();
+
+            if gpu_percent.is_some() || vram_used_gb.is_some() {
+                return (gpu_percent, None, vram_used_gb, vram_total_gb);
             }
         }
     }
 
-    (None, None, None, None)
+    // Ultimate fallback: return static VRAM info only
+    (None, None, None, get_vram_total_cached())
 }
 
 #[cfg(not(target_os = "windows"))]

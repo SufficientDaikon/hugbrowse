@@ -33,6 +33,8 @@ pub struct DownloadEntry {
     pub speed_bps: f64,
     pub eta_secs: f64,
     pub expected_sha256: Option<String>,
+    #[serde(skip_serializing, default)]
+    pub auth_token: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -170,6 +172,7 @@ async fn do_download(
     local_path: String,
     pause_flag: Arc<AtomicBool>,
     cancel_flag: Arc<AtomicBool>,
+    auth_token: Option<String>,
 ) {
     use tokio::io::AsyncWriteExt;
 
@@ -181,6 +184,9 @@ async fn do_download(
 
     let client = reqwest::Client::new();
     let mut req = client.get(&url);
+    if let Some(ref token) = auth_token {
+        req = req.header("Authorization", format!("Bearer {}", token));
+    }
     if already_downloaded > 0 {
         req = req.header("Range", format!("bytes={}-", already_downloaded));
     }
@@ -416,6 +422,7 @@ pub async fn start_download(
     dest_dir: String,
     total_bytes: u64,
     expected_sha256: Option<String>,
+    auth_token: Option<String>,
 ) -> Result<String, String> {
     // Enforce disk space: reject if free < 1.2× file size (FR-011)
     check_disk_space_for_download(&dest_dir, total_bytes)?;
@@ -439,6 +446,7 @@ pub async fn start_download(
         speed_bps: 0.0,
         eta_secs: 0.0,
         expected_sha256,
+        auth_token: auth_token.clone(),
     };
 
     {
@@ -457,7 +465,7 @@ pub async fn start_download(
     let app2 = app.clone();
     let state2 = state.inner().clone();
     let id2 = id.clone();
-    tokio::spawn(do_download(app2, state2, id2, url, local_path, pause_flag, cancel_flag));
+    tokio::spawn(do_download(app2, state2, id2, url, local_path, pause_flag, cancel_flag, auth_token));
     Ok(id)
 }
 

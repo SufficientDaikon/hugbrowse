@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { useSettings } from "./settings";
 
 export type DownloadStatus =
   | "queued"
@@ -88,6 +89,7 @@ export const useDownloads = create<DownloadsStore>()((set, get) => ({
     total_bytes,
     expected_sha256,
   }) => {
+    const authToken = useSettings.getState().hfToken ?? undefined;
     const id = await invoke<string>("start_download", {
       url,
       model_id,
@@ -95,6 +97,7 @@ export const useDownloads = create<DownloadsStore>()((set, get) => ({
       dest_dir,
       total_bytes,
       expected_sha256: expected_sha256 ?? null,
+      auth_token: authToken ?? null,
     });
     return id;
   },
