@@ -85,6 +85,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `McpManager` component in Developer page — add/remove servers, connect, view tools
   - Server status indicators (connected/disconnected/error) with tool count display
 
+- **CLI Interface** (Phase 7/8 of v1.0)
+  - New `src-cli/` standalone Rust crate — `hb` command-line interface
+  - `hb chat` — interactive chat with loaded models via API server
+  - `hb ls` — list downloaded local models
+  - `hb ps` — list currently loaded/running models
+  - `hb load` — load a model by path with optional context length
+  - `hb unload` — unload a running model by ID
+  - `hb server status` — check API server status
+  - HTTP client module communicating with HugBrowse API server (OpenAI-compatible + native endpoints)
+  - Configurable server URL via `--url` flag (default `http://127.0.0.1:8080`)
+  - Built with clap 4 for argument parsing, reqwest for HTTP, tokio async runtime
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed
