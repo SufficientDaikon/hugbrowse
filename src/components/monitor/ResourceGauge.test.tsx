@@ -51,33 +51,33 @@ describe("ResourceGauge", () => {
     expect(screen.getByText("No GPU found")).toBeInTheDocument();
   });
 
-  it("applies red text class for values >= 90", () => {
+  it("applies red text class for values >= 80", () => {
     const { container } = render(
       <ResourceGauge label="CPU" icon="⚡" value={95} />,
     );
     const percentEl = screen.getByText("95%");
     expect(percentEl.className).toContain("text-red-500");
-    // Also check the SVG uses cant-run color for high values
+    // Also check the SVG uses red utilization color for high values
     const circles = container.querySelectorAll("circle");
     const activeCircle = circles[1];
-    expect(activeCircle?.getAttribute("stroke")).toBe("var(--cant-run)");
+    expect(activeCircle?.getAttribute("stroke")).toBe("#ef4444");
   });
 
-  it("uses maybe-run color for values 70-89", () => {
+  it("uses amber color for values 50-79", () => {
     const { container } = render(
       <ResourceGauge label="CPU" icon="⚡" value={75} />,
     );
     const circles = container.querySelectorAll("circle");
     const activeCircle = circles[1];
-    expect(activeCircle?.getAttribute("stroke")).toBe("var(--maybe-run)");
+    expect(activeCircle?.getAttribute("stroke")).toBe("#f59e0b");
   });
 
-  it("uses default accent color for low values", () => {
+  it("uses green color for low values", () => {
     const { container } = render(
       <ResourceGauge label="CPU" icon="⚡" value={30} />,
     );
     const circles = container.querySelectorAll("circle");
     const activeCircle = circles[1];
-    expect(activeCircle?.getAttribute("stroke")).toBe("var(--accent)");
+    expect(activeCircle?.getAttribute("stroke")).toBe("#22c55e");
   });
 });

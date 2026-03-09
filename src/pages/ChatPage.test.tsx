@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { ChatPage } from "./ChatPage";
 
 // scrollIntoView is not implemented in jsdom
@@ -55,6 +56,17 @@ vi.mock("../stores/backends", () => ({
   }),
 }));
 
+vi.mock("../stores/imports", () => ({
+  useImports: () => ({
+    importedModels: [],
+    detectedServers: [],
+    isScanning: false,
+    importFile: vi.fn(),
+    autoDetectAll: vi.fn().mockResolvedValue([]),
+    fetchImportedModels: vi.fn(),
+  }),
+}));
+
 vi.mock("../components/chat/SessionSidebar", () => ({
   SessionSidebar: () => <aside data-testid="session-sidebar">Sidebar</aside>,
 }));
@@ -81,27 +93,27 @@ vi.mock("../components/backends/BackendSelector", () => ({
 
 describe("ChatPage", () => {
   it("renders the session sidebar", () => {
-    render(<ChatPage />);
+    render(<MemoryRouter><ChatPage /></MemoryRouter>);
     expect(screen.getByTestId("session-sidebar")).toBeInTheDocument();
   });
 
   it("renders chat input area", () => {
-    render(<ChatPage />);
+    render(<MemoryRouter><ChatPage /></MemoryRouter>);
     expect(screen.getByTestId("chat-input")).toBeInTheDocument();
   });
 
   it("renders backend selector", () => {
-    render(<ChatPage />);
+    render(<MemoryRouter><ChatPage /></MemoryRouter>);
     expect(screen.getByTestId("backend-selector")).toBeInTheDocument();
   });
 
   it("shows session title in header", () => {
-    render(<ChatPage />);
+    render(<MemoryRouter><ChatPage /></MemoryRouter>);
     expect(screen.getByText("Test Session")).toBeInTheDocument();
   });
 
   it("renders chat messages", () => {
-    render(<ChatPage />);
+    render(<MemoryRouter><ChatPage /></MemoryRouter>);
     expect(screen.getByText("Hello")).toBeInTheDocument();
   });
 });

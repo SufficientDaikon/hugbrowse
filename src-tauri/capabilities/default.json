@@ -9,6 +9,7 @@
     "shell:allow-execute",
     "shell:allow-kill",
     "store:default",
-    "updater:default"
+    "updater:default",
+    "dialog:default"
   ]
 }

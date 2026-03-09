@@ -1,5 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { useState } from "react";
 import { Copy, Check, User, Bot, Wrench } from "lucide-react";
 import { cn } from "../ui/cn";
@@ -106,6 +108,7 @@ export function ChatMessage({ message }: Props) {
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw, rehypeSanitize]}
               components={{
                 code: ({ className, children, ...rest }) => {
                   const isBlock = className?.startsWith("language-");

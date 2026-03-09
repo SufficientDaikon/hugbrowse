@@ -43,6 +43,15 @@ vi.mock("@tauri-apps/plugin-deep-link", () => ({
   onOpenUrl: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock Tauri plugin dialog
+vi.mock("@tauri-apps/plugin-dialog", () => ({
+  open: vi.fn().mockResolvedValue(null),
+  save: vi.fn().mockResolvedValue(null),
+  message: vi.fn().mockResolvedValue(undefined),
+  ask: vi.fn().mockResolvedValue(false),
+  confirm: vi.fn().mockResolvedValue(false),
+}));
+
 // Mock matchMedia for responsive tests
 Object.defineProperty(window, "matchMedia", {
   writable: true,

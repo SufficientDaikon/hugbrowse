@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChatStore } from "../stores/chat";
 import { useInference } from "../stores/inference";
 import { useBackends } from "../stores/backends";
+import { useImports } from "../stores/imports";
+import type { DetectedServer } from "../stores/imports";
 import { SessionSidebar } from "../components/chat/SessionSidebar";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { ChatInput } from "../components/chat/ChatInput";
@@ -14,6 +17,13 @@ import {
   ChevronUp,
   Zap,
   Globe,
+  Search,
+  FolderOpen,
+  Radar,
+  Loader2,
+  HardDrive,
+  FileDown,
+  X,
 } from "lucide-react";
 
 export function ChatPage() {
@@ -26,10 +36,15 @@ export function ChatPage() {
     stopStreaming,
     setSystemPrompt,
   } = useChatStore();
-  const { info } = useInference();
+  const { info, load } = useInference();
   const { activeBackend } = useBackends();
+  const { autoDetectAll, isScanning } = useImports();
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+  const [showDetectResults, setShowDetectResults] = useState(false);
+  const [detectResults, setDetectResults] = useState<DetectedServer[]>([]);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
 
   const session = sessions.find((s) => s.id === currentSessionId);
   const isRunning = info.status === "running";
@@ -57,6 +72,48 @@ export function ChatPage() {
     await sendMessage(session.id, text);
   };
 
+  // FR-010: Import GGUF file via native file picker
+  const handleImportGguf = useCallback(async () => {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: "GGUF Models", extensions: ["gguf"] }],
+      });
+      if (selected) {
+        const filePath = typeof selected === "string" ? selected : selected;
+        if (typeof filePath === "string") {
+          const { importFile } = useImports.getState();
+          const model = await importFile(filePath);
+          setImportStatus(`Imported "${model.name}" — select it below to load`);
+          setTimeout(() => setImportStatus(null), 5000);
+        }
+      }
+    } catch (e) {
+      setImportStatus(`Import failed: ${String(e)}`);
+      setTimeout(() => setImportStatus(null), 5000);
+    }
+  }, []);
+
+  // FR-011 + FR-012: Auto-detect Ollama and LM Studio models
+  const handleAutoDetect = useCallback(async () => {
+    const results = await autoDetectAll();
+    setDetectResults(results);
+    setShowDetectResults(true);
+  }, [autoDetectAll]);
+
+  // FR-013: Load a detected model
+  const handleLoadDetected = useCallback(async (name: string, path?: string) => {
+    const modelPath = path ?? name;
+    const modelName = name.split("/").pop() ?? name;
+    setShowDetectResults(false);
+    await load({ modelPath, modelName });
+  }, [load]);
+
+  const totalDetectedModels = detectResults.reduce(
+    (n, s) => n + s.models.length, 0
+  );
+
   return (
     <div className="flex h-full overflow-hidden">
       <SessionSidebar />
@@ -64,7 +121,7 @@ export function ChatPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         {!canSendMessage ? (
           /* No backend available or not ready — show setup prompt */
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
+          <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8 overflow-y-auto">
             <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-purple-500/20">
               {activeBackend?.backend_type === "local_sidecar" ? (
                 <Bot className="h-10 w-10 text-accent dark:text-accent-light" />
@@ -85,13 +142,132 @@ export function ChatPage() {
                 {!activeBackend 
                   ? "Select a compute backend to start chatting."
                   : activeBackend.backend_type === "local_sidecar"
-                    ? "Load a model below to start chatting. Download GGUF files from the model browser first."
+                    ? "Load a model to start chatting. Browse, import, or auto-detect models below."
                     : `Backend "${activeBackend.name}" is ${activeBackend.status}. Check connection or try another backend.`
                 }
               </p>
             </div>
+
+            {/* FR-009 / FR-010 / FR-011: Action buttons for model discovery */}
             {(!activeBackend || activeBackend.backend_type === "local_sidecar") && (
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-md space-y-4">
+                {/* Quick action buttons */}
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => navigate("/")}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:bg-[var(--surface-hover)] transition-colors"
+                    aria-label="Browse Models"
+                  >
+                    <Search className="h-5 w-5 text-accent dark:text-accent-light" />
+                    <span className="text-xs font-medium">Browse Models</span>
+                  </button>
+                  <button
+                    onClick={handleImportGguf}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:bg-[var(--surface-hover)] transition-colors"
+                    aria-label="Import GGUF File"
+                  >
+                    <FolderOpen className="h-5 w-5 text-accent dark:text-accent-light" />
+                    <span className="text-xs font-medium">Import GGUF</span>
+                  </button>
+                  <button
+                    onClick={handleAutoDetect}
+                    disabled={isScanning}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:bg-[var(--surface-hover)] transition-colors disabled:opacity-50"
+                    aria-label="Auto-Detect Local Models"
+                  >
+                    {isScanning ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-accent dark:text-accent-light" />
+                    ) : (
+                      <Radar className="h-5 w-5 text-accent dark:text-accent-light" />
+                    )}
+                    <span className="text-xs font-medium">Auto-Detect</span>
+                  </button>
+                </div>
+
+                {/* Import status message */}
+                {importStatus && (
+                  <div className="flex items-center gap-2 rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-2">
+                    <FileDown className="h-4 w-4 text-green-500 shrink-0" />
+                    <p className="text-xs text-green-600 dark:text-green-400 flex-1">{importStatus}</p>
+                  </div>
+                )}
+
+                {/* FR-014: Auto-detect results panel */}
+                {showDetectResults && (
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+                      <h3 className="text-sm font-semibold flex items-center gap-2">
+                        <Radar className="h-4 w-4" />
+                        Detected Models
+                        {totalDetectedModels > 0 && (
+                          <span className="text-xs font-normal text-[var(--muted)]">
+                            ({totalDetectedModels} found)
+                          </span>
+                        )}
+                      </h3>
+                      <button
+                        onClick={() => setShowDetectResults(false)}
+                        className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                        aria-label="Close detection results"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {totalDetectedModels === 0 ? (
+                        <div className="px-4 py-6 text-center">
+                          <p className="text-sm text-[var(--muted)]">
+                            No local model servers detected.
+                          </p>
+                          <p className="text-xs text-[var(--muted)] mt-1">
+                            Import a GGUF file or browse models to download one.
+                          </p>
+                        </div>
+                      ) : (
+                        detectResults.map((server) =>
+                          server.models.length > 0 ? (
+                            <div key={server.type}>
+                              <div className="px-4 py-2 bg-[var(--background)] border-b border-[var(--border)]">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)] flex items-center gap-2">
+                                  <HardDrive className="h-3 w-3" />
+                                  {server.type === "ollama" ? "Ollama" : "LM Studio"}
+                                  <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                                    server.status === "running" ? "bg-green-500" : "bg-yellow-500"
+                                  }`} />
+                                </span>
+                              </div>
+                              {server.models.map((model) => (
+                                <div
+                                  key={`${server.type}-${model.name}`}
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)] last:border-b-0"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{model.name}</p>
+                                    <p className="text-[11px] text-[var(--muted)]">
+                                      {model.size > 0
+                                        ? `${(model.size / 1_073_741_824).toFixed(1)} GB`
+                                        : "Size unknown"}
+                                      {" · "}
+                                      {server.type === "ollama" ? "Ollama" : "LM Studio"}
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleLoadDetected(model.name, model.path)}
+                                    className="shrink-0 rounded-lg bg-hf-orange px-3 py-1.5 text-xs font-medium text-white hover:bg-hf-orange/90 transition-colors"
+                                  >
+                                    Load
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing model run panel */}
                 <ModelRunPanel />
               </div>
             )}

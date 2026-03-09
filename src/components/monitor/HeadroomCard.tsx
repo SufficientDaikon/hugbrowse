@@ -44,27 +44,33 @@ export function HeadroomCard({ resources }: HeadroomCardProps) {
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-      <h3 className="text-sm font-semibold mb-3">💡 What Can I Load?</h3>
+      <h3 className="text-xs font-semibold mb-2 text-[var(--muted)] uppercase tracking-wide">
+        💡 What Can I Load?
+      </h3>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="rounded-lg bg-[var(--background)] p-3">
-          <p className="text-xs text-[var(--muted)]">Available RAM</p>
-          <p className="text-lg font-bold">{availableRam.toFixed(1)} GB</p>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="rounded-lg bg-[var(--background)] px-3 py-2">
+          <p className="text-[11px] text-[var(--muted)]">Available RAM</p>
+          <p className="text-base font-bold tabular-nums">
+            {availableRam.toFixed(1)} GB
+          </p>
         </div>
         {availableVram != null ? (
-          <div className="rounded-lg bg-[var(--background)] p-3">
-            <p className="text-xs text-[var(--muted)]">Available VRAM</p>
-            <p className="text-lg font-bold">{availableVram.toFixed(1)} GB</p>
+          <div className="rounded-lg bg-[var(--background)] px-3 py-2">
+            <p className="text-[11px] text-[var(--muted)]">Available VRAM</p>
+            <p className="text-base font-bold tabular-nums">
+              {availableVram.toFixed(1)} GB
+            </p>
           </div>
         ) : (
-          <div className="rounded-lg bg-[var(--background)] p-3">
-            <p className="text-xs text-[var(--muted)]">GPU</p>
-            <p className="text-sm text-[var(--muted)]">No discrete GPU</p>
+          <div className="rounded-lg bg-[var(--background)] px-3 py-2">
+            <p className="text-[11px] text-[var(--muted)]">GPU</p>
+            <p className="text-xs text-[var(--muted)]">No discrete GPU</p>
           </div>
         )}
       </div>
 
-      <div className="flex items-start gap-2 rounded-lg bg-accent/5 dark:bg-accent-light/5 p-3 border border-accent/20 dark:border-accent-light/20">
+      <div className="flex items-start gap-2 rounded-lg bg-accent/5 dark:bg-accent-light/5 px-3 py-2 border border-accent/20 dark:border-accent-light/20">
         <span className="text-xl">{suggestionIcon}</span>
         <div>
           <p className="text-sm font-medium">{suggestion}</p>

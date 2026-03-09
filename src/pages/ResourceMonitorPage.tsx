@@ -1,5 +1,6 @@
 import { useLiveResources } from "../hooks/useLiveResources";
 import { useAlerts } from "../hooks/useAlerts";
+import { useSystemInfo } from "../hooks/useSystemInfo";
 import { ResourceGauge } from "../components/monitor/ResourceGauge";
 import { ResourceHistory } from "../components/monitor/ResourceHistory";
 import { HeadroomCard } from "../components/monitor/HeadroomCard";
@@ -11,18 +12,22 @@ import { Activity } from "lucide-react";
 export function ResourceMonitorPage() {
   const { current, history } = useLiveResources(true, 2000);
   const { alerts, dismiss } = useAlerts(current);
+  const { data: sysInfo } = useSystemInfo();
   const [showHistory, setShowHistory] = useState(false);
 
+  // VRAM total: prefer live data, fall back to static system info
+  const vramTotalGb = current?.vram_total_gb ?? sysInfo?.gpu_vram_gb ?? null;
+
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-3 space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 shrink-0">
-          <Activity className="h-5 w-5 text-accent dark:text-accent-light" />
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 shrink-0">
+          <Activity className="h-4 w-4 text-accent dark:text-accent-light" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Resource Monitor</h1>
-          <p className="text-xs text-[var(--muted)]">
+          <h1 className="text-lg font-bold leading-tight">Resource Monitor</h1>
+          <p className="text-[11px] text-[var(--muted)]">
             Real-time system tracking · Updates every 2s
           </p>
         </div>
@@ -71,8 +76,8 @@ export function ResourceMonitorPage() {
           label="VRAM"
           icon="💾"
           value={
-            current?.vram_used_gb != null && current?.vram_total_gb
-              ? (current.vram_used_gb / current.vram_total_gb) * 100
+            current?.vram_used_gb != null && vramTotalGb
+              ? (current.vram_used_gb / vramTotalGb) * 100
               : 0
           }
           used={
@@ -81,12 +86,12 @@ export function ResourceMonitorPage() {
               : undefined
           }
           total={
-            current?.vram_total_gb != null
-              ? `${current.vram_total_gb.toFixed(1)} GB`
+            vramTotalGb != null
+              ? `${vramTotalGb.toFixed(1)} GB`
               : undefined
           }
           color="#f97316"
-          unavailable={current?.vram_total_gb == null}
+          unavailable={vramTotalGb == null}
           unavailableText="N/A (shared with RAM)"
         />
       </div>
@@ -112,11 +117,18 @@ export function ResourceMonitorPage() {
 
       {/* Disk */}
       {current && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-          <h3 className="text-sm font-semibold mb-2">💿 Disk Space</h3>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="h-3 rounded-full bg-[var(--surface-hover)] overflow-hidden">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-sm">💿</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium">Disk Space</span>
+                <span className="text-[11px] font-mono text-[var(--muted)] tabular-nums">
+                  {current.disk_free_gb.toFixed(0)} GB free /{" "}
+                  {current.disk_total_gb.toFixed(0)} GB
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-[var(--surface-hover)] overflow-hidden">
                 <div
                   className="h-full rounded-full bg-accent transition-all duration-500"
                   style={{
@@ -125,10 +137,6 @@ export function ResourceMonitorPage() {
                 />
               </div>
             </div>
-            <span className="text-sm font-mono text-[var(--muted)]">
-              {current.disk_free_gb.toFixed(0)} GB free /{" "}
-              {current.disk_total_gb.toFixed(0)} GB
-            </span>
           </div>
         </div>
       )}

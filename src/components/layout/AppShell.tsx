@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { useSystemInfo } from "../../hooks/useSystemInfo";
@@ -7,12 +7,14 @@ import { Cpu, MemoryStick, MonitorSmartphone } from "lucide-react";
 
 export function AppShell() {
   const { data: sysInfo } = useSystemInfo();
+  const location = useLocation();
+  const showSidebar = location.pathname === "/";
 
   return (
     <div className="flex h-screen flex-col">
       <Header />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        {showSidebar && <Sidebar />}
         <main className="flex-1 overflow-y-auto bg-[var(--background)] surface-mesh">
           <Outlet />
         </main>

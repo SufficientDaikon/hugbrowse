@@ -32,6 +32,7 @@ hex = "0.4"
 uuid = { version = "1", features = ["v4"] }
 tauri-plugin-updater = "2"
 tauri-plugin-deep-link = "2"
+tauri-plugin-dialog = "2"
 
 # Tauri best-practice profiles: https://v2.tauri.app/concept/size/
 [profile.dev]

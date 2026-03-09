@@ -31,6 +31,8 @@ import {
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { appLocalDataDir } from "@tauri-apps/api/path";
 import { DeployToCloudDialog } from "../components/backends/DeployToCloudDialog";
 
@@ -249,7 +251,7 @@ huggingface-cli download ${model.id}`;
       {tab === "readme" && (
         <div className="prose prose-sm dark:prose-invert max-w-none rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 overflow-hidden">
           {readme ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{readme}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>{readme}</ReactMarkdown>
           ) : (
             <p className="text-[var(--muted)]">
               No README available for this model.
@@ -279,17 +281,18 @@ huggingface-cli download ${model.id}`;
                 <tbody>
                   {files.map((file, i) => {
                     const sizeBytes = file.lfs?.size ?? file.size ?? 0;
-                    const isGguf = file.rfilename
+                    const filename = file.rfilename ?? "";
+                    const isGguf = filename
                       .toLowerCase()
                       .endsWith(".gguf");
-                    const alreadyQueued = isAlreadyDownloaded(file.rfilename);
+                    const alreadyQueued = isAlreadyDownloaded(filename);
                     return (
                       <tr
                         key={i}
                         className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-hover)]"
                       >
                         <td className="px-4 py-2 font-mono text-xs text-[var(--foreground)]">
-                          {file.rfilename}
+                          {filename}
                           {isGguf && (
                             <Badge
                               variant="default"
@@ -308,7 +311,7 @@ huggingface-cli download ${model.id}`;
                               disabled={alreadyQueued}
                               onClick={() =>
                                 handleDownloadGguf(
-                                  file.rfilename,
+                                  filename,
                                   sizeBytes,
                                   file.lfs?.sha256,
                                 )

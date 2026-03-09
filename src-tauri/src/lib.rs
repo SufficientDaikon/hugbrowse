@@ -1,9 +1,9 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sysinfo::{System, Disks};
 use crate::download::{ManagedDownloads, DownloadManagerState};
 use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
 use crate::backend::{ManagedBackends, BackendManager};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
@@ -99,12 +99,48 @@ fn detect_gpu() -> (Option<String>, Option<f64>) {
     (None, None)
 }
 
+/// Cached VRAM total in GB — retrieved once from WMI, doesn't change during a session.
+#[cfg(target_os = "windows")]
+static VRAM_TOTAL_GB_CACHE: OnceLock<Option<f64>> = OnceLock::new();
+
+/// Get VRAM total from WMI, cached after first call.
+#[cfg(target_os = "windows")]
+fn get_vram_total_cached() -> Option<f64> {
+    *VRAM_TOTAL_GB_CACHE.get_or_init(|| {
+        use std::process::Command;
+        if let Ok(output) = Command::new("wmic")
+            .args(["path", "win32_VideoController", "get", "AdapterRAM", "/format:csv"])
+            .output()
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let mut max_vram: f64 = 0.0;
+                for line in stdout.lines().skip(1) {
+                    let parts: Vec<&str> = line.split(',').collect();
+                    if parts.len() >= 2 {
+                        if let Ok(ram) = parts[1].trim().parse::<f64>() {
+                            if ram > max_vram {
+                                max_vram = ram;
+                            }
+                        }
+                    }
+                }
+                if max_vram > 0.0 {
+                    return Some(round1(max_vram / 1_073_741_824.0));
+                }
+            }
+        }
+        None
+    })
+}
+
 #[cfg(target_os = "windows")]
 fn detect_gpu_usage() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
     use std::process::Command;
-    // Try nvidia-smi for NVIDIA GPUs
+    // 1. Try nvidia-smi first (fast path for NVIDIA GPUs)
     if let Ok(output) = Command::new("nvidia-smi")
-        .args(["--query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"])
+        .args(["--query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total",
+               "--format=csv,noheader,nounits"])
         .output()
     {
         if output.status.success() {
@@ -121,6 +157,52 @@ fn detect_gpu_usage() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
             }
         }
     }
+
+    // 2. Fallback: Windows Performance Counters via PowerShell
+    //    Works for AMD, Intel, and any GPU with WDDM 2.0+ drivers (Windows 10+)
+    detect_gpu_usage_win_perf_counters()
+}
+
+/// Query GPU utilization and VRAM usage via Windows Performance Counters.
+/// Uses a single PowerShell invocation to minimise overhead.
+#[cfg(target_os = "windows")]
+fn detect_gpu_usage_win_perf_counters() -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
+    use std::process::Command;
+
+    // Single PowerShell call for GPU utilization + VRAM used.
+    // -1 sentinel means "counter unavailable".
+    let script = concat!(
+        "$g=-1;$v=-1;",
+        "try{$s=(Get-Counter '\\GPU Engine(*engtype_3D)\\Utilization Percentage' -EA Stop).CounterSamples;",
+        "$g=($s|Measure-Object CookedValue -Sum).Sum}catch{};",
+        "try{$s=(Get-Counter '\\GPU Process Memory(*)\\Dedicated Usage' -EA Stop).CounterSamples;",
+        "$v=($s|Measure-Object CookedValue -Sum).Sum}catch{};",
+        "Write-Output \"$g|$v\""
+    );
+
+    if let Ok(output) = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .output()
+    {
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let parts: Vec<&str> = stdout.split('|').collect();
+            if parts.len() == 2 {
+                let gpu_percent = parts[0].trim().parse::<f64>().ok()
+                    .filter(|&v| v >= 0.0)
+                    .map(|v| round1(v.min(100.0)));
+                let vram_used_gb = parts[1].trim().parse::<f64>().ok()
+                    .filter(|&v| v >= 0.0)
+                    .map(|v| round1(v / 1_073_741_824.0));
+                let vram_total_gb = get_vram_total_cached();
+
+                if gpu_percent.is_some() {
+                    return (gpu_percent, None, vram_used_gb, vram_total_gb);
+                }
+            }
+        }
+    }
+
     (None, None, None, None)
 }
 
@@ -287,6 +369,229 @@ fn check_compatibility(model_params_billions: f64, quantization: String) -> serd
     })
 }
 
+// ── Model Import & Discovery (Story 3 + Story 5) ──────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OllamaModel {
+    pub name: String,
+    pub size: u64,
+    pub modified_at: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct OllamaScanResult {
+    pub status: String,
+    pub models: Vec<OllamaModel>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ScannedGgufFile {
+    pub name: String,
+    pub path: String,
+    pub size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ImportedModelInfo {
+    pub name: String,
+    pub path: String,
+    pub size: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PersistedImportedModel {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub size: u64,
+    pub import_date: String,
+    pub source: String,
+}
+
+/// FR-011: Check if Ollama is running and list its models
+#[tauri::command]
+async fn scan_ollama_models() -> OllamaScanResult {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(3))
+        .build();
+    let client = match client {
+        Ok(c) => c,
+        Err(_) => return OllamaScanResult { status: "error".into(), models: vec![] },
+    };
+
+    match client.get("http://127.0.0.1:11434/api/tags").send().await {
+        Ok(resp) => {
+            if !resp.status().is_success() {
+                return OllamaScanResult {
+                    status: "not_running".into(),
+                    models: vec![],
+                };
+            }
+            // Ollama returns { "models": [ { "name": ..., "size": ..., "modified_at": ... } ] }
+            #[derive(Deserialize)]
+            struct OllamaTagsResponse {
+                models: Option<Vec<OllamaModelRaw>>,
+            }
+            #[derive(Deserialize)]
+            struct OllamaModelRaw {
+                name: String,
+                size: Option<u64>,
+                modified_at: Option<String>,
+            }
+
+            match resp.json::<OllamaTagsResponse>().await {
+                Ok(tags) => {
+                    let models = tags.models.unwrap_or_default()
+                        .into_iter()
+                        .map(|m| OllamaModel {
+                            name: m.name,
+                            size: m.size.unwrap_or(0),
+                            modified_at: m.modified_at.unwrap_or_default(),
+                        })
+                        .collect();
+                    OllamaScanResult { status: "running".into(), models }
+                }
+                Err(_) => OllamaScanResult { status: "running".into(), models: vec![] },
+            }
+        }
+        Err(_) => OllamaScanResult {
+            status: "not_running".into(),
+            models: vec![],
+        },
+    }
+}
+
+/// FR-012: Scan LM Studio default model directory for GGUF files
+#[tauri::command]
+async fn scan_lm_studio_models() -> Vec<ScannedGgufFile> {
+    let home = get_home_dir();
+    let lm_dir = std::path::PathBuf::from(&home)
+        .join(".cache")
+        .join("lm-studio")
+        .join("models");
+
+    scan_directory_for_gguf(&lm_dir)
+}
+
+/// Scan a user-selected directory for GGUF files
+#[tauri::command]
+async fn scan_local_gguf_files(dir_path: String) -> Vec<ScannedGgufFile> {
+    let path = std::path::PathBuf::from(&dir_path);
+    scan_directory_for_gguf(&path)
+}
+
+/// FR-018: Validate a file is a GGUF file and return model info
+#[tauri::command]
+async fn import_model_file(file_path: String) -> Result<ImportedModelInfo, String> {
+    let path = std::path::Path::new(&file_path);
+
+    if !path.exists() {
+        return Err("File does not exist".into());
+    }
+
+    let ext = path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
+    if ext.to_lowercase() != "gguf" {
+        return Err("File is not a GGUF file (must have .gguf extension)".into());
+    }
+
+    let metadata = std::fs::metadata(path).map_err(|e| format!("Cannot read file: {}", e))?;
+    if metadata.len() == 0 {
+        return Err("File is empty (0 bytes)".into());
+    }
+
+    let name = path.file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    Ok(ImportedModelInfo {
+        name,
+        path: file_path,
+        size: metadata.len(),
+    })
+}
+
+/// FR-015: Read persisted imported models from app data
+#[tauri::command]
+async fn get_imported_models(app_handle: tauri::AppHandle) -> Vec<PersistedImportedModel> {
+    let path = get_imports_file_path(&app_handle);
+    match std::fs::read_to_string(&path) {
+        Ok(data) => serde_json::from_str(&data).unwrap_or_default(),
+        Err(_) => vec![],
+    }
+}
+
+/// FR-015: Save imported models list to app data
+#[tauri::command]
+async fn save_imported_models(app_handle: tauri::AppHandle, models: Vec<PersistedImportedModel>) -> Result<(), String> {
+    let path = get_imports_file_path(&app_handle);
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let json = serde_json::to_string_pretty(&models)
+        .map_err(|e| format!("Serialization error: {}", e))?;
+    std::fs::write(&path, json)
+        .map_err(|e| format!("Failed to write imports file: {}", e))
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+
+fn get_home_dir() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        std::env::var("HOME").unwrap_or_else(|_| "/home".to_string())
+    }
+}
+
+fn get_imports_file_path(app_handle: &tauri::AppHandle) -> std::path::PathBuf {
+    app_handle
+        .path()
+        .app_data_dir()
+        .unwrap_or_else(|_| std::path::PathBuf::from("."))
+        .join("imported_models.json")
+}
+
+fn scan_directory_for_gguf(dir: &std::path::Path) -> Vec<ScannedGgufFile> {
+    let mut results = Vec::new();
+    if !dir.exists() || !dir.is_dir() {
+        return results;
+    }
+    scan_gguf_recursive(dir, &mut results);
+    results
+}
+
+fn scan_gguf_recursive(dir: &std::path::Path, results: &mut Vec<ScannedGgufFile>) {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            scan_gguf_recursive(&path, results);
+        } else if let Some(ext) = path.extension() {
+            if ext.to_str().map(|s| s.to_lowercase()) == Some("gguf".to_string()) {
+                let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                let name = path.file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+                results.push(ScannedGgufFile {
+                    name,
+                    path: path.to_string_lossy().to_string(),
+                    size,
+                });
+            }
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let download_state: ManagedDownloads = Arc::new(Mutex::new(DownloadManagerState::new()));
@@ -300,6 +605,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())
         .manage(download_state.clone())
         .manage(inference_state)
@@ -424,6 +730,12 @@ pub fn run() {
             backend::pause_hf_endpoint,
             backend::resume_hf_endpoint,
             backend::delete_hf_endpoint,
+            scan_ollama_models,
+            scan_lm_studio_models,
+            scan_local_gguf_files,
+            import_model_file,
+            get_imported_models,
+            save_imported_models,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
