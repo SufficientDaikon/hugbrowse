@@ -1,0 +1,51 @@
+<evaluation>
+  <qa_pair>
+    <question>Search for GGUF models by TheBloke related to "Llama-2-7B", then get the detailed model info for TheBloke/Llama-2-7B-GGUF. What is the author listed in the model details?</question>
+    <answer>TheBloke</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Get the model details for both microsoft/phi-2 and google/gemma-2b. Which of these two models has the larger number of parameters according to their model card metadata — phi-2 or gemma-2b? Report just the model name without the org prefix.</question>
+    <answer>phi-2</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>First check the HugBrowse server status, then perform a health check. Do both the API and HuggingFace connectivity report as healthy? Answer "yes" or "no".</question>
+    <answer>yes</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>List the files in TheBloke/Llama-2-7B-GGUF with the gguf_only filter, then get the model detail for the same repo. What quantization method appears first alphabetically among the GGUF filenames — Q2_K, Q3_K_L, Q3_K_M, Q3_K_S, Q4_0, Q4_K_M, Q4_K_S, Q5_0, Q5_K_M, Q5_K_S, Q6_K, or Q8_0? Answer with just the quantization tag.</question>
+    <answer>Q2_K</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Search for GGUF-compatible models with the query "Llama-2-13B" using hugbrowse_find_gguf_models, then get the README for TheBloke/Llama-2-13B-GGUF. According to the README, what is the original base model that these GGUF files were converted from? Give the HuggingFace model ID.</question>
+    <answer>meta-llama/Llama-2-13b-hf</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Get the model detail for meta-llama/Llama-2-7b-hf and also get its README. What license is this model released under according to both the model card and the README?</question>
+    <answer>llama2</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>List the files in TheBloke/Llama-2-7B-GGUF (gguf_only=true) and also list the files in TheBloke/Llama-2-13B-GGUF (gguf_only=true). Do both repos contain a Q4_K_M quantized GGUF file? Answer "yes" or "no".</question>
+    <answer>yes</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Get the README for TheBloke/Llama-2-7B-GGUF, then get the model detail for the same repo. According to the README, what inference tool does TheBloke primarily recommend for running these GGUF files locally — llama.cpp, text-generation-webui, or LM Studio? Give the name of the tool mentioned first in the README's compatibility section.</question>
+    <answer>llama.cpp</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Search HuggingFace models with the query "phi-2" to find microsoft/phi-2, then get the README for microsoft/phi-2. According to the README, Phi-2 was trained using the same data sources as which earlier Microsoft model? Give just the model name.</question>
+    <answer>Phi-1.5</answer>
+  </qa_pair>
+
+  <qa_pair>
+    <question>Get model details for google/gemma-2b and then get its README. What deep learning framework is listed as the primary library tag in the model metadata — transformers, pytorch, or jax?</question>
+    <answer>transformers</answer>
+  </qa_pair>
+</evaluation>
