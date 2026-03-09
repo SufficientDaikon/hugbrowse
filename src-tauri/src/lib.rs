@@ -653,6 +653,9 @@ pub fn run() {
     let plugin_host_state: ManagedPluginHost = Arc::new(tokio::sync::Mutex::new(PluginHost::new(std::path::PathBuf::from("plugins"))));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
+    let mm_for_api = model_manager_state.clone();
+    let auth_for_api = auth_manager_state.clone();
+    let api_for_autostart = api_server_state.clone();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
@@ -776,6 +779,22 @@ pub fn run() {
                 let mut host = plugin_clone.lock().await;
                 host.plugins_dir = plugins_dir;
                 let _ = host.scan_plugins();
+            });
+
+            // Auto-start API server so MCP tools work immediately
+            let api_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                // Small delay to let other init finish
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                match crate::api_server::start_server(
+                    api_app,
+                    mm_for_api,
+                    auth_for_api,
+                    &api_for_autostart,
+                ).await {
+                    Ok(()) => println!("API server auto-started on port 8080"),
+                    Err(e) => eprintln!("API server auto-start failed: {e}"),
+                }
             });
             
             Ok(())
