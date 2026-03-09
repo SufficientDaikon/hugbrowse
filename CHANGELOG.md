@@ -5,6 +5,23 @@ All notable changes to HugBrowse will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Model Management Engine** (Phase 1/8 of v1.0)
+  - New `model_manager.rs` Rust module for full model lifecycle management
+  - Multi-instance model loading — run multiple models simultaneously on unique ports
+  - JIT (Just-In-Time) loading support — auto-load models on first API request
+  - TTL (Time-To-Live) auto-unload — idle models unload after configurable timeout (default 60min)
+  - Auto-eviction — LRU JIT-loaded models evicted when memory is insufficient
+  - Per-instance health checking with configurable retry limits (max 3 retries)
+  - Memory usage tracking (RAM/VRAM) per loaded model instance
+  - New Tauri commands: `mm_load_model`, `mm_unload_model`, `mm_unload_all`, `mm_list_loaded_models`, `mm_get_model_status`, `mm_get_memory_usage`, `mm_update_config`
+  - New `modelManager` Zustand store for frontend model management state
+  - New `LoadedModelsPanel` component showing all loaded models with status, memory, and unload controls
+  - Real-time model status events via Tauri event system (`model-status-changed`, `model-ttl-expired`)
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed

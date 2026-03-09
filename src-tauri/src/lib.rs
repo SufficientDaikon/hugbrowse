@@ -3,6 +3,7 @@ use sysinfo::{System, Disks};
 use crate::download::{ManagedDownloads, DownloadManagerState};
 use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
 use crate::backend::{ManagedBackends, BackendManager};
+use crate::model_manager::{ManagedModelManager, ModelManager};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -12,6 +13,7 @@ use tauri::Emitter;
 pub mod download;
 pub mod inference;
 pub mod backend;
+pub mod model_manager;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -630,7 +632,9 @@ pub fn run() {
         child: None,
     }));
     let backend_state: ManagedBackends = Arc::new(Mutex::new(BackendManager::new()));
+    let model_manager_state: ManagedModelManager = Arc::new(tokio::sync::Mutex::new(ModelManager::new()));
     let inference_on_exit = inference_state.clone();
+    let mm_for_ttl = model_manager_state.clone();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
@@ -640,6 +644,7 @@ pub fn run() {
         .manage(download_state.clone())
         .manage(inference_state)
         .manage(backend_state.clone())
+        .manage(model_manager_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -709,6 +714,11 @@ pub fn run() {
             {
                 let _ = app.handle().plugin(tauri_plugin_updater::Builder::new().build());
             }
+            
+            // Phase 1: Start TTL checker for model manager
+            let ttl_app = app.handle().clone();
+            crate::model_manager::spawn_ttl_checker(ttl_app, mm_for_ttl);
+            
             Ok(())
         })
         .on_window_event(move |window, event| {
@@ -766,6 +776,13 @@ pub fn run() {
             import_model_file,
             get_imported_models,
             save_imported_models,
+            model_manager::mm_load_model,
+            model_manager::mm_unload_model,
+            model_manager::mm_unload_all,
+            model_manager::mm_list_loaded_models,
+            model_manager::mm_get_model_status,
+            model_manager::mm_get_memory_usage,
+            model_manager::mm_update_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -85,6 +85,10 @@ vi.mock("../components/models/ModelRunPanel", () => ({
   ModelRunPanel: () => <div data-testid="model-run-panel">ModelRunPanel</div>,
 }));
 
+vi.mock("../components/models/LoadedModelsPanel", () => ({
+  LoadedModelsPanel: () => <div data-testid="loaded-models-panel">LoadedModelsPanel</div>,
+}));
+
 vi.mock("../components/backends/BackendSelector", () => ({
   BackendSelector: () => (
     <div data-testid="backend-selector">BackendSelector</div>

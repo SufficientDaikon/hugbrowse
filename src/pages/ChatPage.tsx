@@ -9,6 +9,7 @@ import { SessionSidebar } from "../components/chat/SessionSidebar";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { ChatInput } from "../components/chat/ChatInput";
 import { ModelRunPanel } from "../components/models/ModelRunPanel";
+import { LoadedModelsPanel } from "../components/models/LoadedModelsPanel";
 import { BackendSelector } from "../components/backends/BackendSelector";
 import {
   Bot,
@@ -356,6 +357,7 @@ export function ChatPage() {
       {(isRunning || (activeBackend && activeBackend.backend_type !== "local_sidecar")) && (
         <aside className="w-72 shrink-0 border-l border-[var(--border-subtle)] bg-[var(--surface)] p-4 space-y-3 overflow-y-auto">
           <ModelRunPanel />
+          <LoadedModelsPanel />
 
           {/* System Prompt Editor */}
           {session && (
