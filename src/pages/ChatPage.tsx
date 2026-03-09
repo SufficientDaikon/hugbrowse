@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useChatStore } from "../stores/chat";
+import { usePresetStore, type Preset } from "../stores/presetStore";
 import { useInference } from "../stores/inference";
 import { useBackends } from "../stores/backends";
 import { useImports } from "../stores/imports";
@@ -36,10 +37,12 @@ export function ChatPage() {
     sendMessage,
     stopStreaming,
     setSystemPrompt,
+    setPreset,
   } = useChatStore();
   const { info, load } = useInference();
   const { activeBackend } = useBackends();
   const { autoDetectAll, isScanning } = useImports();
+  const { presets, fetchPresets } = usePresetStore();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
@@ -60,6 +63,11 @@ export function ChatPage() {
       createSession("Chat 1");
     }
   }, [sessions.length, createSession]);
+
+  // Fetch presets on mount
+  useEffect(() => {
+    fetchPresets();
+  }, [fetchPresets]);
 
   // Scroll to bottom on new messages
   const lastMessageContent =
@@ -305,6 +313,19 @@ export function ChatPage() {
             <div className="border-b border-[var(--border-subtle)] px-4 py-3">
               <div className="flex items-center gap-3">
                 <BackendSelector />
+                {session && (presets ?? []).length > 0 && (
+                  <select
+                    value={session.presetId ?? ""}
+                    onChange={(e) => setPreset(session.id, e.target.value || undefined)}
+                    className="text-xs rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-2 py-1.5 outline-none focus:ring-1 focus:ring-[var(--ring)]"
+                    title="Select inference preset"
+                  >
+                    <option value="">No Preset</option>
+                    {(presets ?? []).map((p: Preset) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
                 {session && (
                   <div className="flex-1 text-center">
                     <h2 className="text-sm font-medium text-[var(--foreground)] truncate">

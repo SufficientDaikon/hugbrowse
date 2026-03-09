@@ -34,12 +34,23 @@ export interface ChatSession {
   messages: ChatMessage[];
   createdAt: number;
   updatedAt: number;
+  folderId?: string;
+  presetId?: string;
+}
+
+export interface ChatFolder {
+  id: string;
+  name: string;
+  parentId?: string;
+  order: number;
 }
 
 interface ChatStore {
   sessions: ChatSession[];
   currentSessionId: string | null;
   isStreaming: boolean;
+  folders: ChatFolder[];
+  searchQuery: string;
   // Actions
   createSession: (title?: string) => string;
   deleteSession: (id: string) => void;
@@ -52,6 +63,20 @@ interface ChatStore {
     content: string,
   ) => Promise<void>;
   stopStreaming: () => void;
+  // Phase 5 additions
+  setSearchQuery: (query: string) => void;
+  getFilteredSessions: () => ChatSession[];
+  moveToFolder: (sessionId: string, folderId: string | undefined) => void;
+  setPreset: (sessionId: string, presetId: string | undefined) => void;
+  createFolder: (name: string, parentId?: string) => string;
+  renameFolder: (id: string, name: string) => void;
+  deleteFolder: (id: string) => void;
+  editMessage: (sessionId: string, messageId: string, newContent: string) => void;
+  deleteMessagesFrom: (sessionId: string, messageId: string) => void;
+  duplicateSession: (sessionId: string) => string;
+  exportSession: (sessionId: string) => string;
+  importSession: (json: string) => string;
+  exportAsMarkdown: (sessionId: string) => string;
 }
 
 let _abortController: AbortController | null = null;
@@ -77,6 +102,8 @@ export const useChatStore = create<ChatStore>()(
       sessions: [],
       currentSessionId: null,
       isStreaming: false,
+      folders: [],
+      searchQuery: "",
 
       createSession: (title) => {
         const s = newSession(title);
@@ -347,12 +374,147 @@ export const useChatStore = create<ChatStore>()(
         _abortController = null;
         set({ isStreaming: false });
       },
+
+      // ─── Phase 5: Enhanced Chat ─────────────────────────────
+
+      setSearchQuery: (query) => set({ searchQuery: query }),
+
+      getFilteredSessions: () => {
+        const { sessions, searchQuery } = get();
+        if (!searchQuery.trim()) return sessions;
+        const q = searchQuery.toLowerCase();
+        return sessions.filter(
+          (s) =>
+            s.title.toLowerCase().includes(q) ||
+            s.messages.some((m) => m.content.toLowerCase().includes(q)),
+        );
+      },
+
+      moveToFolder: (sessionId, folderId) =>
+        set((st) => ({
+          sessions: st.sessions.map((s) =>
+            s.id === sessionId ? { ...s, folderId, updatedAt: Date.now() } : s,
+          ),
+        })),
+
+      setPreset: (sessionId, presetId) =>
+        set((st) => ({
+          sessions: st.sessions.map((s) =>
+            s.id === sessionId ? { ...s, presetId, updatedAt: Date.now() } : s,
+          ),
+        })),
+
+      createFolder: (name, parentId) => {
+        const id = uid();
+        set((st) => ({
+          folders: [...st.folders, { id, name, parentId, order: st.folders.length }],
+        }));
+        return id;
+      },
+
+      renameFolder: (id, name) =>
+        set((st) => ({
+          folders: st.folders.map((f) => (f.id === id ? { ...f, name } : f)),
+        })),
+
+      deleteFolder: (id) =>
+        set((st) => ({
+          folders: st.folders.filter((f) => f.id !== id),
+          sessions: st.sessions.map((s) =>
+            s.folderId === id ? { ...s, folderId: undefined } : s,
+          ),
+        })),
+
+      editMessage: (sessionId, messageId, newContent) =>
+        set((st) => ({
+          sessions: st.sessions.map((s) => {
+            if (s.id !== sessionId) return s;
+            const idx = s.messages.findIndex((m) => m.id === messageId);
+            if (idx === -1) return s;
+            // Trim messages after the edited one (triggers re-inference)
+            const messages = s.messages.slice(0, idx + 1).map((m) =>
+              m.id === messageId ? { ...m, content: newContent } : m,
+            );
+            return { ...s, messages, updatedAt: Date.now() };
+          }),
+        })),
+
+      deleteMessagesFrom: (sessionId, messageId) =>
+        set((st) => ({
+          sessions: st.sessions.map((s) => {
+            if (s.id !== sessionId) return s;
+            const idx = s.messages.findIndex((m) => m.id === messageId);
+            if (idx === -1) return s;
+            return { ...s, messages: s.messages.slice(0, idx), updatedAt: Date.now() };
+          }),
+        })),
+
+      duplicateSession: (sessionId) => {
+        const session = get().sessions.find((s) => s.id === sessionId);
+        if (!session) return "";
+        const newId = uid();
+        const dup: ChatSession = {
+          ...session,
+          id: newId,
+          title: `${session.title} (copy)`,
+          messages: session.messages.map((m) => ({ ...m, id: uid() })),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        set((st) => ({
+          sessions: [dup, ...st.sessions],
+          currentSessionId: newId,
+        }));
+        return newId;
+      },
+
+      exportSession: (sessionId) => {
+        const session = get().sessions.find((s) => s.id === sessionId);
+        if (!session) return "{}";
+        return JSON.stringify(session, null, 2);
+      },
+
+      importSession: (json) => {
+        try {
+          const data = JSON.parse(json) as ChatSession;
+          const newId = uid();
+          const session: ChatSession = {
+            ...data,
+            id: newId,
+            messages: (data.messages ?? []).map((m) => ({ ...m, id: uid() })),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+          set((st) => ({
+            sessions: [session, ...st.sessions],
+            currentSessionId: newId,
+          }));
+          return newId;
+        } catch {
+          return "";
+        }
+      },
+
+      exportAsMarkdown: (sessionId) => {
+        const session = get().sessions.find((s) => s.id === sessionId);
+        if (!session) return "";
+        const lines: string[] = [`# ${session.title}`, ""];
+        if (session.systemPrompt) {
+          lines.push(`> **System**: ${session.systemPrompt}`, "");
+        }
+        for (const msg of session.messages) {
+          const role = msg.role.charAt(0).toUpperCase() + msg.role.slice(1);
+          lines.push(`## ${role}`, "", msg.content, "");
+        }
+        return lines.join("\n");
+      },
     }),
     {
       name: "hugbrowse-chat",
       partialize: (s) => ({
         sessions: s.sessions,
         currentSessionId: s.currentSessionId,
+        folders: s.folders,
       }),
     },
   ),

@@ -32,6 +32,32 @@ vi.mock("../../stores/chat", () => ({
     deleteSession: mockDeleteSession,
     renameSession: mockRenameSession,
     setCurrentSession: mockSetCurrentSession,
+    folders: [],
+    searchQuery: "",
+    setSearchQuery: vi.fn(),
+    getFilteredSessions: () => [
+      {
+        id: "s1",
+        title: "First Chat",
+        systemPrompt: "",
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+      {
+        id: "s2",
+        title: "Second Chat",
+        systemPrompt: "",
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+    ],
+    createFolder: vi.fn(),
+    deleteFolder: vi.fn(),
+    renameFolder: vi.fn(),
+    duplicateSession: vi.fn(),
+    moveToFolder: vi.fn(),
   }),
 }));
 

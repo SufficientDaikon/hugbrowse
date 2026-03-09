@@ -29,6 +29,14 @@ vi.mock("../stores/chat", () => ({
     sendMessage: vi.fn(),
     stopStreaming: vi.fn(),
     setSystemPrompt: vi.fn(),
+    setPreset: vi.fn(),
+  }),
+}));
+
+vi.mock("../stores/presetStore", () => ({
+  usePresetStore: () => ({
+    presets: [],
+    fetchPresets: vi.fn(),
   }),
 }));
 

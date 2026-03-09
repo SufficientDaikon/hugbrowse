@@ -40,6 +40,8 @@ describe("chat store", () => {
       sessions: [],
       currentSessionId: null,
       isStreaming: false,
+      folders: [],
+      searchQuery: "",
     });
   });
 

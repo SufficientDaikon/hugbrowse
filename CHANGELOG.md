@@ -62,6 +62,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `PresetManager` component in Developer page — create, delete, expand presets with parameter display
   - Added `serde_yaml` and `chrono` Rust dependencies
 
+- **Enhanced Chat System** (Phase 5/8 of v1.0)
+  - Chat folders — organize conversations in named folders with collapse/expand
+  - Conversation search — filter sessions by title and message content
+  - Preset selector in chat toolbar — apply inference presets per conversation
+  - Message editing — edit messages and truncate subsequent conversation history
+  - Session duplication — fork conversations with "Duplicate" action
+  - Export conversations as JSON or Markdown
+  - Import conversations from JSON
+  - Per-conversation preset binding (`presetId` on ChatSession)
+  - Folder CRUD (create, rename, delete) with sessions auto-unfoldered on delete
+  - Enhanced SessionSidebar with search input, folder hierarchy, and duplicate button
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed
