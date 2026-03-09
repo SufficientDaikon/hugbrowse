@@ -74,6 +74,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Folder CRUD (create, rename, delete) with sessions auto-unfoldered on delete
   - Enhanced SessionSidebar with search input, folder hierarchy, and duplicate button
 
+- **MCP Integration** (Phase 6/8 of v1.0)
+  - New `mcp_host.rs` Rust module — MCP server management with JSON-RPC 2.0 over HTTP
+  - Parse and persist `mcp.json` configuration file
+  - MCP server lifecycle: add, remove, connect, discover tools
+  - Tool execution with configurable timeout (default 30s)
+  - Tool approval mode toggle
+  - Allowed tools filter per server
+  - New Tauri commands: `mcp_list_servers`, `mcp_add_server`, `mcp_remove_server`, `mcp_connect_server`, `mcp_call_tool`, `mcp_get_config`, `mcp_set_approval_mode`, `mcp_get_approval_mode`
+  - New `McpManager` component in Developer page — add/remove servers, connect, view tools
+  - Server status indicators (connected/disconnected/error) with tool count display
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed

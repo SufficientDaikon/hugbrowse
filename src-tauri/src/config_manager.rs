@@ -489,7 +489,7 @@ impl ConfigManager {
         Ok(())
     }
 
-    pub fn generate_model_yaml(model_id: &str, file_path: &str) -> ModelYaml {
+    pub fn generate_model_yaml(model_id: &str, _file_path: &str) -> ModelYaml {
         ModelYaml {
             model: model_id.to_string(),
             version: 1,

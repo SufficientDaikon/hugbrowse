@@ -7,6 +7,7 @@ use crate::model_manager::{ManagedModelManager, ModelManager};
 use crate::api_server::{ManagedApiServer, ApiServer};
 use crate::auth_manager::{ManagedAuthManager, AuthManager};
 use crate::config_manager::{ManagedConfigManager, ConfigManager};
+use crate::mcp_host::{ManagedMcpHost, McpHost};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -20,6 +21,7 @@ pub mod model_manager;
 pub mod api_server;
 pub mod auth_manager;
 pub mod config_manager;
+pub mod mcp_host;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -642,6 +644,7 @@ pub fn run() {
     let api_server_state: ManagedApiServer = Arc::new(tokio::sync::Mutex::new(ApiServer::new()));
     let auth_manager_state: ManagedAuthManager = Arc::new(tokio::sync::Mutex::new(AuthManager::new()));
     let config_manager_state: ManagedConfigManager = Arc::new(tokio::sync::Mutex::new(ConfigManager::new()));
+    let mcp_host_state: ManagedMcpHost = Arc::new(tokio::sync::Mutex::new(McpHost::new()));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
 
@@ -657,6 +660,7 @@ pub fn run() {
         .manage(api_server_state.clone())
         .manage(auth_manager_state.clone())
         .manage(config_manager_state.clone())
+        .manage(mcp_host_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -743,9 +747,17 @@ pub fn run() {
             // Phase 4: Initialize config manager
             let config_clone = config_manager_state.clone();
             let app_data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            let app_data_dir2 = app_data_dir.clone();
             tauri::async_runtime::spawn(async move {
                 let mut mgr = config_clone.lock().await;
                 mgr.init(app_data_dir);
+            });
+
+            // Phase 6: Initialize MCP host
+            let mcp_clone = mcp_host_state.clone();
+            tauri::async_runtime::spawn(async move {
+                let mut host = mcp_clone.lock().await;
+                host.init(app_data_dir2.join("config"));
             });
             
             Ok(())
@@ -837,6 +849,14 @@ pub fn run() {
             config_manager::config_import_settings,
             config_manager::config_export_preset,
             config_manager::config_import_preset,
+            mcp_host::mcp_list_servers,
+            mcp_host::mcp_add_server,
+            mcp_host::mcp_remove_server,
+            mcp_host::mcp_connect_server,
+            mcp_host::mcp_call_tool,
+            mcp_host::mcp_get_config,
+            mcp_host::mcp_set_approval_mode,
+            mcp_host::mcp_get_approval_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
