@@ -4,6 +4,7 @@ use crate::download::{ManagedDownloads, DownloadManagerState};
 use crate::inference::{ManagedInference, InferenceManager, InferenceInfo};
 use crate::backend::{ManagedBackends, BackendManager};
 use crate::model_manager::{ManagedModelManager, ModelManager};
+use crate::api_server::{ManagedApiServer, ApiServer};
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -14,6 +15,7 @@ pub mod download;
 pub mod inference;
 pub mod backend;
 pub mod model_manager;
+pub mod api_server;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemInfo {
@@ -633,6 +635,7 @@ pub fn run() {
     }));
     let backend_state: ManagedBackends = Arc::new(Mutex::new(BackendManager::new()));
     let model_manager_state: ManagedModelManager = Arc::new(tokio::sync::Mutex::new(ModelManager::new()));
+    let api_server_state: ManagedApiServer = Arc::new(tokio::sync::Mutex::new(ApiServer::new()));
     let inference_on_exit = inference_state.clone();
     let mm_for_ttl = model_manager_state.clone();
 
@@ -645,6 +648,7 @@ pub fn run() {
         .manage(inference_state)
         .manage(backend_state.clone())
         .manage(model_manager_state.clone())
+        .manage(api_server_state.clone())
         .setup(move |app| {
             // FR-046: System tray icon with full context menu
             let show = MenuItemBuilder::with_id("show", "Open HugBrowse").build(app)?;
@@ -783,6 +787,11 @@ pub fn run() {
             model_manager::mm_get_model_status,
             model_manager::mm_get_memory_usage,
             model_manager::mm_update_config,
+            api_server::api_server_start,
+            api_server::api_server_stop,
+            api_server::api_server_status,
+            api_server::api_server_update_config,
+            api_server::api_server_get_log,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

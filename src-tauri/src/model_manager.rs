@@ -529,6 +529,149 @@ pub async fn mm_update_config(
     Ok(())
 }
 
+// ── API-Facing Functions (called by api_server.rs without Tauri State) ──
+
+/// Load a model via the API server (no Tauri State extractor needed).
+pub async fn api_load_model(
+    app: &AppHandle,
+    state: &ManagedModelManager,
+    model_path: String,
+    model_name: String,
+    options: Option<LoadOptions>,
+) -> Result<LoadedModel, String> {
+    let opts = options.unwrap_or_default();
+    let instance_id = Uuid::new_v4().to_string();
+    let now = now_epoch();
+
+    let (port, ctx, gpu_layers, gpu_dev) = {
+        let mut mgr = state.lock().await;
+        let port = mgr.allocate_port();
+        let ctx = opts.context_length.unwrap_or(mgr.config.default_context_length);
+        let gpu_layers = resolve_gpu_layers(&opts.gpu);
+        let identifier = ModelManager::make_identifier(&model_name, opts.identifier.as_deref());
+        let ttl = opts.ttl.unwrap_or(mgr.config.default_ttl_seconds);
+        let (vram_est, ram_est) = estimate_memory_mb(&model_path);
+
+        let loaded = LoadedModel {
+            instance_id: instance_id.clone(),
+            model_path: model_path.clone(),
+            model_name: model_name.clone(),
+            identifier,
+            status: ModelStatus::Loading,
+            loaded_at: now,
+            last_used_at: now,
+            vram_usage_mb: vram_est,
+            ram_usage_mb: ram_est,
+            context_length: ctx,
+            gpu_offload: opts.gpu.clone(),
+            port,
+            ttl_seconds: ttl,
+            request_count: 0,
+            load_source: LoadSource::Jit,
+            health_retries: 0,
+            error: None,
+        };
+        mgr.loaded_models.insert(instance_id.clone(), loaded);
+        (port, ctx, gpu_layers, opts.gpu_device)
+    };
+
+    let _ = app.emit("model-status-changed", serde_json::json!({
+        "instanceId": &instance_id,
+        "status": "loading"
+    }));
+
+    let sidecar_name = select_sidecar_binary();
+    let sidecar = app
+        .shell()
+        .sidecar(&sidecar_name)
+        .map_err(|e| format!("Sidecar not found: {e}"))?;
+
+    let mut args = vec![
+        "--model".to_string(), model_path.clone(),
+        "--port".to_string(), port.to_string(),
+        "--ctx-size".to_string(), ctx.to_string(),
+        "--n-gpu-layers".to_string(), gpu_layers.to_string(),
+        "--host".to_string(), "127.0.0.1".to_string(),
+    ];
+    if let Some(dev) = gpu_dev {
+        args.push("--main-gpu".to_string());
+        args.push(dev.to_string());
+    }
+
+    let (_, child) = sidecar
+        .args(&args.iter().map(|s| s.as_str()).collect::<Vec<_>>())
+        .spawn()
+        .map_err(|e| {
+            let st = state.clone();
+            let id = instance_id.clone();
+            tauri::async_runtime::spawn(async move {
+                let mut mgr = st.lock().await;
+                mgr.loaded_models.remove(&id);
+            });
+            format!("Failed to spawn llama-server: {e}")
+        })?;
+
+    {
+        let mut mgr = state.lock().await;
+        mgr.children.insert(instance_id.clone(), child);
+    }
+
+    let health_url = format!("http://127.0.0.1:{port}/health");
+    let client = reqwest::Client::new();
+    let mut ready = false;
+    for _ in 0..120 {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        if let Ok(resp) = client.get(&health_url).send().await {
+            if resp.status().is_success() {
+                ready = true;
+                break;
+            }
+        }
+    }
+
+    let mut mgr = state.lock().await;
+    if ready {
+        if let Some(model) = mgr.loaded_models.get_mut(&instance_id) {
+            model.status = ModelStatus::Ready;
+            let result = model.clone();
+            drop(mgr);
+            let _ = app.emit("model-status-changed", serde_json::json!({
+                "instanceId": &instance_id,
+                "status": "ready"
+            }));
+            spawn_instance_health_checker(app.clone(), state.clone(), instance_id, port);
+            return Ok(result);
+        }
+    }
+
+    if let Some(child) = mgr.children.remove(&instance_id) {
+        let _ = child.kill();
+    }
+    if let Some(model) = mgr.loaded_models.get_mut(&instance_id) {
+        model.status = ModelStatus::Error;
+        model.error = Some("llama-server did not become healthy within 60s".into());
+        let result = model.clone();
+        drop(mgr);
+        let _ = app.emit("model-status-changed", serde_json::json!({
+            "instanceId": &instance_id,
+            "status": "error",
+            "error": "llama-server did not become healthy within 60s"
+        }));
+        return Ok(result);
+    }
+
+    Err("Model loading failed unexpectedly".into())
+}
+
+/// Unload a model via the API server (no Tauri State extractor needed).
+pub async fn api_unload_model(
+    app: &AppHandle,
+    state: &ManagedModelManager,
+    instance_id: &str,
+) -> Result<(), String> {
+    unload_instance(app, state, instance_id).await
+}
+
 // ── Internal Helpers ──────────────────────────────────────────────────
 
 /// Unload a single model instance — graceful shutdown then force kill.

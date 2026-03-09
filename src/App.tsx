@@ -11,6 +11,7 @@ import { OnboardingPage } from "./pages/OnboardingPage";
 import { MarketplacePage } from "./pages/marketplace/MarketplacePage";
 import { CommunityPage } from "./pages/marketplace/CommunityPage";
 import { CreatorDashboard } from "./pages/marketplace/CreatorDashboard";
+import { DeveloperPage } from "./pages/DeveloperPage";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { UpdateNotification } from "./components/ui/UpdateNotification";
 import { OfflineIndicator } from "./components/ui/OfflineIndicator";
@@ -196,6 +197,7 @@ export default function App() {
                 }
               />
               <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/developer" element={<DeveloperPage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/creator-dashboard" element={<CreatorDashboard />} />
               <Route path="/creator/:creatorId" element={<CreatorProfilePage />} />

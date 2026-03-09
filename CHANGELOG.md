@@ -22,6 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `LoadedModelsPanel` component showing all loaded models with status, memory, and unload controls
   - Real-time model status events via Tauri event system (`model-status-changed`, `model-ttl-expired`)
 
+- **API Server** (Phase 2/8 of v1.0)
+  - New `api_server.rs` Rust module — embedded axum HTTP server inside Tauri app
+  - OpenAI-compatible endpoints: `GET /v1/models`, `POST /v1/chat/completions` (SSE streaming + non-streaming), `POST /v1/completions`, `POST /v1/embeddings`
+  - Native REST API: `GET /api/v1/status`, `GET /api/v1/models`, `POST /api/v1/models/load`, `POST /api/v1/models/unload`, `POST /api/v1/chat`
+  - Configurable port (default 8080), start/stop via Tauri commands
+  - SSE streaming proxy — streams llama-server responses directly to API clients
+  - Standard OpenAI error format on all endpoints (message, type, code, requestId)
+  - Request logging with in-memory log and real-time Tauri event emission
+  - CORS support via tower-http
+  - New Tauri commands: `api_server_start`, `api_server_stop`, `api_server_status`, `api_server_update_config`, `api_server_get_log`
+  - New `apiServer` Zustand store for frontend server management state
+  - New Developer page with server controls, status indicator, base URL display, and request log viewer
+  - Developer navigation tab in header
+
 ## [0.3.0] - 2026-03-09
 
 ### Changed

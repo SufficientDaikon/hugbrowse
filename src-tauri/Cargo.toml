@@ -34,6 +34,12 @@ tauri-plugin-updater = "2"
 tauri-plugin-deep-link = "2"
 tauri-plugin-dialog = "2"
 
+# Phase 2: API Server
+axum = { version = "0.8", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+async-stream = "0.3"
+
 # Tauri best-practice profiles: https://v2.tauri.app/concept/size/
 [profile.dev]
 incremental = true
