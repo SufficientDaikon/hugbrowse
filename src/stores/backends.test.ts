@@ -75,8 +75,8 @@ describe("backends store", () => {
     expect(mockedInvoke).toHaveBeenCalledWith("add_backend", {
       name: "New Backend",
       url: "http://localhost:9090",
-      api_key: "my-key",
-      backend_type: "custom_url",
+      apiKey: "my-key",
+      backendType: "custom_url",
     });
     expect(result).toEqual(newBackend);
     expect(useBackends.getState().backends).toContainEqual(newBackend);
@@ -128,7 +128,7 @@ describe("backends store", () => {
 
     expect(mockedInvoke).toHaveBeenCalledWith("test_backend_connection", {
       url: "http://localhost:8080",
-      api_key: "key",
+      apiKey: "key",
     });
     expect(res).toEqual(result);
   });

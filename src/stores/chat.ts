@@ -274,7 +274,7 @@ export const useChatStore = create<ChatStore>()(
 
           // Start the proxy chat completion
           await invoke("proxy_chat_completions", {
-            messages_json: JSON.stringify(history),
+            messagesJson: JSON.stringify(history),
             model: null, // Use backend's default model
             temperature: 0.7,
             stream: true,

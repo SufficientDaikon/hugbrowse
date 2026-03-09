@@ -137,16 +137,16 @@ export function BackendSettings() {
     
     try {
       if (operation === "check") {
-        await invoke("check_hf_endpoint_status", { backend_id: backendId });
+        await invoke("check_hf_endpoint_status", { backendId });
       } else if (operation === "pause") {
-        await invoke("pause_hf_endpoint", { backend_id: backendId });
+        await invoke("pause_hf_endpoint", { backendId });
       } else if (operation === "resume") {
-        await invoke("resume_hf_endpoint", { backend_id: backendId });
+        await invoke("resume_hf_endpoint", { backendId });
       } else if (operation === "delete") {
         if (!confirm("Are you sure you want to delete this HuggingFace endpoint? This action cannot be undone.")) {
           return;
         }
-        await invoke("delete_hf_endpoint", { backend_id: backendId });
+        await invoke("delete_hf_endpoint", { backendId });
       }
       
       // Refresh backend list to get updated status

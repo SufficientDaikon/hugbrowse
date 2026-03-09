@@ -59,12 +59,12 @@ export const useInference = create<InferenceStore>()((set) => ({
     set((s) => ({ info: { ...s.info, status: "loading" }, memoryWarning: null }));
     try {
       const info = await invoke<InferenceInfo>("load_model", {
-        model_path: modelPath,
-        model_name: modelName,
+        modelPath,
+        modelName,
         port: port ?? null,
-        ctx_size: ctxSize ?? null,
-        n_gpu_layers: nGpuLayers ?? null,
-        gpu_device: gpuDevice ?? null,
+        ctxSize: ctxSize ?? null,
+        nGpuLayers: nGpuLayers ?? null,
+        gpuDevice: gpuDevice ?? null,
       });
       set({ info });
       // FR-032: Remember last loaded model for auto-start
@@ -115,7 +115,7 @@ export const useInference = create<InferenceStore>()((set) => ({
   checkMemory: async (modelPath: string) => {
     try {
       const [fits, msg] = await invoke<[boolean, string]>("check_model_memory", {
-        model_path: modelPath,
+        modelPath,
       });
       set({ memoryWarning: fits ? null : msg });
       return fits;

@@ -92,12 +92,12 @@ export const useDownloads = create<DownloadsStore>()((set, get) => ({
     const authToken = useSettings.getState().hfToken ?? undefined;
     const id = await invoke<string>("start_download", {
       url,
-      model_id,
+      modelId: model_id,
       filename,
-      dest_dir,
-      total_bytes,
-      expected_sha256: expected_sha256 ?? null,
-      auth_token: authToken ?? null,
+      destDir: dest_dir,
+      totalBytes: total_bytes,
+      expectedSha256: expected_sha256 ?? null,
+      authToken: authToken ?? null,
     });
     return id;
   },
@@ -112,7 +112,7 @@ export const useDownloads = create<DownloadsStore>()((set, get) => ({
     });
   },
   remove: async (id, deleteFile = false) => {
-    await invoke("delete_download_entry", { id, delete_file: deleteFile });
+    await invoke("delete_download_entry", { id, deleteFile });
     set((s) => {
       const { [id]: _, ...rest } = s.downloads;
       return { downloads: rest };

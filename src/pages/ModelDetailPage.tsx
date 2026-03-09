@@ -144,7 +144,7 @@ huggingface-cli download ${model.id}`;
   ];
 
   return (
-    <div className="p-8 max-w-5xl animate-fade-in">
+    <div className="p-8 max-w-full animate-fade-in">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -222,6 +222,61 @@ huggingface-cli download ${model.id}`;
       <div className="mb-6">
         <CanItRun model={model} />
       </div>
+
+      {/* Quick Download Section — GGUF files */}
+      {(() => {
+        const ggufFiles = (files ?? []).filter((f) =>
+          (f.rfilename ?? "").toLowerCase().endsWith(".gguf"),
+        );
+        if (ggufFiles.length === 0) return null;
+        return (
+          <div className="mb-6 rounded-xl border border-hf-orange/30 bg-hf-orange/5 p-5">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--foreground)] mb-3">
+              <Download className="h-4 w-4 text-hf-orange" /> Download Model
+              <span className="text-xs font-normal text-[var(--muted)]">
+                ({ggufFiles.length} GGUF file{ggufFiles.length !== 1 ? "s" : ""} available)
+              </span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {ggufFiles.slice(0, 6).map((file) => {
+                const filename = file.rfilename ?? "";
+                const sizeBytes = file.lfs?.size ?? file.size ?? 0;
+                const alreadyQueued = isAlreadyDownloaded(filename);
+                const shortName = filename.split("/").pop() ?? filename;
+                return (
+                  <button
+                    key={filename}
+                    disabled={alreadyQueued}
+                    onClick={() =>
+                      handleDownloadGguf(filename, sizeBytes, file.lfs?.sha256)
+                    }
+                    className="flex items-center gap-2 rounded-lg border border-hf-orange/40 bg-[var(--surface)] px-3 py-2 text-xs font-medium text-hf-orange hover:bg-hf-orange/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="max-w-[200px] truncate">{shortName}</span>
+                    {sizeBytes > 0 && (
+                      <span className="text-[var(--muted)] text-[10px]">
+                        {formatBytes(sizeBytes)}
+                      </span>
+                    )}
+                    {alreadyQueued && (
+                      <Check className="h-3 w-3 text-green-500" />
+                    )}
+                  </button>
+                );
+              })}
+              {ggufFiles.length > 6 && (
+                <button
+                  onClick={() => setTab("files")}
+                  className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                >
+                  +{ggufFiles.length - 6} more…
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tabs */}
       <div className="border-b border-[var(--border)] mb-6">

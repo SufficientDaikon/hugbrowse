@@ -80,10 +80,10 @@ export function DeployToCloudDialog({ modelId, open, onClose }: Props) {
 
     try {
       const backend = await invoke<ComputeBackend>("deploy_hf_endpoint", {
-        model_id: modelId,
-        instance_type: formData.instanceType,
+        modelId,
+        instanceType: formData.instanceType,
         region: formData.region,
-        hf_token: formData.hfToken.trim(),
+        hfToken: formData.hfToken.trim(),
       });
 
       setDeployedBackend(backend);

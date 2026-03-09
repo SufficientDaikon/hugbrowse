@@ -99,34 +99,46 @@ fn detect_gpu() -> (Option<String>, Option<f64>) {
     (None, None)
 }
 
-/// Cached VRAM total in GB — retrieved once from WMI, doesn't change during a session.
+/// Cached VRAM total in GB — retrieved once, doesn't change during a session.
 #[cfg(target_os = "windows")]
 static VRAM_TOTAL_GB_CACHE: OnceLock<Option<f64>> = OnceLock::new();
 
-/// Get VRAM total from WMI, cached after first call.
+/// Get VRAM total via registry (qwMemorySize, 64-bit) with WMI fallback, cached after first call.
 #[cfg(target_os = "windows")]
 fn get_vram_total_cached() -> Option<f64> {
     *VRAM_TOTAL_GB_CACHE.get_or_init(|| {
         use std::process::Command;
-        if let Ok(output) = Command::new("wmic")
-            .args(["path", "win32_VideoController", "get", "AdapterRAM", "/format:csv"])
+        // Use PowerShell to read the 64-bit qwMemorySize from the display adapter registry key.
+        // This avoids the 4 GB overflow of the 32-bit WMI AdapterRAM field.
+        let ps_script = r#"
+$v=0
+try{
+  $keys=Get-ChildItem 'HKLM:\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' -EA Stop
+  foreach($k in $keys){
+    try{
+      $mem=(Get-ItemProperty $k.PSPath -EA Stop).'HardwareInformation.qwMemorySize'
+      if($mem -and $mem -gt $v){$v=$mem}
+    }catch{}
+  }
+}catch{}
+if($v -eq 0){
+  try{
+    $a=(Get-CimInstance Win32_VideoController -EA Stop).AdapterRAM|Measure-Object -Maximum
+    $v=$a.Maximum
+  }catch{}
+}
+Write-Output $v
+"#;
+        if let Ok(output) = Command::new("powershell")
+            .args(["-NoProfile", "-NonInteractive", "-Command", ps_script])
             .output()
         {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                let mut max_vram: f64 = 0.0;
-                for line in stdout.lines().skip(1) {
-                    let parts: Vec<&str> = line.split(',').collect();
-                    if parts.len() >= 2 {
-                        if let Ok(ram) = parts[1].trim().parse::<f64>() {
-                            if ram > max_vram {
-                                max_vram = ram;
-                            }
-                        }
+                if let Ok(bytes) = stdout.trim().parse::<u64>() {
+                    if bytes > 0 {
+                        return Some(round1(bytes as f64 / 1_073_741_824.0));
                     }
-                }
-                if max_vram > 0.0 {
-                    return Some(round1(max_vram / 1_073_741_824.0));
                 }
             }
         }

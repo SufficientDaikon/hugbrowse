@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Activity } from "lucide-react";
 
 export function ResourceMonitorPage() {
-  const { current, history } = useLiveResources(true, 2000);
+  const { current, history } = useLiveResources(true, 1000);
   const { alerts, dismiss } = useAlerts(current);
   const { data: sysInfo } = useSystemInfo();
   const [showHistory, setShowHistory] = useState(false);
@@ -28,7 +28,7 @@ export function ResourceMonitorPage() {
         <div>
           <h1 className="text-lg font-bold leading-tight">Resource Monitor</h1>
           <p className="text-[11px] text-[var(--muted)]">
-            Real-time system tracking · Updates every 2s
+            Real-time system tracking · Updates every 1s
           </p>
         </div>
       </div>

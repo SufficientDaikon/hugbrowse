@@ -77,8 +77,8 @@ export const useBackends = create<BackendStore>()((set, get) => ({
       const backend = await invoke<ComputeBackend>("add_backend", {
         name,
         url,
-        api_key: apiKey ?? null,
-        backend_type: backendType,
+        apiKey: apiKey ?? null,
+        backendType: backendType,
       });
 
       set((state) => ({
@@ -123,7 +123,7 @@ export const useBackends = create<BackendStore>()((set, get) => ({
         "test_backend_connection",
         {
           url,
-          api_key: apiKey ?? null,
+          apiKey: apiKey ?? null,
         },
       );
       return result;
@@ -141,8 +141,8 @@ export const useBackends = create<BackendStore>()((set, get) => ({
   saveCredential: async (backendId, apiKey) => {
     try {
       await invoke("save_backend_credential", {
-        backend_id: backendId,
-        api_key: apiKey,
+        backendId,
+        apiKey,
       });
     } catch (error) {
       console.error("Failed to save credential:", error);
