@@ -41,7 +41,7 @@ export function ChatPage() {
   } = useChatStore();
   const { info, load } = useInference();
   const { activeBackend } = useBackends();
-  const { autoDetectAll, isScanning } = useImports();
+  const { autoDetectAll, isScanning, startOllama, ollamaStarting } = useImports();
   const { presets, fetchPresets } = usePresetStore();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,6 +49,7 @@ export function ChatPage() {
   const [showDetectResults, setShowDetectResults] = useState(false);
   const [detectResults, setDetectResults] = useState<DetectedServer[]>([]);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [ollamaStatus, setOllamaStatus] = useState<string | null>(null);
 
   const session = sessions.find((s) => s.id === currentSessionId);
   const isRunning = info.status === "running";
@@ -142,6 +143,28 @@ export function ChatPage() {
   const totalDetectedModels = detectResults.reduce(
     (n, s) => n + s.models.length, 0
   );
+
+  const handleStartOllama = useCallback(async () => {
+    setOllamaStatus(null);
+    try {
+      const result = await startOllama();
+      if (result === "already_running") {
+        setOllamaStatus("Ollama is already running!");
+      } else if (result === "started") {
+        setOllamaStatus("Ollama started successfully!");
+        // Re-detect to refresh models
+        const results = await autoDetectAll();
+        setDetectResults(results);
+        setShowDetectResults(true);
+      } else {
+        setOllamaStatus("Ollama is starting up...");
+      }
+      setTimeout(() => setOllamaStatus(null), 5000);
+    } catch (e) {
+      setOllamaStatus(`Error: ${String(e)}`);
+      setTimeout(() => setOllamaStatus(null), 8000);
+    }
+  }, [startOllama, autoDetectAll]);
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -246,6 +269,14 @@ export function ChatPage() {
                   </button>
                 </div>
 
+                {/* Ollama status message */}
+                {ollamaStatus && (
+                  <div className="flex items-center gap-2 rounded-lg bg-accent/10 border border-accent/20 px-3 py-2">
+                    <Zap className="h-4 w-4 text-accent shrink-0" />
+                    <p className="text-xs text-accent dark:text-accent-light flex-1">{ollamaStatus}</p>
+                  </div>
+                )}
+
                 {/* Import status message */}
                 {importStatus && (
                   <div className="flex items-center gap-2 rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-2">
@@ -277,28 +308,54 @@ export function ChatPage() {
                     </div>
                     <div className="max-h-64 overflow-y-auto">
                       {totalDetectedModels === 0 ? (
-                        <div className="px-4 py-6 text-center">
+                        <div className="px-4 py-6 text-center space-y-3">
                           <p className="text-sm text-[var(--muted)]">
                             No local model servers detected.
                           </p>
-                          <p className="text-xs text-[var(--muted)] mt-1">
+                          <p className="text-xs text-[var(--muted)]">
                             Import a GGUF file or browse models to download one.
                           </p>
+                          <button
+                            onClick={handleStartOllama}
+                            disabled={ollamaStarting}
+                            className="inline-flex items-center gap-2 rounded-lg bg-accent/10 border border-accent/30 px-4 py-2 text-xs font-medium text-accent hover:bg-accent/20 disabled:opacity-50 transition-colors"
+                          >
+                            {ollamaStarting ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Zap className="h-3.5 w-3.5" />
+                            )}
+                            {ollamaStarting ? "Starting Ollama..." : "Start Ollama Server"}
+                          </button>
                         </div>
                       ) : (
-                        detectResults.map((server) =>
-                          server.models.length > 0 ? (
-                            <div key={server.type}>
-                              <div className="px-4 py-2 bg-[var(--background)] border-b border-[var(--border)]">
-                                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)] flex items-center gap-2">
-                                  <HardDrive className="h-3 w-3" />
-                                  {server.type === "ollama" ? "Ollama" : "LM Studio"}
-                                  <span className={`inline-block w-1.5 h-1.5 rounded-full ${
-                                    server.status === "running" ? "bg-green-500" : "bg-yellow-500"
-                                  }`} />
-                                </span>
-                              </div>
-                              {server.models.map((model) => (
+                        detectResults.map((server) => (
+                          <div key={server.type}>
+                            <div className="px-4 py-2 bg-[var(--background)] border-b border-[var(--border)] flex items-center justify-between">
+                              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)] flex items-center gap-2">
+                                <HardDrive className="h-3 w-3" />
+                                {server.type === "ollama" ? "Ollama" : "LM Studio"}
+                                <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+                                  server.status === "running" ? "bg-green-500" : "bg-yellow-500"
+                                }`} />
+                              </span>
+                              {server.type === "ollama" && server.status !== "running" && (
+                                <button
+                                  onClick={handleStartOllama}
+                                  disabled={ollamaStarting}
+                                  className="flex items-center gap-1.5 rounded-md bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent hover:bg-accent/20 disabled:opacity-50 transition-colors"
+                                >
+                                  {ollamaStarting ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Zap className="h-3 w-3" />
+                                  )}
+                                  Start
+                                </button>
+                              )}
+                            </div>
+                            {server.models.length > 0 ? (
+                              server.models.map((model) => (
                                 <div
                                   key={`${server.type}-${model.name}`}
                                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-hover)] transition-colors border-b border-[var(--border)] last:border-b-0"
@@ -320,10 +377,16 @@ export function ChatPage() {
                                     {server.type === "ollama" ? "Connect" : "Load"}
                                   </button>
                                 </div>
-                              ))}
-                            </div>
-                          ) : null
-                        )
+                              ))
+                            ) : (
+                              <div className="px-4 py-3 text-xs text-[var(--muted)]">
+                                {server.status !== "running"
+                                  ? `${server.type === "ollama" ? "Ollama" : "LM Studio"} is not running`
+                                  : "No models found"}
+                              </div>
+                            )}
+                          </div>
+                        ))
                       )}
                     </div>
                   </div>

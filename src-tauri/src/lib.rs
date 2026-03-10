@@ -505,6 +505,47 @@ async fn scan_ollama_models() -> OllamaScanResult {
     }
 }
 
+/// Start the Ollama server if it's not already running
+#[tauri::command]
+async fn start_ollama() -> Result<String, String> {
+    // First check if already running
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(2))
+        .build()
+        .map_err(|e| format!("HTTP client error: {}", e))?;
+
+    if let Ok(resp) = client.get("http://127.0.0.1:11434/api/tags").send().await {
+        if resp.status().is_success() {
+            return Ok("already_running".into());
+        }
+    }
+
+    // Try to start ollama serve as a background process
+    let result = std::process::Command::new("ollama")
+        .arg("serve")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn();
+
+    match result {
+        Ok(_child) => {
+            // Wait a moment then verify it started
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            match client.get("http://127.0.0.1:11434/api/tags").send().await {
+                Ok(resp) if resp.status().is_success() => Ok("started".into()),
+                _ => Ok("starting".into()), // Still booting up
+            }
+        }
+        Err(e) => {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                Err("Ollama is not installed. Download it from https://ollama.com".into())
+            } else {
+                Err(format!("Failed to start Ollama: {}", e))
+            }
+        }
+    }
+}
+
 /// FR-012: Scan LM Studio default model directory for GGUF files
 #[tauri::command]
 async fn scan_lm_studio_models() -> Vec<ScannedGgufFile> {
@@ -849,6 +890,7 @@ pub fn run() {
             backend::resume_hf_endpoint,
             backend::delete_hf_endpoint,
             scan_ollama_models,
+            start_ollama,
             scan_lm_studio_models,
             scan_local_gguf_files,
             import_model_file,

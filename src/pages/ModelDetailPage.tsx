@@ -55,16 +55,20 @@ export function ModelDetailPage() {
     initDownloads();
   }, [initDownloads]);
 
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
   const handleDownloadGguf = async (
     rfilename: string,
     sizeBytes: number,
     sha256?: string,
   ) => {
+    setDownloadError(null);
     try {
       const destDir = await appLocalDataDir()
         .then((d) => `${d}models/${modelId}`)
         .catch(() => `models/${modelId}`);
-      const url = `https://huggingface.co/${modelId}/resolve/main/${rfilename}`;
+      const encodedFilename = rfilename.split("/").map(encodeURIComponent).join("/");
+      const url = `https://huggingface.co/${modelId}/resolve/main/${encodedFilename}`;
       await startDownload({
         url,
         model_id: modelId,
@@ -74,7 +78,10 @@ export function ModelDetailPage() {
         expected_sha256: sha256,
       });
     } catch (e) {
-      console.error("Download failed:", e);
+      const msg = `Download failed: ${String(e)}`;
+      console.error(msg);
+      setDownloadError(msg);
+      setTimeout(() => setDownloadError(null), 8000);
     }
   };
 
@@ -222,6 +229,20 @@ huggingface-cli download ${model.id}`;
       <div className="mb-6">
         <CanItRun model={model} />
       </div>
+
+      {/* Download Error Toast */}
+      {downloadError && (
+        <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+          <span className="shrink-0">⚠️</span>
+          <span className="flex-1">{downloadError}</span>
+          <button
+            onClick={() => setDownloadError(null)}
+            className="shrink-0 rounded p-1 hover:bg-red-500/10"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Quick Download Section — GGUF files */}
       {(() => {

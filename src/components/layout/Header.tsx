@@ -10,6 +10,7 @@ import {
   Store,
   Users,
   Code2,
+  Download,
   X,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,6 +23,7 @@ import { useTier } from "../../hooks/useTier";
 
 const NAV_ITEMS = [
   { path: "/chat", icon: MessageSquare, label: "Chat", soon: false },
+  { path: "/downloads", icon: Download, label: "Downloads", soon: false },
   { path: "/recommended", icon: Sparkles, label: "For You", soon: false },
   { path: "/monitor", icon: Activity, label: "Monitor", soon: false },
   { path: "/marketplace", icon: Store, label: "Marketplace", soon: true },

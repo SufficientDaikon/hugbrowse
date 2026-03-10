@@ -59,6 +59,7 @@ interface ImportsStore {
   detectedServers: DetectedServer[];
   isScanning: boolean;
   scanError: string | null;
+  ollamaStarting: boolean;
 
   fetchImportedModels: () => Promise<void>;
   importFile: (path: string) => Promise<ImportedModel>;
@@ -66,6 +67,7 @@ interface ImportsStore {
   scanOllama: () => Promise<DetectedServer>;
   scanLmStudio: () => Promise<DetectedServer>;
   autoDetectAll: () => Promise<DetectedServer[]>;
+  startOllama: () => Promise<string>;
 }
 
 function generateId(): string {
@@ -100,6 +102,7 @@ export const useImports = create<ImportsStore>()((set, get) => ({
   detectedServers: [],
   isScanning: false,
   scanError: null,
+  ollamaStarting: false,
 
   fetchImportedModels: async () => {
     try {
@@ -201,6 +204,27 @@ export const useImports = create<ImportsStore>()((set, get) => ({
     } catch (e) {
       set({ isScanning: false, scanError: String(e) });
       return [];
+    }
+  },
+
+  startOllama: async () => {
+    set({ ollamaStarting: true });
+    try {
+      const result = await invoke<string>("start_ollama");
+      set({ ollamaStarting: false });
+      // Re-scan to update server status
+      if (result === "started" || result === "already_running") {
+        const ollama = await get().scanOllama();
+        set((s) => ({
+          detectedServers: s.detectedServers.map((ds) =>
+            ds.type === "ollama" ? ollama : ds,
+          ),
+        }));
+      }
+      return result;
+    } catch (e) {
+      set({ ollamaStarting: false });
+      throw e;
     }
   },
 }));
