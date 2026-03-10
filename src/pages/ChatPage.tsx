@@ -163,7 +163,7 @@ export function ChatPage() {
                 {!activeBackend 
                   ? "Welcome to HugBrowse" 
                   : activeBackend.backend_type === "local_sidecar" 
-                    ? "Get Started — Load a Model" 
+                    ? (info.status === "error" ? "Model Loading Failed" : info.status === "loading" ? "Loading Model…" : "Get Started — Load a Model")
                     : "Backend Not Connected"
                 }
               </h2>
@@ -171,7 +171,11 @@ export function ChatPage() {
                 {!activeBackend 
                   ? "Select a compute backend to start chatting with AI."
                   : activeBackend.backend_type === "local_sidecar"
-                    ? "Follow these steps to chat with a local AI model:"
+                    ? (info.status === "error" && info.error 
+                        ? info.error 
+                        : info.status === "loading" 
+                          ? "Please wait while the model loads…" 
+                          : "Follow these steps to chat with a local AI model:")
                     : `"${activeBackend.name}" status: ${activeBackend.status.replace(/_/g, " ")}. Try reconnecting or switch backends.`
                 }
               </p>
@@ -385,8 +389,8 @@ export function ChatPage() {
                   </p>
                   <p className="text-xs opacity-60 font-mono px-3 py-1.5 rounded-lg bg-[var(--surface-hover)]">
                     {activeBackend?.backend_type === "local_sidecar" 
-                      ? `${info.model_name} · port ${info.port}`
-                      : `${activeBackend?.name} · ${activeBackend?.model_name || "remote model"}`
+                      ? `${info.model_name || "No model loaded"} · port ${info.port}`
+                      : `${activeBackend?.name || "Unknown"} · ${activeBackend?.model_name || "remote model"}`
                     }
                   </p>
                 </div>

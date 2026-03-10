@@ -68,7 +68,7 @@ export const useBackends = create<BackendStore>()((set, get) => ({
       set({ backends, activeBackend, isLoading: false });
     } catch (error) {
       console.error("Failed to fetch backends:", error);
-      set({ isLoading: false });
+      set({ isLoading: false, backends: [], activeBackend: null });
     }
   },
 

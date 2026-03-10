@@ -89,8 +89,14 @@ export const useInference = create<InferenceStore>()((set) => ({
   },
 
   unload: async () => {
-    const info = await invoke<InferenceInfo>("unload_model");
-    set({ info });
+    try {
+      const info = await invoke<InferenceInfo>("unload_model");
+      set({ info });
+    } catch (e) {
+      set((s) => ({
+        info: { ...s.info, status: "error", error: String(e) },
+      }));
+    }
     
     // Sync with backends store - refresh local sidecar status
     await useBackends.getState().fetchBackends();
