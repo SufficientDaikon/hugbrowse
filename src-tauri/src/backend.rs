@@ -192,17 +192,21 @@ pub async fn load_persisted_backends(app_handle: &AppHandle, manager: &ManagedBa
 pub async fn persist_backends(app_handle: &AppHandle, manager: &ManagedBackends) -> Result<(), String> {
     let store = app_handle.store("backends.json").map_err(|e| format!("Failed to open store: {}", e))?;
     
-    let mgr = manager.lock().unwrap();
+    // Clone data under lock, then release before I/O
+    let (backends_to_save, active_id) = {
+        let mgr = manager.lock().unwrap();
+        let backends: Vec<_> = mgr.backends.iter()
+            .filter(|b| b.id != "local-sidecar")
+            .cloned()
+            .collect();
+        let active = mgr.active_id.clone();
+        (backends, active)
+    };
     
-    // Save backends (without credentials)
-    let backends_to_save: Vec<_> = mgr.backends.iter()
-        .filter(|b| b.id != "local-sidecar") // Don't persist local sidecar
-        .collect();
-    
+    // Perform store I/O without holding the lock
     store.set("backends", serde_json::to_value(&backends_to_save).unwrap());
     
-    // Save active backend ID
-    if let Some(active_id) = &mgr.active_id {
+    if let Some(active_id) = &active_id {
         store.set("active_backend_id", serde_json::to_value(active_id).unwrap());
     }
     
@@ -469,10 +473,13 @@ pub async fn proxy_chat_completions(
     match backend.backend_type {
         BackendType::LocalSidecar => {
             // Route to local sidecar - get port from inference manager
-            let port = {
+            let (port, inf_status) = {
                 let inf_mgr = inference_manager.lock().unwrap();
-                inf_mgr.info.port
+                (inf_mgr.info.port, inf_mgr.info.status.clone())
             };
+            if inf_status != crate::inference::InferenceStatus::Running {
+                return Err("No model is currently loaded. Please load a model first.".to_string());
+            }
             
             let url = format!("http://127.0.0.1:{}/v1/chat/completions", port);
             proxy_to_endpoint(url, messages, model, temperature, stream, None, app_handle).await
@@ -517,7 +524,9 @@ async fn proxy_to_endpoint(
     }
     
     if let Some(temp) = temperature {
-        payload["temperature"] = serde_json::Value::Number(serde_json::Number::from_f64(temp as f64).unwrap());
+        if let Some(n) = serde_json::Number::from_f64(temp as f64) {
+            payload["temperature"] = serde_json::Value::Number(n);
+        }
     }
     
     // Build HTTP request
@@ -535,7 +544,7 @@ async fn proxy_to_endpoint(
         Ok(response) => {
             if !response.status().is_success() {
                 let error = format!("HTTP {}: {}", response.status(), response.status().canonical_reason().unwrap_or("Unknown"));
-                app_handle.emit("chat-stream-error", ChatStreamError { error }).unwrap();
+                let _ = app_handle.emit("chat-stream-error", ChatStreamError { error });
                 return Err("Request failed".to_string());
             }
             
@@ -558,10 +567,10 @@ async fn proxy_to_endpoint(
                                 let data_part = &line[6..]; // Skip "data: "
                                 
                                 if data_part == "[DONE]" {
-                                    app_handle.emit("chat-stream-done", ChatStreamDelta {
+                                    let _ = app_handle.emit("chat-stream-done", ChatStreamDelta {
                                         content: "".to_string(),
                                         done: true,
-                                    }).unwrap();
+                                    });
                                     return Ok(());
                                 }
                                 
@@ -571,10 +580,10 @@ async fn proxy_to_endpoint(
                                         if let Some(choice) = choices.first() {
                                             if let Some(delta) = choice.get("delta") {
                                                 if let Some(content) = delta.get("content").and_then(|c| c.as_str()) {
-                                                    app_handle.emit("chat-stream-delta", ChatStreamDelta {
+                                                    let _ = app_handle.emit("chat-stream-delta", ChatStreamDelta {
                                                         content: content.to_string(),
                                                         done: false,
-                                                    }).unwrap();
+                                                    });
                                                 }
                                             }
                                         }
@@ -584,19 +593,19 @@ async fn proxy_to_endpoint(
                         }
                     }
                     Err(e) => {
-                        app_handle.emit("chat-stream-error", ChatStreamError {
+                        let _ = app_handle.emit("chat-stream-error", ChatStreamError {
                             error: format!("Stream error: {}", e)
-                        }).unwrap();
+                        });
                         return Err("Stream failed".to_string());
                     }
                 }
             }
             
             // End stream if no explicit [DONE] was received
-            app_handle.emit("chat-stream-done", ChatStreamDelta {
+            let _ = app_handle.emit("chat-stream-done", ChatStreamDelta {
                 content: "".to_string(),
                 done: true,
-            }).unwrap();
+            });
             
             Ok(())
         }
@@ -607,9 +616,9 @@ async fn proxy_to_endpoint(
                 "Connection failed"
             };
             
-            app_handle.emit("chat-stream-error", ChatStreamError {
+            let _ = app_handle.emit("chat-stream-error", ChatStreamError {
                 error: error_msg.to_string()
-            }).unwrap();
+            });
             
             Err(error_msg.to_string())
         }

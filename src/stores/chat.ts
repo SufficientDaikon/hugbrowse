@@ -156,7 +156,21 @@ export const useChatStore = create<ChatStore>()(
         // Get active backend info for tracking
         const activeBackend = useBackends.getState().activeBackend;
         if (!activeBackend) {
-          console.error("No active backend selected");
+          // Show error to user instead of silent failure
+          const errId = uid();
+          const errMsg: ChatMessage = {
+            id: errId,
+            role: "assistant",
+            content: "⚠️ No active backend selected. Please go to Settings and configure a backend.",
+            timestamp: Date.now(),
+          };
+          set((st) => ({
+            sessions: st.sessions.map((s) =>
+              s.id === sessionId
+                ? { ...s, messages: [...s.messages, { id: uid(), role: "user" as Role, content, timestamp: Date.now() }, errMsg], updatedAt: Date.now() }
+                : s,
+            ),
+          }));
           return;
         }
 
@@ -231,13 +245,16 @@ export const useChatStore = create<ChatStore>()(
         }
 
         let unlisten: UnlistenFn | null = null;
+        let unlistenDelta: UnlistenFn | null = null;
+        let unlistenDone: UnlistenFn | null = null;
+        let unlistenError: UnlistenFn | null = null;
         let tokenCount = 0;
         const streamStart = performance.now();
         let firstTokenTime: number | null = null;
 
         try {
           // Set up event listeners for streaming response
-          const unlistenDelta = await listen<{ content: string; done: boolean }>(
+          unlistenDelta = await listen<{ content: string; done: boolean }>(
             "chat-stream-delta",
             (event) => {
               const { content: delta } = event.payload;
@@ -266,15 +283,17 @@ export const useChatStore = create<ChatStore>()(
             }
           );
 
-          const unlistenDone = await listen<{ content: string; done: boolean }>(
+          unlistenDone = await listen<{ content: string; done: boolean }>(
             "chat-stream-done",
             () => {
-              // Stream completed successfully
-              if (unlisten) unlisten();
+              // Stream completed — clean up all listeners
+              unlistenDelta?.();
+              unlistenDone?.();
+              unlistenError?.();
             }
           );
 
-          const unlistenError = await listen<{ error: string }>(
+          unlistenError = await listen<{ error: string }>(
             "chat-stream-error",
             (event) => {
               const { error } = event.payload;
@@ -288,15 +307,17 @@ export const useChatStore = create<ChatStore>()(
                   ),
                 }));
               }
-              if (unlisten) unlisten();
+              unlistenDelta?.();
+              unlistenDone?.();
+              unlistenError?.();
             }
           );
 
-          // Composite unlisten function
+          // Composite unlisten function for finally block
           unlisten = () => {
-            unlistenDelta();
-            unlistenDone();
-            unlistenError();
+            unlistenDelta?.();
+            unlistenDone?.();
+            unlistenError?.();
           };
 
           // Start the proxy chat completion

@@ -287,6 +287,7 @@ async fn do_download(
                 let mut st = state.lock().unwrap();
                 if let Some(e) = st.downloads.get_mut(&id) {
                     e.status = DownloadStatus::Downloading;
+                    emit_progress(&app, e);
                 }
             }
         }

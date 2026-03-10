@@ -72,12 +72,36 @@ export const useDownloads = create<DownloadsStore>()((set, get) => ({
     }
     await listen<DownloadProgress>("download-progress", (ev) => {
       const p = ev.payload;
-      set((s) => ({
-        downloads: {
-          ...s.downloads,
-          [p.id]: { ...s.downloads[p.id], ...p },
-        },
-      }));
+      set((s) => {
+        const existing = s.downloads[p.id];
+        if (!existing) {
+          // Progress arrived before startDownload completed — create a placeholder
+          return {
+            downloads: {
+              ...s.downloads,
+              [p.id]: {
+                id: p.id,
+                model_id: "",
+                filename: "",
+                url: "",
+                local_path: "",
+                total_bytes: p.total_bytes,
+                downloaded_bytes: p.downloaded_bytes,
+                speed_bps: p.speed_bps,
+                eta_secs: p.eta_secs,
+                status: p.status,
+                error: p.error,
+              },
+            },
+          };
+        }
+        return {
+          downloads: {
+            ...s.downloads,
+            [p.id]: { ...existing, ...p },
+          },
+        };
+      });
     });
   },
 
