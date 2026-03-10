@@ -63,11 +63,19 @@ export interface LoadModelRequest {
 }
 
 export async function apiLoadModel(req: LoadModelRequest): Promise<Record<string, unknown>> {
-  return request(`${API_BASE}/api/v1/models/load`, "POST", req);
+  // Map to the Rust API's NativeLoadRequest schema which expects "model" field
+  const payload: Record<string, unknown> = {
+    model: req.model_path,
+    identifier: req.model_name,
+    context_length: req.ctx_size,
+    gpu: req.n_gpu_layers != null ? (req.n_gpu_layers === -1 ? 1.0 : req.n_gpu_layers === 0 ? 0.0 : undefined) : undefined,
+    ttl: req.ttl_seconds,
+  };
+  return request(`${API_BASE}/api/v1/models/load`, "POST", payload);
 }
 
 export async function apiUnloadModel(instance_id: string): Promise<Record<string, unknown>> {
-  return request(`${API_BASE}/api/v1/models/unload`, "POST", { instance_id });
+  return request(`${API_BASE}/api/v1/models/unload`, "POST", { instanceId: instance_id });
 }
 
 export interface ChatMessage {

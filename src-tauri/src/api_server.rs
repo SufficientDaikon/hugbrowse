@@ -248,6 +248,8 @@ fn build_router(state: ApiState) -> Router {
         .allow_headers(Any);
 
     Router::new()
+        // Health check (no auth, no locks)
+        .route("/health", get(get_health))
         // OpenAI-compatible endpoints
         .route("/v1/models", get(get_v1_models))
         .route("/v1/chat/completions", post(post_v1_chat_completions))
@@ -442,6 +444,13 @@ async fn check_request_auth(
         }
     }
 }
+
+// ── Health Check (no auth, no locks) ──────────────────────────────────
+
+/// GET /health — lightweight liveness check.
+async fn get_health() -> Response {
+    Json(serde_json::json!({ "status": "ok" })).into_response()
+}
 
 // ── OpenAI-Compatible Route Handlers ──────────────────────────────────
 
@@ -454,20 +463,30 @@ async fn get_v1_models(
         return r;
     }
     let start = std::time::Instant::now();
-    let mgr = state.model_manager.lock().await;
-    let models: Vec<ModelObject> = mgr
-        .loaded_models
-        .values()
-        .filter(|m| m.status == ModelStatus::Ready)
-        .map(|m| ModelObject {
-            id: m.identifier.clone(),
-            object: "model",
-            created: m.loaded_at,
-            owned_by: "hugbrowse",
-            permission: vec![],
-        })
-        .collect();
-    drop(mgr);
+    let models = match tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        state.model_manager.lock(),
+    )
+    .await
+    {
+        Ok(mgr) => {
+            mgr.loaded_models
+                .values()
+                .filter(|m| m.status == ModelStatus::Ready)
+                .map(|m| ModelObject {
+                    id: m.identifier.clone(),
+                    object: "model",
+                    created: m.loaded_at,
+                    owned_by: "hugbrowse",
+                    permission: vec![],
+                })
+                .collect()
+        }
+        Err(_) => {
+            log::warn!("model_manager lock timed out in /v1/models");
+            vec![]
+        }
+    };
 
     let resp = ModelList {
         object: "list",
@@ -688,15 +707,28 @@ async fn post_v1_embeddings(
 
 // ── Native REST Route Handlers ────────────────────────────────────────
 
-/// GET /api/v1/status — server health check.
+/// GET /api/v1/status — server health check (with lock timeout to avoid hangs).
 async fn get_api_status(AxumState(state): AxumState<ApiState>) -> Response {
-    let mgr = state.model_manager.lock().await;
-    let loaded_count = mgr
-        .loaded_models
-        .values()
-        .filter(|m| m.status == ModelStatus::Ready)
-        .count();
-    drop(mgr);
+    // Use a timeout on the lock to avoid blocking indefinitely if another task holds it
+    let loaded_count = match tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        state.model_manager.lock(),
+    )
+    .await
+    {
+        Ok(mgr) => {
+            let count = mgr
+                .loaded_models
+                .values()
+                .filter(|m| m.status == ModelStatus::Ready)
+                .count();
+            count
+        }
+        Err(_) => {
+            log::warn!("model_manager lock timed out in /api/v1/status");
+            0 // Return 0 if we can't get the lock
+        }
+    };
 
     Json(ServerStatus {
         status: "ok",
@@ -709,10 +741,21 @@ async fn get_api_status(AxumState(state): AxumState<ApiState>) -> Response {
 
 /// GET /api/v1/models — extended model list (downloaded + loaded).
 async fn get_api_models(AxumState(state): AxumState<ApiState>) -> Response {
-    let mgr = state.model_manager.lock().await;
-    let models: Vec<LoadedModel> = mgr.loaded_models.values().cloned().collect();
-    drop(mgr);
-    Json(models).into_response()
+    match tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        state.model_manager.lock(),
+    )
+    .await
+    {
+        Ok(mgr) => {
+            let models: Vec<LoadedModel> = mgr.loaded_models.values().cloned().collect();
+            Json(models).into_response()
+        }
+        Err(_) => {
+            log::warn!("model_manager lock timed out in /api/v1/models");
+            Json(serde_json::json!([])).into_response()
+        }
+    }
 }
 
 /// POST /api/v1/models/load — load a model via API.
