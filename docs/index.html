@@ -253,6 +253,38 @@ nav .nav-inner {
   50% { opacity: .5; transform: scale(1.4); }
 }
 
+/* ── Paused Banner ────────────────────────────── */
+.paused-banner {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: linear-gradient(135deg, #78350f 0%, #92400e 50%, #78350f 100%);
+  border-bottom: 1px solid #b45309;
+  padding: 14px 24px;
+  text-align: center;
+  font-size: .92rem;
+  color: #fef3c7;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.paused-banner a {
+  color: #fbbf24;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paused-banner a:hover {
+  color: #fde68a;
+}
+
+.paused-banner strong {
+  color: #fff;
+}
+
 h1.hero-title {
   font-size: clamp(3.2rem, 8vw, 5.5rem);
   font-weight: 900;
@@ -859,15 +891,19 @@ footer {
   }
 </style>
 
+<!-- Paused Banner -->
+<div class="paused-banner">
+  <strong>⚠️ Project Paused</strong> — I got bored and discovered <a href="https://lmstudio.ai/">LM Studio</a>, which already does everything I was building here. Check it out instead!
+</div>
 
 <!-- ════════════════════════════════════════════════ -->
 <!-- Hero Section                                    -->
 <!-- ════════════════════════════════════════════════ -->
-<section class="hero" id="hero">
+<section class="hero" id="hero" style="padding-top: 160px;">
   <div class="hero-content">
-    <div class="hero-badge fade-in">
-      <span class="badge-dot"></span>
-      Open Source &amp; Free Forever
+    <div class="hero-badge fade-in" style="border-color: #ca8a04; color: #ca8a04;">
+      <span class="badge-dot" style="background: #ca8a04;"></span>
+      Development Paused
     </div>
 
     <h1 class="hero-title fade-in delay-1">

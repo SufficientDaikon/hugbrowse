@@ -9,12 +9,19 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/status-paused-yellow?style=flat-square" alt="Status: Paused" />
   <img src="https://img.shields.io/badge/version-0.2.0-blue?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" />
   <img src="https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows" alt="Platform" />
   <img src="https://img.shields.io/badge/tauri-v2-FFC131?style=flat-square&logo=tauri" alt="Tauri v2" />
   <img src="https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react" alt="React 19" />
 </p>
+
+---
+
+> **⚠️ Project Paused**
+>
+> I've paused development on HugBrowse. While building this, I discovered [LM Studio](https://lmstudio.ai/) which already does pretty much everything I was trying to build here — model browsing, downloading, local inference, and more — and it does it really well. Rather than reinventing the wheel, I'd recommend checking out LM Studio if you're looking for a local AI platform. This repo will stay up for reference, but don't expect active development for the foreseeable future.
 
 ---
 
