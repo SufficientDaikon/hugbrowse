@@ -24,7 +24,13 @@
 > I've paused development on HugBrowse. While building this, I discovered [LM Studio](https://lmstudio.ai/) which already does pretty much everything I was trying to build here — model browsing, downloading, local inference, and more — and it does it really well. Rather than reinventing the wheel, I'd recommend checking out LM Studio if you're looking for a local AI platform. This repo will stay up for reference, but don't expect active development for the foreseeable future.
 
 ---
+---
 
+> **Personal Note**
+>
+> This app was me just testing my tools Tbh, my friend one day was like "is there an app that does *this*" i said to him, idk, i'll make you one, then i found LM studio, soooo... yeah xD anyway, i got bored, so here's the code, do with it whatever you want, i had this idea as well, if you want you can fork this and continue making it, you could make it so people can host servers through the app to run the LLM models on them, or maybe run training on kaggle through the app or google collab or whatever, just make it an interface between cloud LLM servcies and local, if you get what i mean, i can't be asked explaining, goodbye.
+
+---
 HugBrowse is a local-first desktop application for discovering, downloading, and running AI models from Hugging Face. It auto-detects your hardware capabilities, manages model downloads with integrity verification, and provides a full chat interface powered by local inference with GPU acceleration (CUDA, Metal, Vulkan). When your hardware isn't enough, seamlessly offload inference to the cloud — HuggingFace Inference Endpoints, custom API servers, or your own VPS — all managed from one interface. Automatic updates keep you on the latest version without manual downloads.
 
 ## Screenshots
